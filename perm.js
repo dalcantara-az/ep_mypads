@@ -293,7 +293,7 @@ module.exports = (function () {
     var token = (req.query ? req.query.auth_token : false);
     if (!token) { token = perm.fn.getVarFromReferer('auth_token', req); }
     var u = auth.fn.getUser(token);
-    if (u && u.useLoginAndColorInPads) {
+    if (u) {
       var opts = { userName: u.login };
       if (u.padNickname) {
         opts.userName = u.padNickname;
