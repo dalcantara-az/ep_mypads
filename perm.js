@@ -180,13 +180,13 @@ module.exports = (function () {
 
     switch (p.visibility) {
       case 'public':
-        return callback();
+        return u ? callback() : params.refuse();
       case 'private':
         return checkPass(p);
       default:
         switch (g.visibility) {
           case 'public':
-            return callback();
+            return u ? callback() : params.refuse();
           case 'private':
             return (ld.includes(g.users, uid) ? checkPass(p) : checkPass(g));
           // Restricted case : if user, ok

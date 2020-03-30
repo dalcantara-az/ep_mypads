@@ -1401,6 +1401,9 @@ module.exports = (function () {
 
     var canAct = function (edit, successFn, req, res) {
       pad.get(req.params.key, function (err, p) {
+        var token = req.body.auth_token || req.query.auth_token;
+        if (!token || !auth.fn.getUser(token)) { return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.MUST_BE'); }
+
         var key = req.params.key;
         if (err) { return res.status(404).send({ error: err.message }); }
         var isAdmin = fn.isAdmin(req);
