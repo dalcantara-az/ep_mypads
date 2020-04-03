@@ -187,9 +187,9 @@ module.exports = (function () {
           ),
         ]),
         m('div.container.ombre', [
-          m('h1', conf.SERVER.title),
+          m('h1.pull-left', conf.SERVER.title),
           m('hr.trait', {role: 'presentation'}),
-          m('nav', { class: 'menu-main' }, [
+          m('nav.pull-right', { class: 'menu-main' }, [
             m('ul.nav.nav-tabs', views.menuMain())
           ])
         ])

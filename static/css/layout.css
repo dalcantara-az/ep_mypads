@@ -131,3 +131,66 @@ label[for="pad-filter-form"] {
 .btn-group button:focus + .dropdown-menu {
   display: block;
 }
+
+
+/* Customizations for Azeus: Start */
+
+html{
+  background-color: #fff;
+}
+
+h1, .h1{
+  font-size: 22px;
+}
+
+h2, .h2{
+  font-size: 20px;
+}
+
+h3, .h3{
+  font-size: 18px;
+}
+
+.h1, .h2, .h3, h1, h2, h3{
+  margin-top: 10px;
+}
+
+.container{
+  width: auto;
+  margin: 0px;
+}
+
+header div.lang{
+  display: none;
+}
+
+header{
+  border-bottom: 1px solid #ddd;
+}
+
+.ombre{
+  box-shadow: none;
+}
+
+.trait{
+  display: none;
+}
+
+.pad-title .folder-title i{
+  margin-right: 10px;
+}
+
+.panel{
+  margin-top: 20px;
+}
+
+.nav-tabs{
+  border: none;
+}
+
+span.h5.folder-title {
+    display: block;
+    margin: -3px 0;
+}
+
+/* Customizations for Azeus: End */
