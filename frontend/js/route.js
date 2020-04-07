@@ -59,6 +59,7 @@ module.exports = (function () {
   var adminUsersCreate     = require('./modules/admin-users-create.js');
   var adminUserForm        = require('./modules/admin-users-form.js');
   var adminUserRemove      = require('./modules/admin-users-remove.js');
+  var monitorPads          = require('./modules/monitor-pads.js');
 
   var route = { model: {} };
 
@@ -96,6 +97,7 @@ module.exports = (function () {
     '/mypads/group/:group/pad/remove/chat/history/:pad': padRemoveChatHistory,
     '/mypads/group/:group/pad/view/:pad': padView,
     '/mypads/group/:group/user/:action': userInvite,
+    '/monitorpads' : monitorPads,
     '/admin': admin,
     '/admin/logout': adminLogout,
     '/admin/users': adminUsers,
