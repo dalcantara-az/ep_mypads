@@ -45,6 +45,7 @@ module.exports = (function () {
     var form   = require('../helpers/form.js');
   
     var mpad = {};
+    var url;
   
     /**
     * ## Controller
@@ -164,10 +165,32 @@ module.exports = (function () {
         m('article.well', m.trust(conf.LANG.BOOKMARK.HELP))
       ]);
     };
+
   
     view.main = function (c) {
       return m('section', [
         m('h2', "Monitored Pads"),
+        m('.input-group', {class: "h2"}, [
+            m('input.form-control', {
+              type: 'search',
+              placeholder: "Enter URL",
+              minlength: 3,
+              pattern: '.{3,}',
+            //   value: c.search(),
+            //   oninput: m.withAttr('value', c.search),
+              onkeydown: function (e) {
+                if (e.keyCode === 13) { // ENTER
+                  e.preventDefault();
+                //   c.filterSearch();
+                }
+              }
+            }),
+            m('span.input-group-btn',
+              m('button.btn.btn-default',
+                { type: 'button',  },
+                "Bookmark")
+            ),
+          ]),
         m('section.panel.panel-primary', [
           m('.panel-heading',
             m('h3.panel-title', conf.LANG.GROUP.GROUPS)
