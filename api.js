@@ -1648,6 +1648,28 @@ module.exports = (function () {
         });
       });
     });
+
+    app.get(statsRoute + '/diff/:key', function (req, res) {
+      var utils = require('./utils');
+      var etherpadAPI = require('ep_etherpad-lite/node/db/API');
+      var createDiffSince = utils.callbackify2(etherpadAPI.createDiffSince);
+
+      var startTime = Date.now() - parseInt(req.query.ago);
+      var padId = req.params.key;
+
+      createDiffSince(padId, startTime, function(err, diff) {
+        if (err) {
+          return res.send({
+            padId,
+            startTime,
+            error: err.stack
+          });
+        }
+        return res.send({
+          result: diff
+        });
+      });
+    });
   };
 
   return api;
