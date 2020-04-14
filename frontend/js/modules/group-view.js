@@ -478,7 +478,7 @@ module.exports = (function () {
           m('a.btn.btn-default',
             { href: route + '/user/add', config: m.route },
             [ m('i.glyphicon.glyphicon-plus.text-success'),
-                ' '+conf.LANG.GROUP.ADD_WATCHER_AS  ]
+                ' '+conf.LANG.GROUP.ADD_WATCHER.AS  ]
           )
         )
       );

@@ -766,6 +766,27 @@ module.exports = (function () {
     });
   };
 
+  /**
+   * ### getAllGroupIds()
+   *
+   * Returns the ids of groups of the MyPads instance
+   * As arguments, it takes mandatory :
+   * - a `callback` function
+   */
+
+  group.getAllGroupIds = function(callback) {
+    storage.db.findKeys(GPREFIX + '*', null, function (err, res) {
+      if (err) { return callback(err); }
+      var ids = []
+      for(var i = 0; i<res.length; i++){
+        ids[i]= res[i].substring(13)
+      }
+      return callback(null, ids);
+
+    });
+    
+  };
+
   return group;
 
 

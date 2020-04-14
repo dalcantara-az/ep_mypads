@@ -1373,6 +1373,13 @@ module.exports = (function () {
     req.params.key = req.body.gid;
     var successFn = ld.partial(function (req, res) {
       try {
+        
+        group.getAllGroupIds(function(err, gcount) {
+          if (err) { 
+            return res.send({ timestamp: time, err: err }); }
+          console.log(gcount);
+          return gcount;
+        });
         group.addWatchers(req.body.gid,
           req.body.loginsOrEmails, function (err, g, uids) {
             if (err) {

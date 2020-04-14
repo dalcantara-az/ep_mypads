@@ -70,7 +70,7 @@ module.exports = (function () {
         data: data
       }).then(function (resp) {
         
-          var lpfx = GROUP.ADD_WATCHER.AS;
+          var lpfx = 'ADD_WATCHER';
      
         var msg;
         if (resp.present.length > 0) {
