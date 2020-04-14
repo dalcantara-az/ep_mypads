@@ -86,6 +86,7 @@ module.exports = (function () {
             }), sortingPreferences.padByField());
           c.users  = ld.map(c.group.users, function (x) { return users[x]; });
           c.admins = ld.map(c.group.admins, function (x) { return users[x]; });
+          c.watchers = ld.map(c.group.watchers, function (x) { return users[x]; });
         } else {
           c.isAdmin = false;
           c.isUser  = false;
@@ -251,6 +252,7 @@ module.exports = (function () {
             'td',
             ld.size(c.group.users)
           ),
+          
           m('td', m('ul.list-inline', ld.map(c.group.tags, function (t) {
                     return m('li.label.label-default', t);
           })))
@@ -468,9 +470,24 @@ module.exports = (function () {
       );
     }
     sectionListUsers.push(list(c.users));
+
+    var sectionListWatchers = [ m('h4', "WATCHERS") ];
+    if (c.isAdmin) {
+      sectionListWatchers.push(
+        m('p.text-center',
+          m('a.btn.btn-default',
+            { href: route + '/user/add', config: m.route },
+            [ m('i.glyphicon.glyphicon-plus.text-success'),
+                ' '+conf.LANG.GROUP.ADD_WATCHER_AS  ]
+          )
+        )
+      );
+    }
+    sectionListWatchers.push(list(c.watchers));
     return m('section.panel-body', [
       m((conf.SERVER.allPadsPublicsAuthentifiedOnly) ? '.col-sm-12' : '.col-sm-6',sectionListAdmins),
-      (conf.SERVER.allPadsPublicsAuthentifiedOnly) ? null : m('.col-sm-6',sectionListUsers)
+      (conf.SERVER.allPadsPublicsAuthentifiedOnly) ? null : m('.col-sm-6',sectionListUsers),
+      (conf.SERVER.allPadsPublicsAuthentifiedOnly) ? null : m('.col-sm-6',sectionListWatchers)
     ]);
   };
 

@@ -160,6 +160,27 @@ module.exports = (function () {
   view.main = function (c) {
     return m('section', [
       m('h2', conf.LANG.BOOKMARK.TITLE),
+      // m('.input-group', {class: "h2"}, [
+      //   m('input.form-control', {
+      //     type: 'search',
+      //     placeholder: "Enter URL",
+      //     minlength: 3,
+      //     pattern: '.{3,}',
+      //   //   value: c.search(),
+      //   //   oninput: m.withAttr('value', c.search),
+      //     onkeydown: function (e) {
+      //       if (e.keyCode === 13) { // ENTER
+      //         e.preventDefault();
+      //       //   c.filterSearch();
+      //       }
+      //     }
+      //   }),
+      //   m('span.input-group-btn',
+      //     m('button.btn.btn-default',
+      //       { type: 'button',  },
+      //       conf.LANG.GROUP.BOOKMARK)
+      //   ),
+      // ]),
       m('section.panel.panel-primary', [
         m('.panel-heading',
           m('h3.panel-title', conf.LANG.GROUP.GROUPS)

@@ -62,7 +62,7 @@ module.exports = (function () {
       data: {
         type: 'groups',
         key: gid,
-        auth_token: auth.token()
+        auth_token: auth.token(),
       }
     }).then(function () {
       notif.success({ body: conf.LANG.GROUP.MARK_SUCCESS });
