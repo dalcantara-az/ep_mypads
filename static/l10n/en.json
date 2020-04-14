@@ -214,6 +214,11 @@
          "FAILURE": "You can't share administration with users who have no account in this instance: ",
          "SUCCESS": "Administration sharing has been successfully achieved for "
       },
+      "ADD_WATCHER": {
+         "AS": "Add Watchers",
+         "FAILURE": "You can't add users who have no account in this instance: ",
+         "SUCCESS": "Addition to watchlist has been successfully achieved for "
+      },
       "ARCHIVED": "Archived folders",
       "BOOKMARK": "Bookmark",
       "BOOKMARKED": "Bookmarked folders",

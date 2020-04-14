@@ -85,9 +85,6 @@ module.exports = (function () {
               return pads[x];
             }), sortingPreferences.padByField());
           c.users  = ld.map(c.group.users, function (x) { return users[x]; });
-          console.log( "users: " + c.group.users);
-          console.log( "admins: " + c.group.admins);
-          console.log( "watchers: " + c.group.watchers);
           c.admins = ld.map(c.group.admins, function (x) { return users[x]; });
           c.watchers = ld.map(c.group.watchers, function (x) { return users[x]; });
         } else {

@@ -445,7 +445,6 @@ module.exports = (function () {
       ]),
       (conf.SERVER.allPadsPublicsAuthentifiedOnly) ? null : m('td', [
         (function () {
-          if (g.visibility === 'restricted') {
             return [
               ld.size(g.watchers),
               (function () {
@@ -455,13 +454,12 @@ module.exports = (function () {
                     { href: padRoute + '/user/add', config: m.route },
                     [
                       m('i.glyphicon.glyphicon-plus.text-success',
-                        { title: "Add Watchers" })
+                        { title: conf.LANG.GROUP.ADD_WATCHER.AS })
                     ]
                   );
                 }
               })()
             ];
-          }
         })()
       ]),
       m('td', [

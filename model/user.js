@@ -37,7 +37,6 @@ module.exports = (function () {
   var common      = require('./common.js');
   var userCache   = require ('./user-cache.js');
   var deleteGroup = require('./group.js').del;
-  var group       = require('./group.js');
   var UPREFIX     = storage.DBPREFIX.USER;
   var CPREFIX     = storage.DBPREFIX.CONF;
   var auth;

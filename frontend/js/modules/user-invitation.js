@@ -58,6 +58,7 @@ module.exports = (function () {
     c.action = (m.route.param('action'));
 
     if(c.action == "add"){
+      
       var data = {
         gid: c.group._id,
         loginsOrEmails: c.tag.current,
@@ -68,12 +69,8 @@ module.exports = (function () {
         url: conf.URLS.GROUP + '/add-watchers',
         data: data
       }).then(function (resp) {
-        if(c.action == "share"){
-          var lpfx = 'ADMIN_SHARE';
-        }
-        else{
-          var lpfx = 'INVITE_USER';
-        }
+        
+          var lpfx = 'ADD_WATCHER';
      
         var msg;
         if (resp.present.length > 0) {
@@ -178,19 +175,12 @@ module.exports = (function () {
         .pluck('login')
         .value();
       }
-      else if(c.action == "add"){
-        var uids = []
-        for(var i = 0 ; i <c.group.watchers.length; i++){
-            var remove_after= c.group.watchers[i].indexOf('-');
-            var result =  c.group.watchers[i].substring(0, remove_after);
-            uids[i]= result;
-        }
-        // var current = ld(users.byId)
-        // .pick(c.group.watchers)
-        // .values()
-        // .pluck('login')
-        // .value();
-        var current = uids
+      else if(c.action == "add"){   
+        var current = ld(users.byId)
+        .pick(c.group.watchers)
+        .values()
+        .pluck('login')
+        .value();
       }
 
       
@@ -322,7 +312,7 @@ module.exports = (function () {
       legendText = GROUP.ADMIN_SHARE.AS;
     }
     else if(c.action == "add"){
-      legendText = "Add Watchers";
+      legendText = GROUP.ADD_WATCHER.AS;
     }
     var fields = [
       m('fieldset', [
@@ -369,7 +359,7 @@ module.exports = (function () {
       legendText = GROUP.ADMIN_SHARE.AS;
     }
     else if(c.action == "add"){
-      legendText = "Add Watchers";
+      legendText = GROUP.ADD_WATCHER.AS;
     }
     return m('section.user-aside', [
       m('h2', conf.LANG.ACTIONS.HELP),

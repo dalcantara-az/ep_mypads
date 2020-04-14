@@ -71,11 +71,6 @@ module.exports = (function () {
           icon: 'home',
           txt: conf.LANG.MENU.PROFILE
         },
-        // {
-        //   route: '/monitorpads',
-        //   icon: 'home',
-        //   txt: 'Monitored Pads'
-        // },
         {
           route: '/logout',
           icon: 'off',

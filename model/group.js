@@ -730,7 +730,7 @@ module.exports = (function () {
     var keys = ld.reduce(groups, function (memo, val) {
       memo.pads  = ld.union(memo.pads, addPfx(PPREFIX, val.pads));
       memo.users = ld.union(memo.users, addPfx(UPREFIX, val.users),
-        addPfx(UPREFIX, val.admins));
+        addPfx(UPREFIX, val.admins), addPfx(UPREFIX, val.watchers));
       return memo;
     }, { pads: [], users: [] });
     storage.fn.getKeys(ld.flatten(ld.values(keys)), function (err, res) {

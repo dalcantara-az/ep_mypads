@@ -1366,7 +1366,6 @@ module.exports = (function () {
     */
 
    app.post(groupRoute + '/add-watchers', function (req, res) {
-     console.log("adding watchurz");
     if (!req.body.gid) {
       return res.status(400)
         .send({ error: 'BACKEND.ERROR.TYPE.PARAMS_REQUIRED' });
