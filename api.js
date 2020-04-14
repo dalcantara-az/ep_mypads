@@ -955,6 +955,7 @@ module.exports = (function () {
               res.send({ success: true });
             }
           );
+
         }
         catch (e) { res.status(400).send({ error: e.message }); }
       }
@@ -1354,6 +1355,37 @@ module.exports = (function () {
       }, req, res);
       canEdit(req, res, successFn);
     });
+
+    /**
+    * POST method : `group.addWatchers` with gid group id, array of all
+    * concerned loginsOrEmails and invite boolean
+    * This method is open to all authenticated users.
+    *
+    * Sample URL:
+    * http://etherpad.ndd/mypads/api/group/add-watchers
+    */
+
+   app.post(groupRoute + '/add-watchers', function (req, res) {
+    if (!req.body.gid) {
+      return res.status(400)
+        .send({ error: 'BACKEND.ERROR.TYPE.PARAMS_REQUIRED' });
+    }
+    req.params.key = req.body.gid;
+    var successFn = ld.partial(function (req, res) {
+      try {
+        group.addWatchers(req.body.gid,
+          req.body.loginsOrEmails, function (err, g, uids) {
+            if (err) {
+              return res.status(401).send({ error: err.message });
+            }
+            return res.send(ld.assign({ success: true, value: g }, uids));
+        });
+      }
+      catch (e) { res.status(400).send({ error: e.message }); }
+    }, req, res);
+    canEdit(req, res, successFn);
+  });
+
 
     /**
     * POST method : `group.resign` with gid group id and current session uid.

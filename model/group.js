@@ -53,6 +53,7 @@ module.exports = (function () {
   *   pads: [ 'padkey1', 'padkey2' ],
   *   admins: [ 'userkey1', 'userkey2' ],
   *   users: [ 'ukey1' ],
+  *   watchers: [ 'ukey1' ],
   *   visibility: 'restricted' || 'public' || 'private',
   *   password: 'secret',
   *   readonly: false,
@@ -422,6 +423,74 @@ module.exports = (function () {
     });
   };
 
+
+   /**
+  * ### addWatchers
+  *
+  * `addWatchers` is an asynchronous function that check if given data, users
+  * or admins logins, are correct and transforms it to expected values : unique
+  * identifiers, before saving it to database.
+  *
+  * It takes :
+  *
+  * - `gid` group unique identifier;
+  * - array of users `loginsOrEmails`;
+  * - `callback` function calling with  *error* if error or *null* and the
+  *   updated group otherwise, plus accepted and refused invitations logins or
+  *   emails.
+  *
+  * It takes care of exclusion of admins and users : admin status is a
+  * escalation of user.
+  *
+  * As login list should be exhaustive, it also takes care or reindexing user
+  * local groups.
+  */
+  group.addWatchers = function (gid, loginsOrEmails, callback) {
+ 
+    if (!ld.isString(gid)) {
+      throw new TypeError('BACKEND.ERROR.TYPE.GID_STR');
+    }
+    if (!ld.isArray(loginsOrEmails)) {
+      throw new TypeError('BACKEND.ERROR.TYPE.LOGINS_ARR');
+    }
+    if (!ld.isFunction(callback)) {
+      throw new TypeError('BACKEND.ERROR.TYPE.CALLBACK_FN');
+    }
+
+    var users = userCache.fn.getIdsFromLoginsOrEmails(loginsOrEmails);
+    group.get(gid, function (err, g) {
+      if (err) { return callback(err); }
+      var removed;
+      removed = ld.difference(g.watchers, users.uids);
+
+      if(g.watchers.length>0 && g.watchers != null){
+        for(var i=0; i<g.watchers.length; i++){
+          g.watchers.pop();
+        }
+      }
+ 
+      for(var i = 0; i< users.uids.length; i++){
+        if(!g.watchers.includes(users.uids[i])){
+          g.watchers.push(users.uids[i]);
+        }
+      }
+
+        // g.watchers = ld.unique(ld.reject(users.uids,
+        //   ld.partial(ld.includes, g.users)));
+        // console.log(g.watchers);
+      
+
+      group.fn.indexUsers(true, g._id, removed, function (err) {
+        if (err) { return callback(err); }
+        group.fn.set(g, function (err, g) {
+          if (err) { return callback(err); }
+          callback(null, g, ld.omit(users, 'uids'));
+        });
+      });
+    });
+  };
+
+
   /**
   *  ## Helper Functions
   *
@@ -459,6 +528,13 @@ module.exports = (function () {
   */
 
   group.helper.setAdmins   = ld.noop;
+
+  /**
+  * ### addWatchers
+  * string or array
+  */
+
+ group.helper.addWatchers   = ld.noop;
 
   /**
   * ### setPassword
@@ -516,6 +592,7 @@ module.exports = (function () {
     p.admins      = ld.isArray(p.admins)        ? ld.filter(p.admins, ld.isString) : [];
     g.admins      = ld.union([ p.admin ], p.admins);
     g.users       = ld.uniq(p.users);
+    g.watchers    = ld.isArray(p.watchers)        ? ld.filter(p.watchers, ld.isString) : [];
 
     var v    = p.visibility;
     var vVal = ['restricted', 'private', 'public'];
@@ -656,7 +733,7 @@ module.exports = (function () {
     var keys = ld.reduce(groups, function (memo, val) {
       memo.pads  = ld.union(memo.pads, addPfx(PPREFIX, val.pads));
       memo.users = ld.union(memo.users, addPfx(UPREFIX, val.users),
-        addPfx(UPREFIX, val.admins));
+        addPfx(UPREFIX, val.admins), addPfx(UPREFIX, val.watchers));
       return memo;
     }, { pads: [], users: [] });
     storage.fn.getKeys(ld.flatten(ld.values(keys)), function (err, res) {

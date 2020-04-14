@@ -329,10 +329,12 @@ module.exports = (function () {
       var defaultLang = acs.defaultLang;
       delete acs.properties;
       delete acs.defaultLang;
-      acs.serviceUrl = req.protocol+'://'+req.host+req.path.replace(rgx, '?/login');
+      var host = req.hostname || req.host;
+      acs.serviceUrl = req.protocol+'://'+host+req.path.replace(rgx, '?/login');
       var cas = new CasAuth(acs);
       cas.validateServiceTicket(ticket)
         .then(function(info) {
+          console.debug('mypads:casAuth - The ticket %s validation provided user informations ', ticket, info);  
           return callback(null, {
             login: info.attributes[props.login] || info[props.login],
             password: NOT_INTERNAL_AUTH_PWD,

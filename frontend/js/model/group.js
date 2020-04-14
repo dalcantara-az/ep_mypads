@@ -44,6 +44,7 @@ module.exports = (function () {
       pads: m.prop({}),
       users: m.prop([]),
       admins: m.prop([]),
+      watchers: m.prop([]),
       tags: m.prop([]),
       bookmarks: m.prop({ groups: m.prop({}), pads: m.prop({}) }),
       tmp: m.prop({ groups: m.prop({}), pads: m.prop({}) })
