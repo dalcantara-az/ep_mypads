@@ -9,6 +9,7 @@
 *  about recent changes of pads within a group.
 */
 
+var conf = require('./configuration.js');
 var mail = require('./mail.js');
 var storage = require('./storage.js');
 var groupDB = require('./model/group.js');
@@ -70,7 +71,7 @@ module.exports = (function () {
   watcher.fn.generateDigestFormattedMessage = function(actualChanges, padNames) {
     return actualChanges.map(padChange => {
       var subResult = `<h1><a href="${_getPadUrl(padChange.padId)}">${padNames[padChange.padId]}</a></h1><br>`;
-      subResult+= `<h2>Authors: ${padChange.authors.join(" ")}<br>`;
+      subResult+= `<h2>Authors: ${padChange.authors.join(" ")}</h2><br>`;
       subResult+= padChange.splices.filter(s => s[2]).map(s => `<pre>${s[2]}</pre>`).join("<br>");
       subResult+="<br>";
       return subResult;
