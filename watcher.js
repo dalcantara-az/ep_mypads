@@ -25,71 +25,83 @@ module.exports = (function () {
 
   watcher.fn = {};
 
-  var _bulkRetrieve = function(list, prefix, attribute, callback) {
+  var _bulkRetrieve = function(prefix, list, callback) {
     var keys = list.map(id => prefix + id);
-    storage.fn.getKeys(keys, function(err, retrieved) {
-      if (err) { 
-        return callback(err); 
-      }
-      var mappedResult = retrieved.map(record => record[attribute]);
-      return callback(null, mappedResult);
-    });
+    storage.fn.getKeys(keys, callback);
   }
 
   watcher.fn.getEmails = function(watcherList, callback) {
-    return _bulkRetrieve(UPREFIX, watcherList, "email", callback);
+    _bulkRetrieve(UPREFIX, watcherList, function(err, retrieved) {
+      if (err) {
+        return callback(err);
+      }
+      var emailList = watcherList.map(id => retrieved[UPREFIX + id]["email"]);
+      return callback(null, emailList);
+    });
   }
 
   watcher.fn.getPadNames = function(padList, callback) {
-    return _bulkRetrieve(PPREFIX, padList, "name", callback);
+    _bulkRetrieve(PPREFIX, padList, function(err, retrieved) {
+      if (err) {
+        return callback(err);
+      }
+      var padNameMap = {};
+      padList.forEach(padId => {
+        padNameMap[padId] = retrieved[PPREFIX + padId]["name"];
+      });
+      return callback(null, padNameMap);
+    });
   }
 
   watcher.fn.generateDigestMessage = function(actualChanges, padNames) {
     return actualChanges.map(padChange => {
-      var subResult = padNames[padChange.padId] + "\n";
-      subResult+= "Authors: " + padChange.authors.join(" ") + "\n";
-      padChange.splices.map(s => s[2]).filter((s) => s).join("\n");
-      return subResult; 
+      var subResult = `${padNames[padChange.padId]}(https://etherpad.convenenp.com/p/${padChange.padId})\n`;
+      subResult+= "Authors: " + padChange.authors.join(" ") + "\n\n";
+      subResult+= padChange.splices.map(s => s[2]).filter(s => s).join("\n");
+      subResult+="\n";
+      return subResult;
     }).join("\n");
   }
 
   watcher.fn.generateDigestSubject = function(g) {
     return "Daily digest for " + g.name;
-  } 
+  }
 
   watcher.reportGroupChanges = function(groupId, startTime, callback) {
     groupDB.get(groupId, function(err, g) {
       if (err) {
         return callback(err);
       }
-      var watcherList = g.watcher;
+      var watcherList = ["dalcantara-ex20ooj"];
       if (watcherList == null || watcherList.length == 0) {
         return callback(null, { watcherList: null });
       }
 
-      var diffs = await Promise.all(g.pads.map((p) => {return etherpadAPI.createDiffSince(p, startTime); }));
-      var actualChanges = diffs.filter((d) => d.splices.length > 0);
-      if (actualChanges.length == 0) {
-        return callback(null, {actualChanges: null });
-      }
-
-      watcher.fn.getEmails(g.watcher, function(err, emailList){
-        if (err) {
-          return callback(err);
+      var diffPromises = Promise.all(g.pads.map(p => {return etherpadAPI.createDiffSince(p, startTime); }));
+      diffPromises.then(diffs => {
+        var actualChanges = diffs.filter(d => d.splices.length > 0);
+        if (actualChanges.length == 0) {
+          return callback(null, {actualChanges: null });
         }
-        var changedPadIds = actualChanges.map(p => p.padId);
-        watcher.fn.getPadNames(changedPadIds, function(err, padNames) {
+
+        watcher.fn.getEmails(watcherList, function(err, emailList){
           if (err) {
             return callback(err);
           }
-          var body = watcher.fn.generateDigestMessage(actualChanges, padNames);
-          var subject = watcher.fn.generateDigestSubject(g);
-          var to = emailList.join(", ");
-          mail.send(to, subject, message, function (err) {
+          var changedPadIds = actualChanges.map(p => p.padId);
+          watcher.fn.getPadNames(changedPadIds, function(err, padNames) {
             if (err) {
               return callback(err);
             }
-            callback(null, { to, subject, message });
+            var body = watcher.fn.generateDigestMessage(actualChanges, padNames);
+            var subject = watcher.fn.generateDigestSubject(g);
+            var to = emailList.join(", ");
+            mail.send(to, subject, body, function (err) {
+              if (err) {
+                return callback(err);
+              }
+              callback(null, { to, subject, body });
+            });
           });
         });
       });

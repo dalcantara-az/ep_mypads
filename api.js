@@ -1671,7 +1671,7 @@ module.exports = (function () {
       });
     });
 
-    app.get(statsROute + '/watch/:key', function (req, res) {
+    app.get(statsRoute + '/watch/:key', function (req, res) {
       var watcherUtils = require('./watcher');
       var startTime = Date.now() - parseInt(req.query.ago);
       watcherUtils.reportGroupChanges(req.params.key, startTime, function(err, result) {
