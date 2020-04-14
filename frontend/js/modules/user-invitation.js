@@ -55,36 +55,83 @@ module.exports = (function () {
   */
 
   invite.invite = function (c, successFn) {
-    var data = {
-      invite: c.isInvite,
-      gid: c.group._id,
-      loginsOrEmails: c.tag.current,
-      auth_token: auth.token()
-    };
-    m.request({
-      method: 'POST',
-      url: conf.URLS.GROUP + '/invite',
-      data: data
-    }).then(function (resp) {
-      var lpfx = c.isInvite ? 'INVITE_USER' : 'ADMIN_SHARE';
-      var msg;
-      if (resp.present.length > 0) {
-        msg = conf.LANG.GROUP[lpfx].SUCCESS + cleanupXss.cleanup(resp.present.join(', '));
-        notif.success({ body: msg });
-      }
-      if (resp.absent.length > 0) {
-        msg = conf.LANG.GROUP[lpfx].FAILURE + cleanupXss.cleanup(resp.absent.join(', '));
-        notif.warning({ body: msg });
-      }
-      if ((resp.absent.length === 0) && (resp.present.length === 0)) {
-        notif.success({ body: conf.LANG.NOTIFICATION.SUCCESS_GENERIC });
-      }
-      model.fetch(function () {
-        if (successFn) { successFn(resp); }
+    c.action = (m.route.param('action'));
+
+    if(c.action == "add"){
+      var data = {
+        gid: c.group._id,
+        loginsOrEmails: c.tag.current,
+        auth_token: auth.token()
+      };
+      m.request({
+        method: 'POST',
+        url: conf.URLS.GROUP + '/add-watchers',
+        data: data
+      }).then(function (resp) {
+        if(c.action == "share"){
+          var lpfx = 'ADMIN_SHARE';
+        }
+        else{
+          var lpfx = 'INVITE_USER';
+        }
+     
+        var msg;
+        if (resp.present.length > 0) {
+          msg = conf.LANG.GROUP[lpfx].SUCCESS + cleanupXss.cleanup(resp.present.join(', '));
+          notif.success({ body: msg });
+        }
+        if (resp.absent.length > 0) {
+          msg = conf.LANG.GROUP[lpfx].FAILURE + cleanupXss.cleanup(resp.absent.join(', '));
+          notif.warning({ body: msg });
+        }
+        if ((resp.absent.length === 0) && (resp.present.length === 0)) {
+          notif.success({ body: conf.LANG.NOTIFICATION.SUCCESS_GENERIC });
+        }
+        model.fetch(function () {
+          if (successFn) { successFn(resp); }
+        });
+      }, function (err) {
+        notif.error({ body: ld.result(conf.LANG, err.error) });
       });
-    }, function (err) {
-      notif.error({ body: ld.result(conf.LANG, err.error) });
-    });
+    }
+    else{
+      var data = {
+        invite: c.action == "invite",
+        gid: c.group._id,
+        loginsOrEmails: c.tag.current,
+        auth_token: auth.token()
+      };
+      m.request({
+        method: 'POST',
+        url: conf.URLS.GROUP + '/invite',
+        data: data
+      }).then(function (resp) {
+        if(c.action == "invite"){
+          var lpfx = 'INVITE_USER';
+        }
+        else if(c.action == "share"){
+          var lpfx = 'ADMIN_SHARE';
+        }
+        var msg;
+        if (resp.present.length > 0) {
+          msg = conf.LANG.GROUP[lpfx].SUCCESS + cleanupXss.cleanup(resp.present.join(', '));
+          notif.success({ body: msg });
+        }
+        if (resp.absent.length > 0) {
+          msg = conf.LANG.GROUP[lpfx].FAILURE + cleanupXss.cleanup(resp.absent.join(', '));
+          notif.warning({ body: msg });
+        }
+        if ((resp.absent.length === 0) && (resp.present.length === 0)) {
+          notif.success({ body: conf.LANG.NOTIFICATION.SUCCESS_GENERIC });
+        }
+        model.fetch(function () {
+          if (successFn) { successFn(resp); }
+        });
+      }, function (err) {
+        notif.error({ body: ld.result(conf.LANG, err.error) });
+      });
+    }
+    
   };
 
   /**
@@ -103,7 +150,7 @@ module.exports = (function () {
 
     var uInfo  = auth.userInfo();
     var c      = {};
-    c.isInvite = (m.route.param('action') === 'invite');
+    c.action = (m.route.param('action'));
 
     var init = function () {
       var group = m.route.param('group');
@@ -116,11 +163,37 @@ module.exports = (function () {
         return memo;
       }, { byId: {}, byLogin: {}, byEmail: {} });
       c.users     = ld.merge(users.byLogin, users.byEmail);
-      var current = ld(users.byId)
-        .pick(c.isInvite ? c.group.users : c.group.admins)
+
+      if(c.action == "invite"){
+        var current = ld(users.byId)
+        .pick(c.group.users)
         .values()
         .pluck('login')
         .value();
+      }
+      else if(c.action == "share"){
+        var current = ld(users.byId)
+        .pick(c.group.admins)
+        .values()
+        .pluck('login')
+        .value();
+      }
+      else if(c.action == "add"){
+        var uids = []
+        for(var i = 0 ; i <c.group.watchers.length; i++){
+            var remove_after= c.group.watchers[i].indexOf('-');
+            var result =  c.group.watchers[i].substring(0, remove_after);
+            uids[i]= result;
+        }
+        // var current = ld(users.byId)
+        // .pick(c.group.watchers)
+        // .values()
+        // .pluck('login')
+        // .value();
+        var current = uids
+      }
+
+      
       c.tag = new tag.controller({
         name: 'user-invite',
         label: conf.LANG.GROUP.INVITE_USER.USERS_SELECTION,
@@ -241,13 +314,23 @@ module.exports = (function () {
 
   view.form = function (c) {
     var GROUP  = conf.LANG.GROUP;
+    var legendText;
+    if(c.action == "invite"){
+      legendText = GROUP.INVITE_USER.IU;
+    }
+    else if(c.action == "share"){
+      legendText = GROUP.ADMIN_SHARE.AS;
+    }
+    else if(c.action == "add"){
+      legendText = "Add Watchers";
+    }
     var fields = [
       m('fieldset', [
         m('legend', (GROUP.INVITE_USERLIST)),
         m('div', view.userlistField(c))
       ]),
       m('fieldset', [
-        m('legend', (c.isInvite ? GROUP.INVITE_USER.IU : GROUP.ADMIN_SHARE.AS)),
+        m('legend', legendText),
         m('div', view.userField(c.tag))
       ]),
       m('fieldset', [
@@ -278,10 +361,20 @@ module.exports = (function () {
 
   view.aside = function (c) {
     var GROUP = conf.LANG.GROUP;
+    var legendText;
+    if(c.action == "invite"){
+      legendText = GROUP.INVITE_USER.IU;
+    }
+    else if(c.action == "share"){
+      legendText = GROUP.ADMIN_SHARE.AS;
+    }
+    else if(c.action == "add"){
+      legendText = "Add Watchers";
+    }
     return m('section.user-aside', [
       m('h2', conf.LANG.ACTIONS.HELP),
       m('article.well', [
-        m('h3', (c.isInvite ? GROUP.INVITE_USER.IU : GROUP.ADMIN_SHARE.AS)),
+        m('h3', legendText),
         m('section', m.trust(conf.LANG.GROUP.INVITE_USER.HELP))
       ])
     ]);

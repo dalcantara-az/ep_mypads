@@ -37,6 +37,7 @@ module.exports = (function () {
   var common      = require('./common.js');
   var userCache   = require ('./user-cache.js');
   var deleteGroup = require('./group.js').del;
+  var group       = require('./group.js');
   var UPREFIX     = storage.DBPREFIX.USER;
   var CPREFIX     = storage.DBPREFIX.CONF;
   var auth;
@@ -582,6 +583,14 @@ module.exports = (function () {
           ld.pull(u.bookmarks[type], key);
         } else {
           u.bookmarks[type].push(key);
+          // if(type == "groups"){
+          //   var users = [user];
+          //   group.addWatchers(true, key, users, function (err) {
+          //     if (err) { return callback(err); }
+          //     callback(null);
+          //   });
+          // }
+          
         }
         user.fn.set(u, function (err) {
           if (err) { return callback(err); }

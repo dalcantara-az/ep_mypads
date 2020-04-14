@@ -443,6 +443,27 @@ module.exports = (function () {
           }
         })()
       ]),
+      (conf.SERVER.allPadsPublicsAuthentifiedOnly) ? null : m('td', [
+        (function () {
+          if (g.visibility === 'restricted') {
+            return [
+              ld.size(g.watchers),
+              (function () {
+                if (isAdmin) {
+                  return m(
+                    'a.btn.btn-default.btn-xs.pull-right',
+                    { href: padRoute + '/user/add', config: m.route },
+                    [
+                      m('i.glyphicon.glyphicon-plus.text-success',
+                        { title: "Add Watchers" })
+                    ]
+                  );
+                }
+              })()
+            ];
+          }
+        })()
+      ]),
       m('td', [
         m('ul.list-inline', ld.map(g.tags, function (t) {
           return m('li.label.label-default', {
@@ -504,12 +525,19 @@ module.exports = (function () {
                   m('span.sr-only', conf.LANG.GROUP.PAD.USERS)
                 )
               ),
+              (conf.SERVER.allPadsPublicsAuthentifiedOnly) ? null : m(
+                'th',
+                {scope: 'col', title: "bookmarked"},
+                m('i.glyphicon.glyphicon-bookmark',
+                  m('span.sr-only', "bookmarked")
+                )
+              ),
               m('th', {scope: 'col'}, conf.LANG.GROUP.TAGS.TITLE),
             ])
           ),
           m('tbody', [
             view.bookmarked(c),
-            view.groups(c)
+            view.groups(c),
 
           ])
         ])
