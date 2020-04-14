@@ -123,9 +123,6 @@ module.exports = (function () {
 
   mail.send = function (to, subject, message, callback) {
     var err;
-    if (!ld.isEmail(to)) {
-      throw new TypeError('BACKEND.ERROR.TYPE.TO_MAIL');
-    }
     if (!ld.isString(subject)) {
       throw new TypeError('BACKEND.ERROR.TYPE.SUBJECT_STR');
     }

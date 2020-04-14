@@ -1670,6 +1670,17 @@ module.exports = (function () {
         });
       });
     });
+
+    app.get(statsROute + '/watch/:key', function (req, res) {
+      var watcherUtils = require('./watcher');
+      var startTime = Date.now() - parseInt(req.query.ago);
+      watcherUtils.reportGroupChanges(req.params.key, startTime, function(err, result) {
+        if (err) {
+          return res.send({error: err.stack});
+        }
+        return res.send({result});
+      });
+    })
   };
 
   return api;
