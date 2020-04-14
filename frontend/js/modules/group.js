@@ -525,9 +525,9 @@ module.exports = (function () {
               ),
               (conf.SERVER.allPadsPublicsAuthentifiedOnly) ? null : m(
                 'th',
-                {scope: 'col', title: "bookmarked"},
+                {scope: 'col', title: conf.LANG.GROUP.PAD.WATCHERS},
                 m('i.glyphicon.glyphicon-bookmark',
-                  m('span.sr-only', "bookmarked")
+                  m('span.sr-only', conf.LANG.GROUP.PAD.WATCHERS)
                 )
               ),
               m('th', {scope: 'col'}, conf.LANG.GROUP.TAGS.TITLE),

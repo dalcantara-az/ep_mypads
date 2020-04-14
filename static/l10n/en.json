@@ -291,6 +291,7 @@
          "ADD": "Create a new pad",
          "ADD_PROMPT": "Enter the name of the new pad",
          "ADMINS": "Admins",
+         "WATCHERS": "Watchers",
          "DESELECT_ALL": "Deselect all pads",
          "EDIT": "Edit a pad",
          "EDIT_PROMPT": "Enter the new name of the pad",

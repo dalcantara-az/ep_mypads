@@ -582,14 +582,6 @@ module.exports = (function () {
           ld.pull(u.bookmarks[type], key);
         } else {
           u.bookmarks[type].push(key);
-          // if(type == "groups"){
-          //   var users = [user];
-          //   group.addWatchers(true, key, users, function (err) {
-          //     if (err) { return callback(err); }
-          //     callback(null);
-          //   });
-          // }
-          
         }
         user.fn.set(u, function (err) {
           if (err) { return callback(err); }

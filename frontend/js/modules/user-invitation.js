@@ -70,7 +70,7 @@ module.exports = (function () {
         data: data
       }).then(function (resp) {
         
-          var lpfx = 'ADD_WATCHER';
+          var lpfx = GROUP.ADD_WATCHER.AS;
      
         var msg;
         if (resp.present.length > 0) {
@@ -161,27 +161,21 @@ module.exports = (function () {
       }, { byId: {}, byLogin: {}, byEmail: {} });
       c.users     = ld.merge(users.byLogin, users.byEmail);
 
+      var picklist;
       if(c.action == "invite"){
-        var current = ld(users.byId)
-        .pick(c.group.users)
-        .values()
-        .pluck('login')
-        .value();
+        picklist = c.group.users;
       }
       else if(c.action == "share"){
-        var current = ld(users.byId)
-        .pick(c.group.admins)
-        .values()
-        .pluck('login')
-        .value();
+        picklist = c.group.admins;
       }
       else if(c.action == "add"){   
-        var current = ld(users.byId)
-        .pick(c.group.watchers)
+        picklist = c.group.watchers;
+      }
+      var current = ld(users.byId)
+        .pick(picklist)
         .values()
         .pluck('login')
         .value();
-      }
 
       
       c.tag = new tag.controller({

@@ -462,15 +462,18 @@ module.exports = (function () {
       if (err) { return callback(err); }
       var removed;
       removed = ld.difference(g.watchers, users.uids);
+
+      if(g.watchers.length>0 && g.watchers != null){
         for(var i=0; i<g.watchers.length; i++){
           g.watchers.pop();
         }
-        
-        for(var i = 0; i< users.uids.length; i++){
-          if(!g.watchers.includes(users.uids[i])){
-            g.watchers.push(users.uids[i]);
-          }
+      }
+ 
+      for(var i = 0; i< users.uids.length; i++){
+        if(!g.watchers.includes(users.uids[i])){
+          g.watchers.push(users.uids[i]);
         }
+      }
 
         // g.watchers = ld.unique(ld.reject(users.uids,
         //   ld.partial(ld.includes, g.users)));
