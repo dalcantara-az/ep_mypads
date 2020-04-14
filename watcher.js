@@ -53,14 +53,28 @@ module.exports = (function () {
     });
   }
 
+  var _getPadUrl = function(padId) {
+    return conf.get("rootUrl") + "/p/" + padId;
+  }
+
   watcher.fn.generateDigestMessage = function(actualChanges, padNames) {
     return actualChanges.map(padChange => {
-      var subResult = `${padNames[padChange.padId]}(https://etherpad.convenenp.com/p/${padChange.padId})\n`;
+      var subResult = `${padNames[padChange.padId]}(${_getPadUrl(padChange.padId)})\n`;
       subResult+= "Authors: " + padChange.authors.join(" ") + "\n\n";
       subResult+= padChange.splices.map(s => s[2]).filter(s => s).join("\n");
       subResult+="\n";
       return subResult;
     }).join("\n");
+  }
+
+  watcher.fn.generateDigestFormattedMessage = function(actualChanges, padNames) {
+    return actualChanges.map(padChange => {
+      var subResult = `<h1><a href="${_getPadUrl(padChange.padId)}">${padNames[padChange.padId]}</a></h1><br>`;
+      subResult+= `<h2>Authors: ${padChange.authors.join(" ")}<br>`;
+      subResult+= padChange.splices.filter(s => s[2]).map(s => `<pre>${s[2]}</pre>`).join("<br>");
+      subResult+="<br>";
+      return subResult;
+    }).join("<br>");
   }
 
   watcher.fn.generateDigestSubject = function(g) {
@@ -93,14 +107,21 @@ module.exports = (function () {
             if (err) {
               return callback(err);
             }
-            var body = watcher.fn.generateDigestMessage(actualChanges, padNames);
-            var subject = watcher.fn.generateDigestSubject(g);
             var to = emailList.join(", ");
-            mail.send(to, subject, body, function (err) {
+            var subject = watcher.fn.generateDigestSubject(g);
+            var text = watcher.fn.generateDigestMessage(actualChanges, padNames);
+            var data = watcher.fn.generateDigestFormattedMessage(actualChanges, padNames);
+            var envelope = {
+              to,
+              subject,
+              text,
+              attachment: [{ data, alternative: true}]
+            };
+            mail.sendEnvelope(envelope, function (err) {
               if (err) {
                 return callback(err);
               }
-              callback(null, { to, subject, body });
+              callback(null, { envelope });
             });
           });
         });

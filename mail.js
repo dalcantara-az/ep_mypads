@@ -123,6 +123,9 @@ module.exports = (function () {
 
   mail.send = function (to, subject, message, callback) {
     var err;
+    if (!ld.isEmail(to)) {
+      throw new TypeError('BACKEND.ERROR.TYPE.TO_MAIL');
+    }
     if (!ld.isString(subject)) {
       throw new TypeError('BACKEND.ERROR.TYPE.SUBJECT_STR');
     }
@@ -145,6 +148,16 @@ module.exports = (function () {
     };
     mail.server.send(envelope, callback);
   };
+
+  mail.sendEnvelope = function (envelope, callback) {
+    var emailFrom = conf.get('SMTPEmailFrom');
+    if (!mail.server || !emailFrom) {
+      err = 'BACKEND.ERROR.CONFIGURATION.MAIL_NOT_CONFIGURED';
+      return callback(err);
+    }
+    envelope.from = emailFrom;
+    mail.server.send(envelope, callback);
+  }
 
   /**
   * ## init
