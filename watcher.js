@@ -14,10 +14,14 @@ var mail = require('./mail.js');
 var storage = require('./storage.js');
 var groupDB = require('./model/group.js');
 var etherpadAPI = require('ep_etherpad-lite/node/db/API');
+var schedule = require('node-schedule');
 
 var GPREFIX = storage.DBPREFIX.GROUP;
 var UPREFIX = storage.DBPREFIX.USER;
 var PPREFIX = storage.DBPREFIX.PAD;
+
+var ONE_DAY = 86400000;
+var EVERY_MIDNIGHT = "0 16 * * *"; //hours is set to 16 because server is in UTC, but we want RP/HK midnight
 
 module.exports = (function () {
   'use strict';
@@ -87,7 +91,7 @@ module.exports = (function () {
       if (err) {
         return callback(err);
       }
-      var watcherList = ["dalcantara-ex20ooj"];
+      var watcherList = g.watchers;
       if (watcherList == null || watcherList.length == 0) {
         return callback(null, { watcherList: null });
       }
@@ -129,6 +133,30 @@ module.exports = (function () {
       });
     });
   }
+
+  _quietCallback = function(err) {
+    //FIXME determine better logging
+    if (err) {
+      console.log(err);
+    }
+  };
+
+  watcher.reportAllGroups = function() {
+    var startTime = Date.now() - ONE_DAY;
+
+    groupDB.getAllGroupIds(function(err, groupIds) {
+      if (err) {
+        _quietCallback(err);
+      }
+      groupIds.forEach(gid => {
+        watcher.reportGroupChanges(gid, startTime, _quietCallback);
+      });
+    });
+  }
+
+  watcher.init = function () {
+    schedule.scheduleJob(EVERY_MIDNIGHT, watcher.reportAllGroups);
+  };
 
   return watcher;
 
