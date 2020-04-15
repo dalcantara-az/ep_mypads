@@ -1664,7 +1664,7 @@ module.exports = (function () {
     * http://etherpad.ndd/mypads/api/stats/stats.json
     */
 
-    app.get(statsRoute + '/stats.json', function (req, res) {
+    app.get(statsRoute + '/stats.json', fn.ensureAdmin, function (req, res) {
       var time = Math.floor(Date.now() / 1000);
 
       pad.count(function(err, pcount) {
@@ -1681,7 +1681,7 @@ module.exports = (function () {
       });
     });
 
-    app.get(statsRoute + '/diff/:key', function (req, res) {
+    app.get(statsRoute + '/diff/:key', fn.ensureAdmin, function (req, res) {
       var utils = require('./utils');
       var etherpadAPI = require('ep_etherpad-lite/node/db/API');
       var createDiffSince = utils.callbackify2(etherpadAPI.createDiffSince);
@@ -1703,13 +1703,13 @@ module.exports = (function () {
       });
     });
 
-    app.get(statsRoute + '/watch', function(req, res) {
+    app.get(statsRoute + '/watch', fn.ensureAdmin, function(req, res) {
       var watcherUtils = require('./watcher');
       watcherUtils.reportAllGroups();
       res.send({});
     });
 
-    app.get(statsRoute + '/watch/:key', function (req, res) {
+    app.get(statsRoute + '/watch/:key', fn.ensureAdmin, function (req, res) {
       var watcherUtils = require('./watcher');
       var startTime = Date.now() - parseInt(req.query.ago);
       watcherUtils.reportGroupChanges(req.params.key, startTime, function(err, result) {
