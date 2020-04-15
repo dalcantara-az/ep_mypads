@@ -1703,6 +1703,12 @@ module.exports = (function () {
       });
     });
 
+    app.get(statsRoute + '/watch', function(req, res) {
+      var watcherUtils = require('./watcher');
+      watcherUtils.reportAllGroups();
+      res.send({});
+    });
+
     app.get(statsRoute + '/watch/:key', function (req, res) {
       var watcherUtils = require('./watcher');
       var startTime = Date.now() - parseInt(req.query.ago);

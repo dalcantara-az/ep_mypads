@@ -134,7 +134,7 @@ module.exports = (function () {
     });
   }
 
-  _quietCallback = function(err) {
+  var _quietCallback = function(err) {
     //FIXME determine better logging
     if (err) {
       console.log(err);
