@@ -20,8 +20,8 @@ var GPREFIX = storage.DBPREFIX.GROUP;
 var UPREFIX = storage.DBPREFIX.USER;
 var PPREFIX = storage.DBPREFIX.PAD;
 
-var ONE_DAY = 86400000;
-var EVERY_MIDNIGHT = "0 16 * * *"; //hours is set to 16 because server is in UTC, but we want RP/HK midnight
+var DIGEST_DURATION = 3600000; //One hour
+var DIGEST_SCHEDULE = "0 * * * *"; //Every hour
 
 module.exports = (function () {
   'use strict';
@@ -83,7 +83,7 @@ module.exports = (function () {
   }
 
   watcher.fn.generateDigestSubject = function(g) {
-    return "Daily digest for " + g.name;
+    return "Hourly digest for " + g.name;
   }
 
   watcher.reportGroupChanges = function(groupId, startTime, callback) {
@@ -142,7 +142,7 @@ module.exports = (function () {
   };
 
   watcher.reportAllGroups = function() {
-    var startTime = Date.now() - ONE_DAY;
+    var startTime = Date.now() - DIGEST_DURATION;
 
     groupDB.getAllGroupIds(function(err, groupIds) {
       if (err) {
@@ -155,7 +155,7 @@ module.exports = (function () {
   }
 
   watcher.init = function () {
-    schedule.scheduleJob(EVERY_MIDNIGHT, watcher.reportAllGroups);
+    schedule.scheduleJob(DIGEST_SCHEDULE, watcher.reportAllGroups);
   };
 
   return watcher;
