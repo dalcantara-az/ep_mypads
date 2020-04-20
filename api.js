@@ -1440,6 +1440,9 @@ module.exports = (function () {
 
     var canAct = function (edit, successFn, req, res) {
       pad.get(req.params.key, function (err, p) {
+        var token = req.body.auth_token || req.query.auth_token;
+        if (!token || !auth.fn.getUser(token)) { return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.MUST_BE'); }
+
         var key = req.params.key;
         if (err) { return res.status(404).send({ error: err.message }); }
         var isAdmin = fn.isAdmin(req);
@@ -1668,7 +1671,7 @@ module.exports = (function () {
     * http://etherpad.ndd/mypads/api/stats/stats.json
     */
 
-    app.get(statsRoute + '/stats.json', function (req, res) {
+    app.get(statsRoute + '/stats.json', fn.ensureAdmin, function (req, res) {
       var time = Math.floor(Date.now() / 1000);
 
       pad.count(function(err, pcount) {
@@ -1684,6 +1687,45 @@ module.exports = (function () {
         });
       });
     });
+
+    app.get(statsRoute + '/diff/:key', fn.ensureAdmin, function (req, res) {
+      var utils = require('./utils');
+      var etherpadAPI = require('ep_etherpad-lite/node/db/API');
+      var createDiffSince = utils.callbackify2(etherpadAPI.createDiffSince);
+
+      var startTime = Date.now() - parseInt(req.query.ago);
+      var padId = req.params.key;
+
+      createDiffSince(padId, startTime, function(err, diff) {
+        if (err) {
+          return res.send({
+            padId,
+            startTime,
+            error: err.stack
+          });
+        }
+        return res.send({
+          result: diff
+        });
+      });
+    });
+
+    app.get(statsRoute + '/watch', fn.ensureAdmin, function(req, res) {
+      var watcherUtils = require('./watcher');
+      watcherUtils.reportAllGroups();
+      res.send({});
+    });
+
+    app.get(statsRoute + '/watch/:key', fn.ensureAdmin, function (req, res) {
+      var watcherUtils = require('./watcher');
+      var startTime = Date.now() - parseInt(req.query.ago);
+      watcherUtils.reportGroupChanges(req.params.key, startTime, function(err, result) {
+        if (err) {
+          return res.send({error: err.stack});
+        }
+        return res.send({result});
+      });
+    })
   };
 
   return api;

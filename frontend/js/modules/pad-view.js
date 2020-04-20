@@ -75,7 +75,7 @@ module.exports = (function () {
     */
 
     var init = function (err) {
-      if (err) { return m.route('/mypads'); }
+      if (err || !c.isAuth) { return m.route('/mypads'); }
       var _init = function () {
         var data = c.isGuest ? model.tmp() : model;
         c.group  = data.groups()[c.gid] || {};
@@ -168,12 +168,8 @@ module.exports = (function () {
         var lastname  = (u.lastname)  ? u.lastname  : '';
 
         n = '&userName=' + firstname + ' ' + lastname;
-      } else if (u.useLoginAndColorInPads) {
-        if (u.padNickname) {
-          n = '&userName=' + u.padNickname;
-        } else {
-          n = '&userName=' + u.login;
-        }
+      } else {
+        n = '&userName=' + (u.padNickname ? u.padNickname : u.login);
       }
     }
     var link = conf.URLS.RAWBASE.replace('mypads/', '') + 'p/' + c.pad._id + '?' + p + a + co + n;
@@ -269,33 +265,34 @@ module.exports = (function () {
           }
         })()
       ]),
-      m('h2', [
+      m('h2.pad-title', [
         (function () {
           if (auth.isAuthenticated()) {
             var isBookmarked = ld.includes(c.bookmarks, c.pad._id);
             return m('button.btn.btn-link.btn-lg', {
-              title: (isBookmarked ? GROUP.UNMARK : GROUP.BOOKMARK),
-              onclick: function () { padMark(c.pad); }
-            }, [
-              m('i',
-                { class: 'glyphicon glyphicon-star' +
-                  (isBookmarked ? '' : '-empty'),
-                  title: (isBookmarked ? GROUP.UNMARK : GROUP.BOOKMARK) })
-            ]);
+                title: (isBookmarked ? GROUP.UNMARK : GROUP.BOOKMARK),
+                onclick: function () { padMark(c.pad); }
+              }, [
+                m('i',
+                  { class: 'glyphicon glyphicon-star' +
+                    (isBookmarked ? '' : '-empty'),
+                    title: (isBookmarked ? GROUP.UNMARK : GROUP.BOOKMARK) })
+              ]);
           }
         })(),
         m('span', conf.LANG.GROUP.PAD.PAD + ' ' + c.pad.name),
         (function () {
           if (c.group && c.group.name) {
-            return [ m('br'), m('span.h3', [
-              ' (',
-              conf.LANG.GROUP.PAD.FROM_GROUP+' ',
+            return [ m('span.h5.folder-title', [
+              m('i', {
+                class: 'glyphicon glyphicon-folder-open',
+                title: 'Folder'
+              }),
               m('a', {
                 href: route + '/view',
                 config: m.route,
                 title: conf.LANG.GROUP.VIEW
-              }, c.group.name ),
-              ')'
+              }, c.group.name )
             ])];
           }
         })()

@@ -180,13 +180,13 @@ module.exports = (function () {
 
     switch (p.visibility) {
       case 'public':
-        return callback();
+        return u ? callback() : params.refuse();
       case 'private':
         return checkPass(p);
       default:
         switch (g.visibility) {
           case 'public':
-            return callback();
+            return u ? callback() : params.refuse();
           case 'private':
             return (ld.includes(g.users, uid) ? checkPass(p) : checkPass(g));
           // Restricted case : if user, ok
@@ -293,7 +293,7 @@ module.exports = (function () {
     var token = (req.query ? req.query.auth_token : false);
     if (!token) { token = perm.fn.getVarFromReferer('auth_token', req); }
     var u = auth.fn.getUser(token);
-    if (u && u.useLoginAndColorInPads) {
+    if (u) {
       var opts = { userName: u.login };
       if (u.padNickname) {
         opts.userName = u.padNickname;

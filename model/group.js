@@ -460,25 +460,26 @@ module.exports = (function () {
     var users = userCache.fn.getIdsFromLoginsOrEmails(loginsOrEmails);
     group.get(gid, function (err, g) {
       if (err) { return callback(err); }
+
+      //safety check for legacy groups that did not have watchers
+      if (g.watchers == null) {
+        g.watchers = [];
+      }
+
       var removed;
       removed = ld.difference(g.watchers, users.uids);
 
-      if(g.watchers.length>0 && g.watchers != null){
+      if(g.watchers.length > 0){
         for(var i=0; i<g.watchers.length; i++){
           g.watchers.pop();
         }
       }
- 
+
       for(var i = 0; i< users.uids.length; i++){
         if(!g.watchers.includes(users.uids[i])){
           g.watchers.push(users.uids[i]);
         }
       }
-
-        // g.watchers = ld.unique(ld.reject(users.uids,
-        //   ld.partial(ld.includes, g.users)));
-        // console.log(g.watchers);
-      
 
       group.fn.indexUsers(true, g._id, removed, function (err) {
         if (err) { return callback(err); }
@@ -767,25 +768,18 @@ module.exports = (function () {
   };
 
   /**
-   * ### getAllGroupIds()
+   * ### getAllGroupIds
    *
    * Returns the ids of groups of the MyPads instance
    * As arguments, it takes mandatory :
    * - a `callback` function
    */
-
   group.getAllGroupIds = function(callback) {
     storage.db.findKeys(GPREFIX + '*', null, function (err, res) {
       if (err) { return callback(err); }
-      var ids = []
-      for(var i = 0; i<res.length; i++){
-        ids[i]= res[i].substring(13)
-      }
-      return callback(null, ids);
-
+      return callback(null, ld.map(res, key => key.substr(GPREFIX.length)));
     });
-    
-  };
+  }
 
   return group;
 

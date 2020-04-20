@@ -69,9 +69,8 @@ module.exports = (function () {
         url: conf.URLS.GROUP + '/add-watchers',
         data: data
       }).then(function (resp) {
-        
-          var lpfx = 'ADD_WATCHER';
-     
+        var lpfx = "ADD_WATCHER";
+
         var msg;
         if (resp.present.length > 0) {
           msg = conf.LANG.GROUP[lpfx].SUCCESS + cleanupXss.cleanup(resp.present.join(', '));
