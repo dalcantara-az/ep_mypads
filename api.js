@@ -961,8 +961,9 @@ module.exports = (function () {
       }
     );
     
-    app.post(userRoute + '/watch', fn.ensureAuthenticated,
+    app.post(userRoute + 'watch', fn.ensureAuthenticated,
       function(req, res) {
+        console.log("watching");
         var successFn = ld.partial(function (req, res) {
           try {
             

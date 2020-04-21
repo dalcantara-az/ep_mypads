@@ -354,8 +354,15 @@ module.exports = (function () {
   view.group = function (c, g) {
     console.log(u);
     console.log(u());
+    console.log(u().watchlist);
     var padRoute     = '/mypads/group/' + g._id;
-    var isWatched = (ld.includes(u().watchlist.groups, g._id));
+    if(u().watchlist!= null){
+      var isWatched = (ld.includes(u().watchlist.groups, g._id));
+    }
+    else{
+      var isWatched = false;
+    }
+    
     var isBookmarked = (ld.includes(u().bookmarks.groups, g._id));
     var GROUP        = conf.LANG.GROUP;
     var isAdmin      = ld.includes(g.admins, u()._id);
@@ -402,7 +409,7 @@ module.exports = (function () {
           title: (isWatched ? GROUP.UNWATCH : GROUP.WATCH)
         }, [
           m('i',
-            { class: 'glyphicon glyphicon-bookmark' +
+            { class: 'glyphicon glyphicon-heart' +
               (isWatched ? '' : '-empty') }),
         ]),
         m('a', {

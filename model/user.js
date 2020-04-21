@@ -171,7 +171,7 @@ module.exports = (function () {
     }, {});
     u.groups    = [];
     u.bookmarks = { groups: [], pads: [] };
-    u.watchlist = { groups: [], pads: []};
+    u.watchlist = { groups: [], pads: [] };
     u.userlists = {};
     if (!p._id) { u.active = !conf.get('checkMails'); }
     if (ld.isBoolean(p.useLoginAndColorInPads)) {
@@ -593,6 +593,7 @@ module.exports = (function () {
   };
 
   user.watch = function (login, type, key, callback) {
+    console.log("hi hello");
     if (!ld.includes(['pads', 'groups'], type)) {
       throw new TypeError('BACKEND.ERROR.TYPE.TYPE_PADSORGROUPS');
     }
@@ -615,6 +616,8 @@ module.exports = (function () {
         });
       });
     });
+    console.log("bbep");
+    console.log(u.watchlist);
   };
 
   return user;
