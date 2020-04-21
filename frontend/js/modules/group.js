@@ -42,6 +42,7 @@ module.exports = (function () {
   var padShare           = require('./pad-share.js');
   var sortingPreferences = require('../helpers/sortingPreferences.js');
   var groupMark          = require('./group-mark.js');
+  var groupWatch         = require('./group-watch.js');
 
   var group = {};
 
@@ -351,7 +352,10 @@ module.exports = (function () {
   };
 
   view.group = function (c, g) {
+    console.log(u);
+    console.log(u());
     var padRoute     = '/mypads/group/' + g._id;
+    var isWatched = (ld.includes(u().watchlist.groups, g._id));
     var isBookmarked = (ld.includes(u().bookmarks.groups, g._id));
     var GROUP        = conf.LANG.GROUP;
     var isAdmin      = ld.includes(g.admins, u()._id);
@@ -392,14 +396,14 @@ module.exports = (function () {
               (isBookmarked ? '' : '-empty') }),
         ]),
         m('a.btn.btn-link.btn-lg', {
-          onclick: groupMark.bind(c, g, c.computeGroups),
+          onclick: groupWatch.bind(c, g, c.computeGroups),
           href: '/mypads',
           config: m.route,
-          title: (isBookmarked ? GROUP.UNMARK : GROUP.BOOKMARK)
+          title: (isWatched ? GROUP.UNWATCH : GROUP.WATCH)
         }, [
           m('i',
             { class: 'glyphicon glyphicon-bookmark' +
-              (isBookmarked ? '' : '-empty') }),
+              (isWatched ? '' : '-empty') }),
         ]),
         m('a', {
           href: '/mypads/group/' + g._id + '/view',

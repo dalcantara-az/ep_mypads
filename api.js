@@ -960,7 +960,36 @@ module.exports = (function () {
         catch (e) { res.status(400).send({ error: e.message }); }
       }
     );
+    
+    app.post(userRoute + '/watch', fn.ensureAuthenticated,
+      function(req, res) {
+        var successFn = ld.partial(function (req, res) {
+          try {
+            
+            var u = auth.fn.getUser(req.body.auth_token);
+            print(u);
 
+            user.watch(req.mypadsLogin, req.body.type, req.body.key,
+              function (err) {
+                if (err) { return res.status(404).send({ error: err.message }); }
+                res.send({ success: true });
+              }
+            );
+            if (req.body.type === "group") {
+              group.addWatcher(req.body.gid,
+                [u._id], function (err, g, uids) {
+                  if (err) {
+                    return res.status(401).send({ error: err.message });
+                  }
+                  return res.send(ld.assign({ success: true, value: g }, uids));
+              });
+            }
+          }
+          catch (e) { res.status(400).send({ error: e.message }); }
+        }, req, res);
+        canEdit(req, res, successFn);
+      }
+    )
     /**
     * POST method : special password recovery with mail sending.
     * Need to have the email address into the body
@@ -1157,6 +1186,24 @@ module.exports = (function () {
                       memo[key] = ld.omit(val, 'password');
                     }
                   );
+                  // group.getWatchedGroupsByUser(u, function(err, bookmarks) {
+                  //   if (err) {
+                  //     return res.status(404).send({
+                  //       error: err.message
+                  //     });
+                  //   }
+                  //   data.watchlist.groups = ld.transform(watchlist,
+                  //     function(memo, val, key) {
+                  //       memo[key] = ld.omit(val, 'password');
+                  //     }
+                  //   );
+                  //   /*  Fix IE11 stupid habit of caching AJAX calls
+                  //    *  See http://www.dashbay.com/2011/05/internet-explorer-caches-ajax/
+                  //    *  and https://framagit.org/framasoft/Etherpad/ep_mypads/issues/220
+                  //    */
+                  //   res.set('Expires', '-1');
+                  //   res.send({ value: data });
+                  // })
                   /* Fix IE11 stupid habit of caching AJAX calls
                    * See http://www.dashbay.com/2011/05/internet-explorer-caches-ajax/
                    * and https://framagit.org/framasoft/Etherpad/ep_mypads/issues/220

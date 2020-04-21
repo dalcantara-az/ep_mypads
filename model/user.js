@@ -171,6 +171,7 @@ module.exports = (function () {
     }, {});
     u.groups    = [];
     u.bookmarks = { groups: [], pads: [] };
+    u.watchlist = { groups: [], pads: []};
     u.userlists = {};
     if (!p._id) { u.active = !conf.get('checkMails'); }
     if (ld.isBoolean(p.useLoginAndColorInPads)) {
@@ -402,7 +403,7 @@ module.exports = (function () {
           user.get(u.login, function (err, dbuser) {
             if (err) { return callback(err); }
             ld.assign(u, ld.pick(dbuser,
-              ['ctime', 'groups', 'bookmarks', 'userlists', 'active']));
+              ['ctime', 'groups', 'bookmarks', 'watchlist', 'userlists', 'active']));
             user.fn.genPassword(dbuser, u, function (err, u) {
               if (err) { return callback(err); }
               user.fn.set(u, callback);
@@ -582,6 +583,31 @@ module.exports = (function () {
           ld.pull(u.bookmarks[type], key);
         } else {
           u.bookmarks[type].push(key);
+        }
+        user.fn.set(u, function (err) {
+          if (err) { return callback(err); }
+          callback(null);
+        });
+      });
+    });
+  };
+
+  user.watch = function (login, type, key, callback) {
+    if (!ld.includes(['pads', 'groups'], type)) {
+      throw new TypeError('BACKEND.ERROR.TYPE.TYPE_PADSORGROUPS');
+    }
+    user.get(login, function (err, u) {
+      if (err) { return callback(err); }
+      var p = (type === 'pads') ? storage.DBPREFIX.PAD : storage.DBPREFIX.GROUP;
+      common.checkExistence(p + key, function (err, res) {
+        if (err) { return callback(err); }
+        if (!res) {
+          return callback(new Error('BACKEND.ERROR.USER.BOOKMARK_NOT_FOUND'));
+        }
+        if (ld.includes(u.watchlist[type], key)) {
+          ld.pull(u.watchlist[type], key);
+        } else {
+          u.watchlist[type].push(key);
         }
         user.fn.set(u, function (err) {
           if (err) { return callback(err); }
