@@ -33,7 +33,7 @@ module.exports = (function () {
     var auth  = require('../auth.js');
     var conf  = require('../configuration.js');
     var notif = require('../widgets/notification.js');
-    var model = require('../model/user.js');
+    var model = require('../model/group.js');
   
     /**
     * ## Main function

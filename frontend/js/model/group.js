@@ -47,7 +47,8 @@ module.exports = (function () {
       watchers: m.prop([]),
       tags: m.prop([]),
       bookmarks: m.prop({ groups: m.prop({}), pads: m.prop({}) }),
-      tmp: m.prop({ groups: m.prop({}), pads: m.prop({}) })
+      tmp: m.prop({ groups: m.prop({}), pads: m.prop({}) }),
+      watchlist: m.prop({ groups: m.prop({}), pads: m.prop({}) }),
     });
   };
   model.init();

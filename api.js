@@ -990,18 +990,6 @@ module.exports = (function () {
         }, req, res);
         canEdit(req, res, successFn);
       }
-      // function (req, res) {
-      //   try {
-      //     user.watch(req.mypadsLogin, req.body.type, req.body.key,
-      //       function (err) {
-      //         if (err) { return res.status(404).send({ error: err.message }); }
-      //         res.send({ success: true });
-      //       }
-      //     );
-
-      //   }
-      //   catch (e) { res.status(400).send({ error: e.message }); }
-      // }
     )
     /**
     * POST method : special password recovery with mail sending.

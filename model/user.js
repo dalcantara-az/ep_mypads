@@ -609,6 +609,7 @@ module.exports = (function () {
           ld.pull(u.watchlist[type], key);
         } else {
           u.watchlist[type].push(key);
+          
         }
         user.fn.set(u, function (err) {
           if (err) { return callback(err); }

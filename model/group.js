@@ -547,7 +547,8 @@ module.exports = (function () {
   * local groups.
   */
   group.addWatcher = function (gid, loginOrEmail, callback) {
-  
+    console.log("add watcher");
+    console.log(loginOrEmail);
     if (!ld.isString(gid)) {
       throw new TypeError('BACKEND.ERROR.TYPE.GID_STR');
     }
