@@ -962,33 +962,58 @@ module.exports = (function () {
     );
     
     app.post(userRoute + 'watch', fn.ensureAuthenticated,
-      function(req, res) {
-        console.log("watching");
-        var successFn = ld.partial(function (req, res) {
-          try {
+      // function(req, res) {
+      //   console.log("watching");
+      //   var successFn = ld.partial(function (req, res) {
+      //     try {
             
-            var u = auth.fn.getUser(req.body.auth_token);
-            print(u);
+      //       var u = auth.fn.getUser(req.body.auth_token);
+      //       print(u);
 
-            user.watch(req.mypadsLogin, req.body.type, req.body.key,
-              function (err) {
-                if (err) { return res.status(404).send({ error: err.message }); }
-                res.send({ success: true });
-              }
-            );
-            if (req.body.type === "group") {
-              group.addWatcher(req.body.gid,
-                [u._id], function (err, g, uids) {
-                  if (err) {
-                    return res.status(401).send({ error: err.message });
-                  }
-                  return res.send(ld.assign({ success: true, value: g }, uids));
-              });
+      //       user.watch(req.mypadsLogin, req.body.type, req.body.key,
+      //         function (err) {
+      //           if (err) { return res.status(404).send({ error: err.message }); }
+      //           res.send({ success: true });
+      //         }
+      //       );
+      //       if (req.body.type === "group") {
+      //         group.addWatcher(req.body.gid,
+      //           [u._id], function (err, g, uids) {
+      //             if (err) {
+      //               return res.status(401).send({ error: err.message });
+      //             }
+      //             return res.send(ld.assign({ success: true, value: g }, uids));
+      //         });
+      //       }
+      //     }
+      //     catch (e) { res.status(400).send({ error: e.message }); }
+      //   }, req, res);
+      //   canEdit(req, res, successFn);
+
+      //   function (req, res) {
+      //   try {
+      //     user.mark(req.mypadsLogin, req.body.type, req.body.key,
+      //       function (err) {
+      //         if (err) { return res.status(404).send({ error: err.message }); }
+      //         res.send({ success: true });
+      //       }
+      //     );
+
+      //   }
+      //   catch (e) { res.status(400).send({ error: e.message }); }
+      // }
+      // }
+      function (req, res) {
+        try {
+          user.watch(req.mypadsLogin, req.body.type, req.body.key,
+            function (err) {
+              if (err) { return res.status(404).send({ error: err.message }); }
+              res.send({ success: true });
             }
-          }
-          catch (e) { res.status(400).send({ error: e.message }); }
-        }, req, res);
-        canEdit(req, res, successFn);
+          );
+
+        }
+        catch (e) { res.status(400).send({ error: e.message }); }
       }
     )
     /**

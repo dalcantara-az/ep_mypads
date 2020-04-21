@@ -617,7 +617,6 @@ module.exports = (function () {
       });
     });
     console.log("bbep");
-    console.log(u.watchlist);
   };
 
   return user;
