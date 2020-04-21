@@ -280,6 +280,20 @@ module.exports = (function () {
               ]);
           }
         })(),
+        (function () {
+          if (auth.isAuthenticated()) {
+            var isBookmarked = ld.includes(c.bookmarks, c.pad._id);
+            return m('button.btn.btn-link.btn-lg', {
+                title: (isBookmarked ? GROUP.UNMARK : GROUP.BOOKMARK),
+                onclick: function () { padMark(c.pad); }
+              }, [
+                m('i',
+                  { class: 'glyphicon glyphicon-bookmark' +
+                    (isBookmarked ? '' : '-empty'),
+                    title: (isBookmarked ? GROUP.UNMARK : GROUP.BOOKMARK) })
+              ]);
+          }
+        })(),   
         m('span', conf.LANG.GROUP.PAD.PAD + ' ' + c.pad.name),
         (function () {
           if (c.group && c.group.name) {

@@ -389,7 +389,17 @@ module.exports = (function () {
         }, [
           m('i',
             { class: 'glyphicon glyphicon-star' +
-              (isBookmarked ? '' : '-empty') })
+              (isBookmarked ? '' : '-empty') }),
+        ]),
+        m('a.btn.btn-link.btn-lg', {
+          onclick: groupMark.bind(c, g, c.computeGroups),
+          href: '/mypads',
+          config: m.route,
+          title: (isBookmarked ? GROUP.UNMARK : GROUP.BOOKMARK)
+        }, [
+          m('i',
+            { class: 'glyphicon glyphicon-bookmark' +
+              (isBookmarked ? '' : '-empty') }),
         ]),
         m('a', {
           href: '/mypads/group/' + g._id + '/view',

@@ -385,6 +385,9 @@ module.exports = (function () {
                 }, [
                   m('i',
                     { class: 'glyphicon glyphicon-star' +
+                      (isBookmarked ? '' : '-empty') }),
+                  m('i',
+                    { class: 'glyphicon glyphicon-bookmark' +
                       (isBookmarked ? '' : '-empty') })
                 ]);
               }
@@ -534,6 +537,18 @@ module.exports = (function () {
               (isBookmarked ? '' : '-empty') })
         ]
       ),
+      m('button.btn.btn-link.btn-lg', {
+        onclick: function (e) {
+          e.preventDefault();
+          groupMark(c.group);
+        },
+        title: (isBookmarked ? conf.LANG.GROUP.UNMARK : conf.LANG.GROUP.BOOKMARK)
+      }, [
+        m('i',
+          { class: 'glyphicon glyphicon-bookmark' +
+            (isBookmarked ? '' : '-empty') })
+      ]
+    ),
       conf.LANG.GROUP.GROUP + ' ' + c.group.name
     ])];
     var shareBtn = '';
