@@ -559,7 +559,8 @@ module.exports = (function () {
       throw new TypeError('BACKEND.ERROR.TYPE.CALLBACK_FN');
     }
 
-    var users = userCache.fn.getIdsFromLoginsOrEmails(loginsOrEmails);
+    var users = userCache.fn.getIdsFromLoginsOrEmails(loginOrEmail);
+    console.log('adding watcher to group');
     group.get(gid, function (err, g) {
       if (err) { return callback(err); }
 
@@ -567,20 +568,38 @@ module.exports = (function () {
       if (g.watchers == null) {
         g.watchers = [];
       }
+      console.log('before adding');
+      console.log(users);
       
+      console.log(g.watchers);
       var exists = g.watchers.length > 0 && g.watchers.includes(users.uids[0]);
+      console.log ('exists? ' + exists);
       if (!exists) {
         g.watchers.push(users.uids[0]);
-      } else {
-        group.fn.indexUsers(true, g._id, users.uids, function (err) {
+        
+        console.log('after adding');
+        console.log(users);
+        
+        console.log(g.watchers);
+        group.fn.set(g, function (err, g) {
           if (err) { return callback(err); }
+          callback(null, g, ld.omit(users, 'uids'));
+        });
+      } else {
+        // group.fn.indexUsers(true, g._id, users.uids, function (err) {
+        //   if (err) { return callback(err); }
+          g.watchers.splice(g.watchers.indexOf(users.uids[0]));
+          
+      console.log('after adding');
+      console.log(users);
+      
+      console.log(g.watchers);
           group.fn.set(g, function (err, g) {
             if (err) { return callback(err); }
             callback(null, g, ld.omit(users, 'uids'));
           });
-        });
+        // });
       }
-      
     });
   };
 

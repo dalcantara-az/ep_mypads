@@ -968,27 +968,33 @@ module.exports = (function () {
           try {
             
             var u = auth.fn.getUser(req.body.auth_token);
-            print(u);
 
             user.watch(req.mypadsLogin, req.body.type, req.body.key,
               function (err) {
                 if (err) { return res.status(404).send({ error: err.message }); }
-                res.send({ success: true });
+                console.log('req.body.type = ' + req.body.type);
+                if (!(req.body.type === "groups")) {
+                  res.send({ success: true });
+                } else {
+                  console.log('req.body.key = ' + req.body.key);
+                  group.addWatcher(req.body.key,
+                    [u.login], function (err, g, uids) {
+                      if (err) {
+                        return res.status(401).send({ error: err.message });
+                      }
+                      console.log("done adding watcher");
+                      return res.send({success: true});
+                      // return res.send(ld.assign({ success: true, value: g }, uids));
+                  });
+                }
               }
             );
-            if (req.body.type === "group") {
-              group.addWatcher(req.body.gid,
-                [u._id], function (err, g, uids) {
-                  if (err) {
-                    return res.status(401).send({ error: err.message });
-                  }
-                  return res.send(ld.assign({ success: true, value: g }, uids));
-              });
-            }
+            
           }
           catch (e) { res.status(400).send({ error: e.message }); }
         }, req, res);
-        canEdit(req, res, successFn);
+        successFn();
+        // canEdit(req, res, successFn);
       }
     )
     /**
@@ -1404,6 +1410,7 @@ module.exports = (function () {
       canEdit(req, res, successFn);
     });
 
+    
     /**
     * POST method : `group.addWatchers` with gid group id, array of all
     * concerned loginsOrEmails and invite boolean
