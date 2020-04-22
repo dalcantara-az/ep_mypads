@@ -69,6 +69,8 @@ module.exports = (function () {
         if(c!=null){
             model.fetch(c.computeGroups);
           }
+        //model.fetch(c.computeGroups);
+        console.log(model.watchlist());
         if (successFn) { successFn(); }
       }, function (err) {
         return notif.error({ body: ld.result(conf.LANG, err.error) });
