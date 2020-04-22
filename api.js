@@ -1425,6 +1425,19 @@ module.exports = (function () {
     req.params.key = req.body.gid;
     var successFn = ld.partial(function (req, res) {
       try {
+        console.log(req.body.gid);
+        group.get(req.body.gid, function(err, g){
+          // var watchers = userCache.fn.getIdsFromLoginsOrEmails(g.watchers);
+          console.log(g.watchers);
+          for(var i=0; i< g.watchers.length; i++){
+            console.log(g.watchers[i]);
+            user.get(g.watchers[i], function(err, u){
+              console.log(u());
+              user.unwatch(u.id, 'groups', g.id, function(err, g){});
+            })
+            
+          }
+        });
         group.addWatchers(req.body.gid,
           req.body.loginsOrEmails, function (err, g, uids) {
             if (err) {
@@ -1432,13 +1445,13 @@ module.exports = (function () {
             }
             return res.send(ld.assign({ success: true, value: g }, uids));
         });
+
         var users = userCache.fn.getIdsFromLoginsOrEmails(req.body.loginsOrEmails);
+
         for(var i = 0; i< users.present.length; i++){
-          // console.log(users[i]);
-          user.watch(users.present[i], req.body.type, req.body.gid,
+          user.addToWatchlist(users.present[i], req.body.type, req.body.gid,
             function (err) {
               if (err) { return res.status(404).send({ error: err.message }); }
-              
             }
           );
         }

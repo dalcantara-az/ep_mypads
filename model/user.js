@@ -618,6 +618,55 @@ module.exports = (function () {
     });
   };
 
+  user.addToWatchlist = function (login, type, key, callback) {
+    if (!ld.includes(['pads', 'groups'], type)) {
+      throw new TypeError('BACKEND.ERROR.TYPE.TYPE_PADSORGROUPS');
+    }
+    user.get(login, function (err, u) {
+      if (err) { return callback(err); }
+      var p = (type === 'pads') ? storage.DBPREFIX.PAD : storage.DBPREFIX.GROUP;
+      common.checkExistence(p + key, function (err, res) {
+        if (err) { return callback(err); }
+        if (!res) {
+          return callback(new Error('BACKEND.ERROR.USER.BOOKMARK_NOT_FOUND'));
+        }
+        if (!ld.includes(u.watchlist[type], key)) {
+          u.watchlist[type].push(key);
+        }
+        user.fn.set(u, function (err) {
+          if (err) { return callback(err); }
+          callback(null);
+        });
+      });
+    });
+  };
+
+  user.unwatch = function (login, type, key, callback) {
+    if (!ld.includes(['pads', 'groups'], type)) {
+      throw new TypeError('BACKEND.ERROR.TYPE.TYPE_PADSORGROUPS');
+    }
+    user.get(login, function (err, u) {
+      if (err) { return callback(err); }
+      var p = (type === 'pads') ? storage.DBPREFIX.PAD : storage.DBPREFIX.GROUP;
+      common.checkExistence(p + key, function (err, res) {
+        if (err) { return callback(err); }
+        if (!res) {
+          return callback(new Error('BACKEND.ERROR.USER.BOOKMARK_NOT_FOUND'));
+        }
+         
+        u.watchlist[type].push(key);
+
+        
+        user.fn.set(u, function (err) {
+          if (err) { return callback(err); }
+          callback(null);
+        });
+      });
+    });
+  };
+
+  
+
   return user;
 
 }).call(this);
