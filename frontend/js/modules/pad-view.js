@@ -43,6 +43,7 @@ module.exports = (function () {
   var padShare  = require('./pad-share.js');
   var expandPad = require('../helpers/expandPad.js');
   var ready     = require('../helpers/ready.js');
+  var padWatch  = require('./pad-watch.js');
 
   var pad = {};
 
@@ -63,6 +64,7 @@ module.exports = (function () {
     c.isAuth    = auth.isAuthenticated();
     c.isGuest   = !c.isAuth;
     c.bookmarks = (c.isAuth ? auth.userInfo().bookmarks.pads : []);
+    c.watchlist = (c.isAuth ? auth.userInfo().watchlist.pads : []);
 
     c.gid = m.route.param('group');
     c.pid = m.route.param('pad');
@@ -282,15 +284,15 @@ module.exports = (function () {
         })(),
         (function () {
           if (auth.isAuthenticated()) {
-            var isBookmarked = ld.includes(c.bookmarks, c.pad._id);
+            var isWatched = ld.includes(c.watchlist, c.pad._id);
             return m('button.btn.btn-link.btn-lg', {
-                title: (isBookmarked ? GROUP.UNMARK : GROUP.BOOKMARK),
-                onclick: function () { padMark(c.pad); }
+                title: (isWatched ? GROUP.UNWATCH : GROUP.WATCH),
+                onclick: function () { padWatch(c.pad); }
               }, [
                 m('i',
-                  { class: 'glyphicon glyphicon-bookmark' +
-                    (isBookmarked ? '' : '-empty'),
-                    title: (isBookmarked ? GROUP.UNMARK : GROUP.BOOKMARK) })
+                  { class: 'glyphicon glyphicon-heart' +
+                    (isWatched ? '' : '-empty'),
+                    title: (isWatched ? GROUP.UNWATCH : GROUP.WATCH) })
               ]);
           }
         })(),   

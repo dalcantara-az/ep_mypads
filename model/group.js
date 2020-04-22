@@ -202,7 +202,6 @@ module.exports = (function () {
   */
 
  group.getWatchedGroupsByUser = function (user, callback) {
-  console.log(user);
   if (!ld.isObject(user) || !ld.isArray(user.bookmarks.groups)) {
     throw new TypeError('BACKEND.ERROR.TYPE.USER_INVALID');
   }
@@ -547,8 +546,6 @@ module.exports = (function () {
   * local groups.
   */
   group.addWatcher = function (gid, loginOrEmail, callback) {
-    console.log("add watcher");
-    console.log(loginOrEmail);
     if (!ld.isString(gid)) {
       throw new TypeError('BACKEND.ERROR.TYPE.GID_STR');
     }
@@ -560,7 +557,6 @@ module.exports = (function () {
     }
 
     var users = userCache.fn.getIdsFromLoginsOrEmails(loginOrEmail);
-    console.log('adding watcher to group');
     group.get(gid, function (err, g) {
       if (err) { return callback(err); }
 
@@ -568,10 +564,7 @@ module.exports = (function () {
       if (g.watchers == null) {
         g.watchers = [];
       }
-      console.log('before adding');
-      console.log(users);
-      
-      console.log(g.watchers);
+
       var exists = g.watchers.length > 0 && g.watchers.includes(users.uids[0]);
       console.log ('exists? ' + exists);
       if (!exists) {

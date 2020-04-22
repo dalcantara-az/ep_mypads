@@ -593,7 +593,6 @@ module.exports = (function () {
   };
 
   user.watch = function (login, type, key, callback) {
-    console.log("hi hello");
     if (!ld.includes(['pads', 'groups'], type)) {
       throw new TypeError('BACKEND.ERROR.TYPE.TYPE_PADSORGROUPS');
     }
@@ -609,7 +608,7 @@ module.exports = (function () {
           ld.pull(u.watchlist[type], key);
         } else {
           u.watchlist[type].push(key);
-          
+
         }
         user.fn.set(u, function (err) {
           if (err) { return callback(err); }
@@ -617,7 +616,6 @@ module.exports = (function () {
         });
       });
     });
-    console.log("bbep");
   };
 
   return user;

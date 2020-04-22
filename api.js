@@ -963,7 +963,6 @@ module.exports = (function () {
     
     app.post(userRoute + 'watch', fn.ensureAuthenticated,
       function(req, res) {
-        console.log("watching");
         var successFn = ld.partial(function (req, res) {
           try {
             
@@ -972,17 +971,14 @@ module.exports = (function () {
             user.watch(req.mypadsLogin, req.body.type, req.body.key,
               function (err) {
                 if (err) { return res.status(404).send({ error: err.message }); }
-                console.log('req.body.type = ' + req.body.type);
                 if (!(req.body.type === "groups")) {
                   res.send({ success: true });
                 } else {
-                  console.log('req.body.key = ' + req.body.key);
                   group.addWatcher(req.body.key,
                     [u.login], function (err, g, uids) {
                       if (err) {
                         return res.status(401).send({ error: err.message });
                       }
-                      console.log("done adding watcher");
                       return res.send({success: true});
                       // return res.send(ld.assign({ success: true, value: g }, uids));
                   });
