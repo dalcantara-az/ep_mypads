@@ -67,6 +67,7 @@ module.exports = (function () {
       }).then(function () {
         notif.success({ body: conf.LANG.GROUP.WATCH_SUCCESS });
         //model.fetch(c.computeGroups);
+        console.log(model.watchlist());
         if (successFn) { successFn(); }
       }, function (err) {
         return notif.error({ body: ld.result(conf.LANG, err.error) });

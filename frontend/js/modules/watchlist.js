@@ -40,7 +40,7 @@ module.exports = (function () {
     var u         = auth.userInfo;
     var layout    = require('./layout.js');
     var groupWatch= require('./group-watch.js');
-    // var padMark   = require('./pad-mark.js');
+    var padWatch  = require('./pad-watch.js');
     var model     = require('../model/group.js');
   
     var watchlist = {};
@@ -78,8 +78,11 @@ module.exports = (function () {
             .sortBy('name')
             .value();
         };
+        console.log(items(model.watchlist().groups, uWatched.groups));
         c.watchlist = {
+          // groups: uWatched.groups,
           groups: items(model.watchlist().groups, uWatched.groups),
+          // pads: items(uWatched.pads, uWatched.pads)
           pads: items(model.watchlist().pads, uWatched.pads)
         };
       };
@@ -92,8 +95,7 @@ module.exports = (function () {
       */
   
       c.unwatch = function (item, type) {
-        var action = groupWatch;
-        // var action = (type === 'groups') ? groupMark : padMark;
+        var action = (type === 'groups') ? groupWatch : padWatch;
         action(item, c.computeWatchlist);
       };
   
@@ -140,10 +142,6 @@ module.exports = (function () {
             route = '/mypads/group/' + item.group + '/pad/view/' + item._id;
           }
           return m('li', [
-            m('button.btn.btn-link.btn-lg', {
-              title: conf.LANG.GROUP.UNWATCH,
-              onclick: ld.partial(c.unwatch, item, type)
-            }, [ m('i.glyphicon glyphicon-star') ]),
             m('button.btn.btn-link.btn-lg', {
               title: conf.LANG.GROUP.UNWATCH,
               onclick: ld.partial(c.unwatch, item, type)
