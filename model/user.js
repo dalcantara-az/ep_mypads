@@ -653,10 +653,12 @@ module.exports = (function () {
         if (!res) {
           return callback(new Error('BACKEND.ERROR.USER.BOOKMARK_NOT_FOUND'));
         }
-         
-        u.watchlist[type].push(key);
+        if (ld.includes(u.watchlist[type], key)) {
+          ld.pull(u.watchlist[type], key);
+        } else {
+          //u.watchlist[type].push(key);
 
-        
+        }
         user.fn.set(u, function (err) {
           if (err) { return callback(err); }
           callback(null);
@@ -664,6 +666,7 @@ module.exports = (function () {
       });
     });
   };
+
 
   
 

@@ -1423,17 +1423,20 @@ module.exports = (function () {
         .send({ error: 'BACKEND.ERROR.TYPE.PARAMS_REQUIRED' });
     }
     req.params.key = req.body.gid;
+    var type = req.body.type;
+    var g_id = req.body.gid;
     var successFn = ld.partial(function (req, res) {
       try {
         console.log(req.body.gid);
-        group.get(req.body.gid, function(err, g){
+        group.get(g_id, function(err, g){
           // var watchers = userCache.fn.getIdsFromLoginsOrEmails(g.watchers);
           console.log(g.watchers);
           for(var i=0; i< g.watchers.length; i++){
             console.log(g.watchers[i]);
-            user.get(g.watchers[i], function(err, u){
-              console.log(u());
-              user.unwatch(u.id, 'groups', g.id, function(err, g){});
+            user.get(g.watchers[i].slice(0, -8), function(err, u){
+              if (err) { return res.status(404).send({ error: err.message }); }
+              console.log(u);
+               user.unwatch(u.login, type, g_id, function(err){ if (err) { return res.status(404).send({ error: err.message }); }});
             })
             
           }
