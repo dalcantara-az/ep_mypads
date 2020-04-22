@@ -62,6 +62,11 @@ module.exports = (function () {
           txt: conf.LANG.MENU.BOOKMARK
         },
         {
+          route: '/mywatchlist',
+          icon: 'heart',
+          txt: conf.LANG.MENU.WATCHLIST
+        },
+        {
           route: '/myuserlists',
           icon: 'user',
           txt: conf.LANG.MENU.USERLIST

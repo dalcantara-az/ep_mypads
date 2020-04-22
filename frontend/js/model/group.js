@@ -78,6 +78,8 @@ module.exports = (function () {
         model.groups(resp.value.groups); 
         model.pads(resp.value.pads);
         model.bookmarks(resp.value.bookmarks);
+        model.watchers(resp.value.watchers);
+        model.watchlist(resp.value.watchlist);
         var u                   = auth.userInfo();
         resp.value.users[u._id] = u;
         model.users(resp.value.users);

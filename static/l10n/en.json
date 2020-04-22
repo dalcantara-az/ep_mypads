@@ -355,7 +355,8 @@
       "PAD": "My Folders & Pads",
       "PROFILE": "My Profile",
       "USERLIST": "My Userlists",
-      "USERS": "Users"
+      "USERS": "Users",
+      "WATCHLIST": "My Watchlist"
    },
    "NOTIFICATION": {
       "ERROR": "Error",
@@ -466,5 +467,9 @@
          "USER_SUCCESS": "User adding has been successfull for "
       },
       "USERLIST": "Userlist"
+   },
+   "WATCHLIST": {
+      "HELP": "<p>Watchlist page offers you the ability to see all your watched elements from MyPads. You can remove them from the watchlist if you want to.</p>",
+      "TITLE": "My Watchlist"
    }
 }

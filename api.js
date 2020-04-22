@@ -1171,6 +1171,7 @@ module.exports = (function () {
                 }
               );
               data.bookmarks = { groups: {}, pads: {} };
+              data.watchlist = { groups: {}, pads: {} };
               group.getBookmarkedGroupsByUser(u, function (err, bookmarks) {
                 if (err) {
                   return res.status(404).send({
@@ -1193,30 +1194,30 @@ module.exports = (function () {
                       memo[key] = ld.omit(val, 'password');
                     }
                   );
-                  // group.getWatchedGroupsByUser(u, function(err, bookmarks) {
-                  //   if (err) {
-                  //     return res.status(404).send({
-                  //       error: err.message
-                  //     });
-                  //   }
-                  //   data.watchlist.groups = ld.transform(watchlist,
-                  //     function(memo, val, key) {
-                  //       memo[key] = ld.omit(val, 'password');
-                  //     }
-                  //   );
-                  //   /*  Fix IE11 stupid habit of caching AJAX calls
-                  //    *  See http://www.dashbay.com/2011/05/internet-explorer-caches-ajax/
-                  //    *  and https://framagit.org/framasoft/Etherpad/ep_mypads/issues/220
-                  //    */
-                  //   res.set('Expires', '-1');
-                  //   res.send({ value: data });
-                  // })
-                  /* Fix IE11 stupid habit of caching AJAX calls
-                   * See http://www.dashbay.com/2011/05/internet-explorer-caches-ajax/
-                   * and https://framagit.org/framasoft/Etherpad/ep_mypads/issues/220
-                   */
-                  res.set('Expires', '-1');
-                  res.send({ value: data });
+                  group.getWatchedGroupsByUser(u, function(err, watchlist) {
+                    if (err) {
+                      return res.status(404).send({
+                        error: err.message
+                      });
+                    }
+                    data.watchlist.groups = ld.transform(watchlist,
+                      function(memo, val, key) {
+                        memo[key] = ld.omit(val, 'password');
+                      }
+                    );
+                    /*  Fix IE11 stupid habit of caching AJAX calls
+                     *  See http://www.dashbay.com/2011/05/internet-explorer-caches-ajax/
+                     *  and https://framagit.org/framasoft/Etherpad/ep_mypads/issues/220
+                     */
+                    res.set('Expires', '-1');
+                    res.send({ value: data });
+                  })
+                  // /* Fix IE11 stupid habit of caching AJAX calls
+                  //  * See http://www.dashbay.com/2011/05/internet-explorer-caches-ajax/
+                  //  * and https://framagit.org/framasoft/Etherpad/ep_mypads/issues/220
+                  //  */
+                  // res.set('Expires', '-1');
+                  // res.send({ value: data });
                 });
               });
             });

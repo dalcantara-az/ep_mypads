@@ -586,19 +586,19 @@ module.exports = (function () {
           callback(null, g, ld.omit(users, 'uids'));
         });
       } else {
-        // group.fn.indexUsers(true, g._id, users.uids, function (err) {
-        //   if (err) { return callback(err); }
+        group.fn.indexUsers(true, g._id, users.uids, function (err) {
+          if (err) { return callback(err); }
           g.watchers.splice(g.watchers.indexOf(users.uids[0]));
           
-      console.log('after adding');
-      console.log(users);
-      
-      console.log(g.watchers);
+          console.log('after adding');
+          console.log(users);
+          
+          console.log(g.watchers);
           group.fn.set(g, function (err, g) {
             if (err) { return callback(err); }
             callback(null, g, ld.omit(users, 'uids'));
           });
-        // });
+        });
       }
     });
   };
