@@ -43,32 +43,30 @@ module.exports = (function () {
     * argument after successfull operation.
     */
   
-    return function (group, successFn) {
-      var gid  = group._id;
+    return function (pad, successFn) {
+      var pid  = pad._id;
       var user = auth.userInfo();
-      if (ld.includes(user.watchlist.groups, gid)) {
-        ld.pull(user.watchlist.groups, gid);
+      if (ld.includes(user.watchlist.pads, pid)) {
+        ld.pull(user.watchlist.pads, pid);
       } else {
-        user.watchlist.groups.push(gid);
+        user.watchlist.pads.push(pid);
       }
-      if (typeof(model.watchlist().groups[gid]) !== 'undefined') {
-        delete model.watchlist().groups[gid];
+      if (typeof(model.watchlist().pads[pid]) !== 'undefined') {
+        delete model.watchlist().pads[pid];
       } else {
-        model.watchlist().groups[gid] = group;
+        model.watchlist().pads[pid] = pad;
       }
       m.request({
         url: conf.URLS.USERWATCH,
         method: 'POST',
         data: {
-          type: 'groups',
-          key: gid,
+          type: 'pads',
+          key: pid,
           auth_token: auth.token(),
         }
       }).then(function () {
         notif.success({ body: conf.LANG.GROUP.WATCH_SUCCESS });
-        if(c!=null){
-          model.fetch(c.computeGroups);
-        }
+        //model.fetch(c.computeGroups);
         if (successFn) { successFn(); }
       }, function (err) {
         return notif.error({ body: ld.result(conf.LANG, err.error) });

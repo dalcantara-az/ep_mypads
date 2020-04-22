@@ -142,10 +142,6 @@ module.exports = (function () {
             title: conf.LANG.GROUP.UNMARK,
             onclick: ld.partial(c.unmark, item, type)
           }, [ m('i.glyphicon glyphicon-star') ]),
-          m('button.btn.btn-link.btn-lg', {
-            title: conf.LANG.GROUP.UNMARK,
-            onclick: ld.partial(c.unmark, item, type)
-          }, [ m('i.glyphicon glyphicon-bookmark') ]),
           m('a', { href: route, config: m.route }, item.name)
         ]);
       }));
