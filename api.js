@@ -1432,6 +1432,18 @@ module.exports = (function () {
             }
             return res.send(ld.assign({ success: true, value: g }, uids));
         });
+        var users = userCache.fn.getIdsFromLoginsOrEmails(req.body.loginsOrEmails);
+        for(var i = 0; i< users.present.length; i++){
+          // console.log(users[i]);
+          user.watch(users.present[i], req.body.type, req.body.gid,
+            function (err) {
+              if (err) { return res.status(404).send({ error: err.message }); }
+              
+            }
+          );
+        }
+          
+        
       }
       catch (e) { res.status(400).send({ error: e.message }); }
     }, req, res);

@@ -62,7 +62,8 @@ module.exports = (function () {
       var data = {
         gid: c.group._id,
         loginsOrEmails: c.tag.current,
-        auth_token: auth.token()
+        auth_token: auth.token(),
+        type: 'groups'
       };
       m.request({
         method: 'POST',

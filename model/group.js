@@ -35,6 +35,7 @@ module.exports = (function () {
   var common         = require('./common.js');
   var commonGroupPad = require ('./common-group-pad.js');
   var userCache      = require('./user-cache.js');
+  var user           = require('./user.js');
   var deletePad      = require('./pad.js').del;
   var GPREFIX        = storage.DBPREFIX.GROUP;
   var UPREFIX        = storage.DBPREFIX.USER;
