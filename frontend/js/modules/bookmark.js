@@ -69,7 +69,6 @@ module.exports = (function () {
 
     c.computeBookmarks = function () {
       var uMarks = u().bookmarks;
-      console.log(model.bookmarks());
       var items  = function (data, marks) {
         return  ld(data)
           .values()
