@@ -840,7 +840,6 @@ module.exports = (function () {
             var token = mail.genToken({ login: key, action: 'accountconfirm' });
             var url   = conf.get('rootUrl') +
               '/mypads/index.html?/accountconfirm/' + token;
-            console.log(url);
             var lang = (function () {
               if (ld.includes(ld.keys(conf.cache.languages), req.body.lang)) {
                 return req.body.lang;
@@ -1023,8 +1022,6 @@ module.exports = (function () {
       user.get(email, function (err, u) {
         if (err) { return res.status(400).send({ error: err }); }
         var token = mail.genToken({ login: u.login, action: 'passrecover' });
-        console.log(conf.get('rootUrl') + '/mypads/index.html?/passrecover/' +
-          token);
         var subject = fn.mailMessage('PASSRECOVER_SUBJECT', {
           title: conf.get('title') }, u.lang);
         var message = fn.mailMessage('PASSRECOVER', {
@@ -1440,15 +1437,16 @@ module.exports = (function () {
     var g_id = req.body.gid;
     var successFn = ld.partial(function (req, res) {
       try {
-        console.log(req.body.gid);
         group.get(g_id, function(err, g){
-          // var watchers = userCache.fn.getIdsFromLoginsOrEmails(g.watchers);
-          console.log(g.watchers);
+          if (err) {
+            return res.status(401).send({ error: err.message });
+          }
+          if (!g.hasOwnProperty("watchers")) {
+            g.watchers = [];
+          }
           for(var i=0; i< g.watchers.length; i++){
-            console.log(g.watchers[i]);
             user.get(g.watchers[i].slice(0, -8), function(err, u){
               if (err) { return res.status(404).send({ error: err.message }); }
-              console.log(u);
                user.unwatch(u.login, type, g_id, function(err){ if (err) { return res.status(404).send({ error: err.message }); }});
             })
             

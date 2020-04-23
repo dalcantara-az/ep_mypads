@@ -352,19 +352,13 @@ module.exports = (function () {
   };
 
   view.group = function (c, g) {
-    console.log(u());
-    
+    var user = u();
     var padRoute     = '/mypads/group/' + g._id;
-    if(u().watchlist!= null){
-      var isWatched = (ld.includes(u().watchlist.groups, g._id));
-    }
-    else{
-      var isWatched = false;
-    }
+    var isWatched = user.watchlist != null ? (ld.includes(user.watchlist.groups, g._id)) : false;
     
-    var isBookmarked = (ld.includes(u().bookmarks.groups, g._id));
+    var isBookmarked = (ld.includes(user.bookmarks.groups, g._id));
     var GROUP        = conf.LANG.GROUP;
-    var isAdmin      = ld.includes(g.admins, u()._id);
+    var isAdmin      = ld.includes(g.admins, user._id);
     var actions      = [
       (function () {
         if (g.visibility !== 'restricted' || conf.SERVER.allPadsPublicsAuthentifiedOnly) {
