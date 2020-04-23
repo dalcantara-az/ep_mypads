@@ -353,6 +353,7 @@ module.exports = (function () {
 
   view.group = function (c, g) {
     console.log(u());
+    
     var padRoute     = '/mypads/group/' + g._id;
     if(u().watchlist!= null){
       var isWatched = (ld.includes(u().watchlist.groups, g._id));

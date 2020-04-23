@@ -213,7 +213,7 @@ module.exports = (function () {
       e.preventDefault();
       var successFn = function (resp) {
         m.route('/mypads/group/' + resp.value._id + '/view');
-        model.fetch(c.computeGroups);
+        
       };
       invite.invite(c, successFn);
       
