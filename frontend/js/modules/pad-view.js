@@ -172,7 +172,13 @@ module.exports = (function () {
         n = '&userName=' + (u.padNickname ? u.padNickname : u.login);
       }
     }
-    var link = conf.URLS.RAWBASE.replace('mypads/', '') + 'p/' + c.pad._id + '?' + p + a + co + n;
+
+    var findUser = m.route.param('findUser');
+    var fu = findUser ? '&findUser=' + findUser : '';
+    var lineNumber = m.route.param('lineNumber');
+    var ln = lineNumber ? '&lineNumber=' + lineNumber : '';
+    
+    var link = conf.URLS.RAWBASE.replace('mypads/', '') + 'p/' + c.pad._id + '?' + p + a + co + n + fu + ln;
     return [
       m('p.text-right', [
         m('a.btn.btn-default.expand-toggle', {

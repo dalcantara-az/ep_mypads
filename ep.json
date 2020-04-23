@@ -9,7 +9,8 @@
         "pluginUninstall": "ep_mypads/hooks:removeAllData"
       },
       "client_hooks": {
-        "postToolbarInit": "ep_mypads/static/js/clientHooks:postToolbarInit"
+        "postToolbarInit": "ep_mypads/static/js/clientHooks:postToolbarInit",
+        "postAceInit": "ep_mypads/static/js/scrollTo:postAceInit"
       }
     }
   ]
