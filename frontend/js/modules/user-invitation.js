@@ -58,7 +58,6 @@ module.exports = (function () {
     c.action = (m.route.param('action'));
 
     if(c.action == "add"){
-      
       var data = {
         gid: c.group._id,
         loginsOrEmails: c.tag.current,
@@ -70,8 +69,24 @@ module.exports = (function () {
         url: conf.URLS.GROUP + '/add-watchers',
         data: data
       }).then(function (resp) {
+        var loginsOrEmails = c.tag.current;
+        var u     = auth.userInfo;
+        console.log(loginsOrEmails);
+        console.log('user: ');
+        console.log(u());
+        if (loginsOrEmails.includes(u().login)) {
+          console.log('final list of ids does not include logged in user id');
+          if (!u().watchlist.groups.includes(c.group._id)) {
+            console.log('user watchlist no contain group id');
+            u().watchlist.groups.push(c.group._id);
+          }
+        } else {
+          console.log('final list of ids includes logged in user id');
+          if (u().watchlist.groups.includes(c.group._id)) {
+            u().watchlist.groups.splice(u().watchlist.groups.indexOf(c.group._id));
+          }
+        }
         var lpfx = "ADD_WATCHER";
-
         var msg;
         if (resp.present.length > 0) {
           msg = conf.LANG.GROUP[lpfx].SUCCESS + cleanupXss.cleanup(resp.present.join(', '));

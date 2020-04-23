@@ -1461,7 +1461,6 @@ module.exports = (function () {
             }
             return res.send(ld.assign({ success: true, value: g }, uids));
         });
-
         var users = userCache.fn.getIdsFromLoginsOrEmails(req.body.loginsOrEmails);
 
         for(var i = 0; i< users.present.length; i++){

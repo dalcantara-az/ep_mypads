@@ -13,6 +13,7 @@ var conf = require('./configuration.js');
 var mail = require('./mail.js');
 var storage = require('./storage.js');
 var groupDB = require('./model/group.js');
+var padDB = require('./model/pad.js');
 var etherpadAPI = require('ep_etherpad-lite/node/db/API');
 var schedule = require('node-schedule');
 
@@ -20,8 +21,10 @@ var GPREFIX = storage.DBPREFIX.GROUP;
 var UPREFIX = storage.DBPREFIX.USER;
 var PPREFIX = storage.DBPREFIX.PAD;
 
-var DIGEST_DURATION = 3600000; //One hour
-var DIGEST_SCHEDULE = "0 * * * *"; //Every hour
+// var DIGEST_DURATION = 3600000; //One hour
+var DIGEST_DURATION = 60000; //One minute
+var DIGEST_SCHEDULE  = "*/1 * * * *";
+// var DIGEST_SCHEDULE = "0 * * * *"; //Every hour
 
 module.exports = (function () {
   'use strict';
@@ -95,8 +98,65 @@ module.exports = (function () {
       if (watcherList == null || watcherList.length == 0) {
         return callback(null, { watcherList: null });
       }
-
+      console.log('gonna promise');
       var diffPromises = Promise.all(g.pads.map(p => {return etherpadAPI.createDiffSince(p, startTime); }));
+      diffPromises.then(diffs => {
+        console.log('done promise');
+        var actualChanges = diffs.filter(d => d.splices.length > 0);
+        if (actualChanges.length == 0) {
+          return callback(null, {actualChanges: null });
+        }
+
+        watcher.fn.getEmails(watcherList, function(err, emailList){
+          if (err) {
+            return callback(err);
+          }
+          var changedPadIds = actualChanges.map(p => p.padId);
+          watcher.fn.getPadNames(changedPadIds, function(err, padNames) {
+            if (err) {
+              return callback(err);
+            }
+            var to = emailList.join(", ");
+            var subject = watcher.fn.generateDigestSubject(p);
+            var text = watcher.fn.generateDigestMessage(actualChanges, padNames);
+            var data = watcher.fn.generateDigestFormattedMessage(actualChanges, padNames);
+            console.log('to: ' + to);
+            console.log('subject: ' + subject);
+            console.log('text: ' + text);
+            console.log('data: ' + data);
+            // var to = emailList.join(", ");
+            // var subject = watcher.fn.generateDigestSubject(g);
+            // var text = watcher.fn.generateDigestMessage(actualChanges, padNames);
+            // var data = watcher.fn.generateDigestFormattedMessage(actualChanges, padNames);
+            // var envelope = {
+            //   to,
+            //   subject,
+            //   text,
+            //   attachment: [{ data, alternative: true}]
+            // };
+            // mail.sendEnvelope(envelope, function (err) {
+            //   if (err) {
+            //     return callback(err);
+            //   }
+            //   callback(null, { envelope });
+            // });
+          });
+        });
+      });
+    });
+  }
+
+  watcher.reportPadChanges = function(padId, startTime, callback) {
+    padDB.get(padId, function(err, p) {
+      if (err) {
+        return callback(err);
+      }
+      var watcherList = p.watchers;
+      if (watcherList == null || watcherList.length == 0) {
+        return callback(null, { watcherList: null });
+      }
+
+      var diffPromises = Promise.all(p.pads.map(p => {return etherpadAPI.createDiffSince(p, startTime); }));
       diffPromises.then(diffs => {
         var actualChanges = diffs.filter(d => d.splices.length > 0);
         if (actualChanges.length == 0) {
@@ -113,21 +173,25 @@ module.exports = (function () {
               return callback(err);
             }
             var to = emailList.join(", ");
-            var subject = watcher.fn.generateDigestSubject(g);
+            var subject = watcher.fn.generateDigestSubject(p);
             var text = watcher.fn.generateDigestMessage(actualChanges, padNames);
             var data = watcher.fn.generateDigestFormattedMessage(actualChanges, padNames);
-            var envelope = {
-              to,
-              subject,
-              text,
-              attachment: [{ data, alternative: true}]
-            };
-            mail.sendEnvelope(envelope, function (err) {
-              if (err) {
-                return callback(err);
-              }
-              callback(null, { envelope });
-            });
+            console.log('to: ' + to);
+            console.log('subject: ' + subject);
+            console.log('text: ' + text);
+            console.log('data: ' + data);
+            // var envelope = {
+            //   to,
+            //   subject,
+            //   text,
+            //   attachment: [{ data, alternative: true}]
+            // };
+            // mail.sendEnvelope(envelope, function (err) {
+            //   if (err) {
+            //     return callback(err);
+            //   }
+            //   callback(null, { envelope });
+            // });
           });
         });
       });
@@ -142,6 +206,7 @@ module.exports = (function () {
   };
 
   watcher.reportAllGroups = function() {
+    console.log('reporting...');
     var startTime = Date.now() - DIGEST_DURATION;
 
     groupDB.getAllGroupIds(function(err, groupIds) {
@@ -155,6 +220,7 @@ module.exports = (function () {
   }
 
   watcher.init = function () {
+    console.log('initialized');
     schedule.scheduleJob(DIGEST_SCHEDULE, watcher.reportAllGroups);
   };
 
