@@ -203,7 +203,7 @@ module.exports = (function () {
   */
 
  group.getWatchedGroupsByUser = function (user, callback) {
-  if (!ld.isObject(user) || !ld.isArray(user.bookmarks.groups)) {
+  if (!ld.isObject(user) || !ld.isArray(user.watchlist.groups)) {
     throw new TypeError('BACKEND.ERROR.TYPE.USER_INVALID');
   }
   if (!ld.isFunction(callback)) {

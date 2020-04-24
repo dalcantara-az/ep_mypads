@@ -966,25 +966,23 @@ module.exports = (function () {
           try {
             
             var u = auth.fn.getUser(req.body.auth_token);
-
-            user.watch(req.mypadsLogin, req.body.type, req.body.key,
-              function (err) {
-                if (err) { return res.status(404).send({ error: err.message }); }
-                if (!(req.body.type === "groups")) {
-                  res.send({ success: true });
-                } else {
-                  group.addWatcher(req.body.key,
-                    [u.login], function (err, g, uids) {
-                      if (err) {
-                        return res.status(401).send({ error: err.message });
-                      }
-                      return res.send({success: true});
-                      // return res.send(ld.assign({ success: true, value: g }, uids));
-                  });
+              user.watch(req.mypadsLogin, req.body.type, req.body.key,
+                function (err) {
+                  if (err) { return res.status(404).send({ error: err.message }); }
+                  if (!(req.body.type === "groups")) {
+                    res.send({ success: true });
+                  } else {
+                    group.addWatcher(req.body.key,
+                      [u.login], function (err, g, uids) {
+                        if (err) {
+                          return res.status(401).send({ error: err.message });
+                        }
+                        return res.send({success: true});
+                        // return res.send(ld.assign({ success: true, value: g }, uids));
+                    });
+                  }
                 }
-              }
-            );
-            
+              );
           }
           catch (e) { res.status(400).send({ error: e.message }); }
         }, req, res);

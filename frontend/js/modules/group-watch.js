@@ -27,12 +27,12 @@ module.exports = (function () {
     return function (group, successFn) {
       var gid  = group._id;
       var user = auth.userInfo();
-      if (user.hasOwnProperty("watchlist")) {
-        user.watchlist = {
-          groups: [],
-          pads: [],
-        };
-      }
+      // if (user.hasOwnProperty("watchlist")) {
+      //   user.watchlist = {
+      //     groups: [],
+      //     pads: [],
+      //   };
+      // }
       if (ld.includes(user.watchlist.groups, gid)) {
         ld.pull(user.watchlist.groups, gid);
       } else {

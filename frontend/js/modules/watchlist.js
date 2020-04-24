@@ -68,6 +68,12 @@ module.exports = (function () {
       */
   
       c.computeWatchlist = function () {
+        if(u().watchlist == null){
+          u().watchlist = {
+            groups:[],
+            pads:[]
+          }
+        }
         var uWatched = u().watchlist;
         var items  = function (data, watched) {
           return  ld(data)
