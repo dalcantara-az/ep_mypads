@@ -45,6 +45,8 @@ module.exports = (function () {
   var sortingPreferences = require('../helpers/sortingPreferences.js');
   var filterPads         = require('../helpers/filterPads.js');
   var groupMark          = require('./group-mark.js');
+  var padWatch           = require('./pad-watch.js');
+  var groupWatch         = require('./group-watch.js');
 
   var u     = auth.userInfo;
   var group = {};
@@ -389,6 +391,28 @@ module.exports = (function () {
                 ]);
               }
             })(),
+            (function () {
+              if (!c.isGuest) {
+                if(u().watchlist!= null){
+                  var isWatched = ld.includes(u().watchlist.pads, p._id);
+                }
+                else{
+                  u().watchlist = {
+                    groups: [],
+                    pads: [],
+                  };
+                }
+                
+                return m('button.btn.btn-link.btn-lg', {
+                  title: (isWatched ? GROUP.UNWATCH : GROUP.WATCH),
+                  onclick: function () { padWatch(p); }
+                }, [
+                  m('i',
+                    { class: 'glyphicon glyphicon-heart' +
+                      (isWatched ? '' : '-empty') })
+                ]);
+              }
+            })(),
             m('span.name', [
               m('a', {
                 href: route + '/pad/view/' + p._id,
@@ -521,6 +545,17 @@ module.exports = (function () {
 
   view.main = function (c) {
     var isBookmarked = (auth.isAuthenticated()) ? (ld.includes(u().bookmarks.groups, c.group._id)) : false;
+    if(u().watchlist!= null){
+      var isWatched = (auth.isAuthenticated()) ? (ld.includes(u().watchlist.groups, c.group._id)) : false;
+    }
+    else{
+      u().watchlist = {
+        groups: [],
+        pads: [],
+      };
+      var isWatched = false;
+    }
+    
     var h2Elements   = [ m('span', [
       m('button.btn.btn-link.btn-lg', {
           onclick: function (e) {
@@ -534,6 +569,18 @@ module.exports = (function () {
               (isBookmarked ? '' : '-empty') })
         ]
       ),
+      m('button.btn.btn-link.btn-lg', {
+        onclick: function (e) {
+          e.preventDefault();
+          groupWatch(c.group);
+        },
+        title: (isWatched ? conf.LANG.GROUP.UNWATCH : conf.LANG.GROUP.WATCH)
+      }, [
+        m('i',
+          { class: 'glyphicon glyphicon-heart' +
+            (isWatched ? '' : '-empty') })
+      ]
+    ),
       conf.LANG.GROUP.GROUP + ' ' + c.group.name
     ])];
     var shareBtn = '';

@@ -340,9 +340,12 @@
          "TITLE": "Tags"
       },
       "UNMARK": "Unmark",
+      "UNWATCH": "Unwatch",
       "VIEW": "View",
       "VIEW_HELP": "<p>The details of the folder show you:<ul><li>options defined when folder has been created or updated;</li><li>list of pads created for this folder;</li><li>and list of admins and users of the folder.</li></ul></p><p>From there, you can: <ul><li>create new pads, edit them, remove or mark them;</li><li>share administration of your folder with other users;</li><li>invite other users to view and edit pads of the folder.</li></ul></p>",
-      "VIEW_MANAGE": "View and manage folder and its pads"
+      "VIEW_MANAGE": "View and manage folder and its pads",
+      "WATCH": "Watch",
+      "WATCH_SUCCESS": "Watching successfully"
    },
    "MENU": {
       "ADMIN": "Administration",
@@ -352,7 +355,8 @@
       "PAD": "My Folders & Pads",
       "PROFILE": "My Profile",
       "USERLIST": "My Userlists",
-      "USERS": "Users"
+      "USERS": "Users",
+      "WATCHLIST": "My Watchlist"
    },
    "NOTIFICATION": {
       "ERROR": "Error",
@@ -463,5 +467,9 @@
          "USER_SUCCESS": "User adding has been successfull for "
       },
       "USERLIST": "Userlist"
+   },
+   "WATCHLIST": {
+      "HELP": "<p>Watchlist page offers you the ability to see all your watched elements from MyPads. You can remove them from the watchlist if you want to.</p>",
+      "TITLE": "My Watchlist"
    }
 }

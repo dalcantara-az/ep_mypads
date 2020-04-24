@@ -35,6 +35,7 @@ module.exports = (function () {
   var common         = require('./common.js');
   var commonGroupPad = require ('./common-group-pad.js');
   var userCache      = require('./user-cache.js');
+  var user           = require('./user.js');
   var deletePad      = require('./pad.js').del;
   var GPREFIX        = storage.DBPREFIX.GROUP;
   var UPREFIX        = storage.DBPREFIX.USER;
@@ -188,6 +189,39 @@ module.exports = (function () {
       }
     );
   };
+
+  /**
+  * ### getWatchedGroupsByUser
+  *
+  * `getWatchedGroupsByUser` is an asynchronous function that returns all
+  * watched groups for a defined user, using `storage.fn.getKeys`. It takes :
+  *
+  * - a `user` object
+  * - a `callback` function, called with *error* if needed, *null* and the
+  *   results, an object with keys and groups values, otherwise.
+  *
+  */
+
+ group.getWatchedGroupsByUser = function (user, callback) {
+  if (!ld.isObject(user) || !ld.isArray(user.watchlist.groups)) {
+    throw new TypeError('BACKEND.ERROR.TYPE.USER_INVALID');
+  }
+  if (!ld.isFunction(callback)) {
+    throw new TypeError('BACKEND.ERROR.TYPE.CALLBACK_FN');
+  }
+  storage.fn.getKeys(
+    ld.map(user.watchlist.groups, function (g) { return GPREFIX + g; }),
+    function (err, groups) {
+      if (err) { return callback(err); }
+      groups = ld.reduce(groups, function (memo, val, key) {
+        key       = key.substr(GPREFIX.length);
+        memo[key] = val;
+        return memo;
+      }, {});
+      callback(null, groups);
+    }
+  );
+};
 
   /**
   * ### set
@@ -488,6 +522,71 @@ module.exports = (function () {
           callback(null, g, ld.omit(users, 'uids'));
         });
       });
+    });
+  };
+
+  /**
+  * ### addWatcher
+  *
+  * `addWatcher` is an asynchronous function that check if given data, users
+  * or admins logins, are correct and transforms it to expected values : unique
+  * identifiers, before saving it to database.
+  *
+  * It takes :
+  *
+  * - `gid` group unique identifier;
+  * - a user `loginOrEmail`;
+  * - `callback` function calling with  *error* if error or *null* and the
+  *   updated group otherwise, plus accepted and refused invitations logins or
+  *   emails.
+  *
+  * It takes care of exclusion of admins and users : admin status is a
+  * escalation of user.
+  *
+  * As login list should be exhaustive, it also takes care or reindexing user
+  * local groups.
+  */
+  group.addWatcher = function (gid, loginOrEmail, callback) {
+    if (!ld.isString(gid)) {
+      throw new TypeError('BACKEND.ERROR.TYPE.GID_STR');
+    }
+    if (!ld.isArray(loginOrEmail)) {
+      throw new TypeError('BACKEND.ERROR.TYPE.LOGIN_ARR');
+    }
+    if (!ld.isFunction(callback)) {
+      throw new TypeError('BACKEND.ERROR.TYPE.CALLBACK_FN');
+    }
+
+    var users = userCache.fn.getIdsFromLoginsOrEmails(loginOrEmail);
+    group.get(gid, function (err, g) {
+      if (err) { return callback(err); }
+
+      //safety check for legacy groups that did not have watchers
+      if (g.watchers == null) {
+        g.watchers = [];
+      }
+
+      var exists = g.watchers.length > 0 && g.watchers.includes(users.uids[0]);
+      
+      if (!exists) {
+        g.watchers.push(users.uids[0]);
+     
+
+        group.fn.set(g, function (err, g) {
+          if (err) { return callback(err); }
+          callback(null, g, ld.omit(users, 'uids'));
+        });
+      } else {
+        group.fn.indexUsers(true, g._id, users.uids, function (err) {
+          if (err) { return callback(err); }
+          g.watchers.splice(g.watchers.indexOf(users.uids[0]));
+          
+          group.fn.set(g, function (err, g) {
+            if (err) { return callback(err); }
+            callback(null, g, ld.omit(users, 'uids'));
+          });
+        });
+      }
     });
   };
 

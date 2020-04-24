@@ -840,7 +840,6 @@ module.exports = (function () {
             var token = mail.genToken({ login: key, action: 'accountconfirm' });
             var url   = conf.get('rootUrl') +
               '/mypads/index.html?/accountconfirm/' + token;
-            console.log(url);
             var lang = (function () {
               if (ld.includes(ld.keys(conf.cache.languages), req.body.lang)) {
                 return req.body.lang;
@@ -960,7 +959,37 @@ module.exports = (function () {
         catch (e) { res.status(400).send({ error: e.message }); }
       }
     );
-
+    
+    app.post(userRoute + 'watch', fn.ensureAuthenticated,
+      function(req, res) {
+        var successFn = ld.partial(function (req, res) {
+          try {
+            
+            var u = auth.fn.getUser(req.body.auth_token);
+              user.watch(req.mypadsLogin, req.body.type, req.body.key,
+                function (err) {
+                  if (err) { return res.status(404).send({ error: err.message }); }
+                  if (!(req.body.type === "groups")) {
+                    res.send({ success: true });
+                  } else {
+                    group.addWatcher(req.body.key,
+                      [u.login], function (err, g, uids) {
+                        if (err) {
+                          return res.status(401).send({ error: err.message });
+                        }
+                        return res.send({success: true});
+                        // return res.send(ld.assign({ success: true, value: g }, uids));
+                    });
+                  }
+                }
+              );
+          }
+          catch (e) { res.status(400).send({ error: e.message }); }
+        }, req, res);
+        successFn();
+        // canEdit(req, res, successFn);
+      }
+    )
     /**
     * POST method : special password recovery with mail sending.
     * Need to have the email address into the body
@@ -991,8 +1020,6 @@ module.exports = (function () {
       user.get(email, function (err, u) {
         if (err) { return res.status(400).send({ error: err }); }
         var token = mail.genToken({ login: u.login, action: 'passrecover' });
-        console.log(conf.get('rootUrl') + '/mypads/index.html?/passrecover/' +
-          token);
         var subject = fn.mailMessage('PASSRECOVER_SUBJECT', {
           title: conf.get('title') }, u.lang);
         var message = fn.mailMessage('PASSRECOVER', {
@@ -1135,6 +1162,7 @@ module.exports = (function () {
                 }
               );
               data.bookmarks = { groups: {}, pads: {} };
+              data.watchlist = { groups: {}, pads: {} };
               group.getBookmarkedGroupsByUser(u, function (err, bookmarks) {
                 if (err) {
                   return res.status(404).send({
@@ -1157,12 +1185,43 @@ module.exports = (function () {
                       memo[key] = ld.omit(val, 'password');
                     }
                   );
-                  /* Fix IE11 stupid habit of caching AJAX calls
-                   * See http://www.dashbay.com/2011/05/internet-explorer-caches-ajax/
-                   * and https://framagit.org/framasoft/Etherpad/ep_mypads/issues/220
-                   */
-                  res.set('Expires', '-1');
-                  res.send({ value: data });
+                  group.getWatchedGroupsByUser(u, function(err, watchlist) {
+                    if (err) {
+                      return res.status(404).send({
+                        error: err.message
+                      });
+                    }
+                    data.watchlist.groups = ld.transform(watchlist,
+                      function(memo, val, key) {
+                        memo[key] = ld.omit(val, 'password');
+                      }
+                    );
+                    pad.getWatchedPadsByUser(u, function(err, watchlist) {
+                      if (err) {
+                        return res.status(404).send({
+                          error: err.message
+                        });
+                      }
+                      /*  Fix IE11 stupid habit of caching AJAX calls
+                      *  See http://www.dashbay.com/2011/05/internet-explorer-caches-ajax/
+                      *  and https://framagit.org/framasoft/Etherpad/ep_mypads/issues/220
+                      */
+                      data.watchlist.pads = ld.transform(watchlist,
+                        function(memo, val, key) {
+                          memo[key] = ld.omit(val, 'password');
+                        }
+                      );
+                      res.set('Expires', '-1');
+                      res.send({ value: data });
+                    })
+                    
+                  })
+                  // /* Fix IE11 stupid habit of caching AJAX calls
+                  //  * See http://www.dashbay.com/2011/05/internet-explorer-caches-ajax/
+                  //  * and https://framagit.org/framasoft/Etherpad/ep_mypads/issues/220
+                  //  */
+                  // res.set('Expires', '-1');
+                  // res.send({ value: data });
                 });
               });
             });
@@ -1356,6 +1415,7 @@ module.exports = (function () {
       canEdit(req, res, successFn);
     });
 
+    
     /**
     * POST method : `group.addWatchers` with gid group id, array of all
     * concerned loginsOrEmails and invite boolean
@@ -1371,8 +1431,25 @@ module.exports = (function () {
         .send({ error: 'BACKEND.ERROR.TYPE.PARAMS_REQUIRED' });
     }
     req.params.key = req.body.gid;
+    var type = req.body.type;
+    var g_id = req.body.gid;
     var successFn = ld.partial(function (req, res) {
       try {
+        group.get(g_id, function(err, g){
+          if (err) {
+            return res.status(401).send({ error: err.message });
+          }
+          if (!g.hasOwnProperty("watchers")) {
+            g.watchers = [];
+          }
+          for(var i=0; i< g.watchers.length; i++){
+            user.get(g.watchers[i].slice(0, -8), function(err, u){
+              if (err) { return res.status(404).send({ error: err.message }); }
+               user.unwatch(u.login, type, g_id, function(err){ if (err) { return res.status(404).send({ error: err.message }); }});
+            })
+            
+          }
+        });
         group.addWatchers(req.body.gid,
           req.body.loginsOrEmails, function (err, g, uids) {
             if (err) {
@@ -1380,6 +1457,17 @@ module.exports = (function () {
             }
             return res.send(ld.assign({ success: true, value: g }, uids));
         });
+        var users = userCache.fn.getIdsFromLoginsOrEmails(req.body.loginsOrEmails);
+
+        for(var i = 0; i< users.present.length; i++){
+          user.addToWatchlist(users.present[i], req.body.type, req.body.gid,
+            function (err) {
+              if (err) { return res.status(404).send({ error: err.message }); }
+            }
+          );
+        }
+          
+        
       }
       catch (e) { res.status(400).send({ error: e.message }); }
     }, req, res);

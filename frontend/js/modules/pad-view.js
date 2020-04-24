@@ -43,6 +43,7 @@ module.exports = (function () {
   var padShare  = require('./pad-share.js');
   var expandPad = require('../helpers/expandPad.js');
   var ready     = require('../helpers/ready.js');
+  var padWatch  = require('./pad-watch.js');
 
   var pad = {};
 
@@ -63,6 +64,16 @@ module.exports = (function () {
     c.isAuth    = auth.isAuthenticated();
     c.isGuest   = !c.isAuth;
     c.bookmarks = (c.isAuth ? auth.userInfo().bookmarks.pads : []);
+    if(uth.userInfo().watchlist != null){
+      c.watchlist = (c.isAuth ? auth.userInfo().watchlist.pads : []);
+    }
+    else{
+      c.watchlist = {
+        groups: [],
+        pads: [],
+      };
+    }
+   
 
     c.gid = m.route.param('group');
     c.pid = m.route.param('pad');
@@ -286,6 +297,20 @@ module.exports = (function () {
               ]);
           }
         })(),
+        (function () {
+          if (auth.isAuthenticated()) {
+            var isWatched = ld.includes(c.watchlist, c.pad._id);
+            return m('button.btn.btn-link.btn-lg', {
+                title: (isWatched ? GROUP.UNWATCH : GROUP.WATCH),
+                onclick: function () { padWatch(c.pad); }
+              }, [
+                m('i',
+                  { class: 'glyphicon glyphicon-heart' +
+                    (isWatched ? '' : '-empty'),
+                    title: (isWatched ? GROUP.UNWATCH : GROUP.WATCH) })
+              ]);
+          }
+        })(),   
         m('span', conf.LANG.GROUP.PAD.PAD + ' ' + c.pad.name),
         (function () {
           if (c.group && c.group.name) {

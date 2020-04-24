@@ -42,6 +42,7 @@ module.exports = (function () {
   var padShare           = require('./pad-share.js');
   var sortingPreferences = require('../helpers/sortingPreferences.js');
   var groupMark          = require('./group-mark.js');
+  var groupWatch         = require('./group-watch.js');
 
   var group = {};
 
@@ -351,10 +352,13 @@ module.exports = (function () {
   };
 
   view.group = function (c, g) {
+    var user = u();
     var padRoute     = '/mypads/group/' + g._id;
-    var isBookmarked = (ld.includes(u().bookmarks.groups, g._id));
+    var isWatched = user.watchlist != null ? (ld.includes(user.watchlist.groups, g._id)) : false;
+    
+    var isBookmarked = (ld.includes(user.bookmarks.groups, g._id));
     var GROUP        = conf.LANG.GROUP;
-    var isAdmin      = ld.includes(g.admins, u()._id);
+    var isAdmin      = ld.includes(g.admins, user._id);
     var actions      = [
       (function () {
         if (g.visibility !== 'restricted' || conf.SERVER.allPadsPublicsAuthentifiedOnly) {
@@ -389,7 +393,17 @@ module.exports = (function () {
         }, [
           m('i',
             { class: 'glyphicon glyphicon-star' +
-              (isBookmarked ? '' : '-empty') })
+              (isBookmarked ? '' : '-empty') }),
+        ]),
+        m('a.btn.btn-link.btn-lg', {
+          onclick: groupWatch.bind(c, g, c.computeGroups),
+          href: '/mypads',
+          config: m.route,
+          title: (isWatched ? GROUP.UNWATCH : GROUP.WATCH)
+        }, [
+          m('i',
+            { class: 'glyphicon glyphicon-heart' +
+              (isWatched ? '' : '-empty') }),
         ]),
         m('a', {
           href: '/mypads/group/' + g._id + '/view',

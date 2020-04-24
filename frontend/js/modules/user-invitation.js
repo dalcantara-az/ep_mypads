@@ -58,19 +58,29 @@ module.exports = (function () {
     c.action = (m.route.param('action'));
 
     if(c.action == "add"){
-      
       var data = {
         gid: c.group._id,
         loginsOrEmails: c.tag.current,
-        auth_token: auth.token()
+        auth_token: auth.token(),
+        type: 'groups'
       };
       m.request({
         method: 'POST',
         url: conf.URLS.GROUP + '/add-watchers',
         data: data
       }).then(function (resp) {
+        var loginsOrEmails = c.tag.current;
+        var user = auth.userInfo();
+        if (loginsOrEmails.includes(user.login)) {
+          if (!user.watchlist.groups.includes(c.group._id)) {
+            user.watchlist.groups.push(c.group._id);
+          }
+        } else {
+          if (user.watchlist.groups.includes(c.group._id)) {
+            user.watchlist.groups.splice(user.watchlist.groups.indexOf(c.group._id));
+          }
+        }
         var lpfx = "ADD_WATCHER";
-
         var msg;
         if (resp.present.length > 0) {
           msg = conf.LANG.GROUP[lpfx].SUCCESS + cleanupXss.cleanup(resp.present.join(', '));
@@ -212,8 +222,10 @@ module.exports = (function () {
       e.preventDefault();
       var successFn = function (resp) {
         m.route('/mypads/group/' + resp.value._id + '/view');
+        
       };
       invite.invite(c, successFn);
+      
     };
 
     return c;
