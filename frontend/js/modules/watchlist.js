@@ -82,7 +82,6 @@ module.exports = (function () {
             .sortBy('name')
             .value();
         };
-        console.log(items(model.watchlist().groups, uWatched.groups));
         c.watchlist = {
           // groups: uWatched.groups,
           groups: items(model.watchlist().groups, uWatched.groups),

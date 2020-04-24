@@ -72,13 +72,10 @@ module.exports = (function () {
         var loginsOrEmails = c.tag.current;
         var u     = auth.userInfo;
         if (loginsOrEmails.includes(u().login)) {
-          console.log('final list of ids does not include logged in user id');
           if (!u().watchlist.groups.includes(c.group._id)) {
-            console.log('user watchlist no contain group id');
             u().watchlist.groups.push(c.group._id);
           }
         } else {
-          console.log('final list of ids includes logged in user id');
           if (u().watchlist.groups.includes(c.group._id)) {
             u().watchlist.groups.splice(u().watchlist.groups.indexOf(c.group._id));
           }

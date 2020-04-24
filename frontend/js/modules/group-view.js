@@ -553,7 +553,6 @@ module.exports = (function () {
         groups: [],
         pads: [],
       };
-      console.log( u());
       var isWatched = false;
     }
     
