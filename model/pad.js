@@ -453,6 +453,20 @@ module.exports = (function () {
     });
   };
 
+ /**
+   * ### getAllPadIds
+   *
+   * Returns the ids of pads of the MyPads instance
+   * As arguments, it takes mandatory :
+   * - a `callback` function
+   */
+  pad.getAllPadIds = function(callback) {
+    storage.db.findKeys(PPREFIX + '*', null, function (err, res) {
+      if (err) { return callback(err); }
+      return callback(null, ld.map(res, key => key.substr(PPREFIX.length)));
+    });
+  }
+
   return pad;
 
 }).call(this);
