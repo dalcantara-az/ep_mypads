@@ -70,14 +70,14 @@ module.exports = (function () {
         data: data
       }).then(function (resp) {
         var loginsOrEmails = c.tag.current;
-        var u     = auth.userInfo;
-        if (loginsOrEmails.includes(u().login)) {
-          if (!u().watchlist.groups.includes(c.group._id)) {
-            u().watchlist.groups.push(c.group._id);
+        var user = auth.userInfo();
+        if (loginsOrEmails.includes(user.login)) {
+          if (!user.watchlist.groups.includes(c.group._id)) {
+            user.watchlist.groups.push(c.group._id);
           }
         } else {
-          if (u().watchlist.groups.includes(c.group._id)) {
-            u().watchlist.groups.splice(u().watchlist.groups.indexOf(c.group._id));
+          if (user.watchlist.groups.includes(c.group._id)) {
+            user.watchlist.groups.splice(user.watchlist.groups.indexOf(c.group._id));
           }
         }
         var lpfx = "ADD_WATCHER";
