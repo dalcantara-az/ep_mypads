@@ -69,8 +69,6 @@ module.exports = (function () {
   
       c.computeWatchlist = function () {
         var uWatched = u().watchlist;
-        console.log(uWatched);
-        console.log(model.watchlist());
         var items  = function (data, watched) {
           return  ld(data)
             .values()
