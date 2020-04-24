@@ -390,13 +390,19 @@ module.exports = (function () {
   */
 
   pad.getWatchedPadsByUser = function(user, callback) {
-    console.log('get watched pads');
+    if (!user.hasOwnProperty("watchlist")) {
+      user.watchlist = {
+        groups: [],
+        pads: []
+      };
+    }
     if (!ld.isObject(user) || !ld.isArray(user.watchlist.pads)) {
       throw new TypeError('BACKEND.ERROR.TYPE.USER_INVALID');
     }
     if (!ld.isFunction(callback)) {
       throw new TypeError('BACKEND.ERROR.TYPE.CALLBACK_FN');
     }
+    
     storage.fn.getKeys(
       ld.map(user.watchlist.pads, function (p) { return PPREFIX + p; }),
       function (err, pads) {
