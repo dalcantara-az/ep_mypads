@@ -393,7 +393,16 @@ module.exports = (function () {
             })(),
             (function () {
               if (!c.isGuest) {
-                var isWatched = ld.includes(u().watchlist.pads, p._id);
+                if(u().watchlist!= null){
+                  var isWatched = ld.includes(u().watchlist.pads, p._id);
+                }
+                else{
+                  u().watchlist = {
+                    groups: [],
+                    pads: [],
+                  };
+                }
+                
                 return m('button.btn.btn-link.btn-lg', {
                   title: (isWatched ? GROUP.UNWATCH : GROUP.WATCH),
                   onclick: function () { padWatch(p); }
