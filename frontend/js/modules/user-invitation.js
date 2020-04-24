@@ -70,17 +70,14 @@ module.exports = (function () {
         data: data
       }).then(function (resp) {
         var loginsOrEmails = c.tag.current;
-        var u     = auth.userInfo;
-        if (loginsOrEmails.includes(u().login)) {
-          console.log('final list of ids does not include logged in user id');
-          if (!u().watchlist.groups.includes(c.group._id)) {
-            console.log('user watchlist no contain group id');
-            u().watchlist.groups.push(c.group._id);
+        var user = auth.userInfo();
+        if (loginsOrEmails.includes(user.login)) {
+          if (!user.watchlist.groups.includes(c.group._id)) {
+            user.watchlist.groups.push(c.group._id);
           }
         } else {
-          console.log('final list of ids includes logged in user id');
-          if (u().watchlist.groups.includes(c.group._id)) {
-            u().watchlist.groups.splice(u().watchlist.groups.indexOf(c.group._id));
+          if (user.watchlist.groups.includes(c.group._id)) {
+            user.watchlist.groups.splice(user.watchlist.groups.indexOf(c.group._id));
           }
         }
         var lpfx = "ADD_WATCHER";
