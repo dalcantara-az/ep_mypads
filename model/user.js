@@ -604,6 +604,12 @@ module.exports = (function () {
         if (!res) {
           return callback(new Error('BACKEND.ERROR.USER.BOOKMARK_NOT_FOUND'));
         }
+        if (!u.hasOwnProperty("watchlist")) {
+          u.watchlist = {
+            groups: [],
+            pads: []
+          };
+        }
         if (ld.includes(u.watchlist[type], key)) {
           ld.pull(u.watchlist[type], key);
         } else {
@@ -630,6 +636,12 @@ module.exports = (function () {
         if (!res) {
           return callback(new Error('BACKEND.ERROR.USER.BOOKMARK_NOT_FOUND'));
         }
+        if (!u.hasOwnProperty("watchlist")) {
+          u.watchlist = {
+            groups: [],
+            pads: []
+          };
+        }
         if (!ld.includes(u.watchlist[type], key)) {
           u.watchlist[type].push(key);
         }
@@ -652,6 +664,12 @@ module.exports = (function () {
         if (err) { return callback(err); }
         if (!res) {
           return callback(new Error('BACKEND.ERROR.USER.BOOKMARK_NOT_FOUND'));
+        }
+        if (!u.hasOwnProperty("watchlist")) {
+          u.watchlist = {
+            groups: [],
+            pads: []
+          };
         }
         if (ld.includes(u.watchlist[type], key)) {
           ld.pull(u.watchlist[type], key);
