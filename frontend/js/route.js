@@ -41,6 +41,7 @@ module.exports = (function () {
   var subscribe            = require('./modules/subscribe.js');
   var bookmark             = require('./modules/bookmark.js');
   var watchlist            = require('./modules/watchlist.js');
+  var search               = require('./modules/search.js');
   var userlist             = require('./modules/userlist.js');
   var userlistForm         = require('./modules/userlist-form.js');
   var userlistRemove       = require('./modules/userlist-remove.js');
@@ -80,6 +81,7 @@ module.exports = (function () {
     '/myprofile': subscribe,
     '/mybookmarks': bookmark,
     '/mywatchlist': watchlist,
+    '/search': search,
     '/myuserlists': userlist,
     '/myuserlists/add': userlistForm,
     '/myuserlists/:key/edit': userlistForm,
