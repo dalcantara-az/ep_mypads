@@ -64,7 +64,7 @@ module.exports = (function () {
     c.isAuth    = auth.isAuthenticated();
     c.isGuest   = !c.isAuth;
     c.bookmarks = (c.isAuth ? auth.userInfo().bookmarks.pads : []);
-    if(uth.userInfo().watchlist != null){
+    if(c.isAuth && auth.userInfo().watchlist != null){
       c.watchlist = (c.isAuth ? auth.userInfo().watchlist.pads : []);
     }
     else{
@@ -170,6 +170,7 @@ module.exports = (function () {
     var a  = (auth.isAuthenticated() ? '&auth_token=' + auth.token() : '');
     var n  = '';
     var co = '';
+    var anchor = '';
     if (u) {
       if (((u.useLoginAndColorInPads || conf.SERVER.useFirstLastNameInPads) && u.color)) {
         co = '&userColor=' + u.color;
@@ -182,14 +183,17 @@ module.exports = (function () {
       } else {
         n = '&userName=' + (u.padNickname ? u.padNickname : u.login);
       }
+
+      var lineNumber = m.route.param('lineNumber');
+      if (lineNumber) {
+        anchor = '&lineNumber=' + lineNumber;
+      } else {
+        // always look for the login user
+        anchor = '&findUser=' + (m.route.param('findUser') || u.login);
+      }
     }
 
-    var findUser = m.route.param('findUser');
-    var fu = findUser ? '&findUser=' + findUser : '';
-    var lineNumber = m.route.param('lineNumber');
-    var ln = lineNumber ? '&lineNumber=' + lineNumber : '';
-    
-    var link = conf.URLS.RAWBASE.replace('mypads/', '') + 'p/' + c.pad._id + '?' + p + a + co + n + fu + ln;
+    var link = conf.URLS.RAWBASE.replace('mypads/', '') + 'p/' + c.pad._id + '?' + p + a + co + n + anchor;
     return [
       m('p.text-right', [
         m('a.btn.btn-default.expand-toggle', {

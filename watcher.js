@@ -106,7 +106,7 @@ module.exports = (function () {
           return callback(err);
         }
         var to = emailList.join(", ");
-        var subject = watcher.fn.generateDigestSubject(g);
+        var subject = emailSubject;
         var text = watcher.fn.generateDigestMessage(actualChanges, padNames);
         var data = watcher.fn.generateDigestFormattedMessage(actualChanges, padNames);
         var envelope = {
@@ -133,7 +133,11 @@ module.exports = (function () {
         return resolve(padChangeCache[padId]);
       });
     }
-    return etherpadAPI.createDiffSince(padId, startTime).then(diffs => {
+    return etherpadAPI.createDiffSince(padId, startTime).catch(err => {
+      // Its possible padId no longer exists or diff cannot be generated
+      // For our purposes, this is equivalent to having no diffs.
+      return {padId, splices: [], authors: []}; 
+    }).then(diffs => {
       padChangeCache[padId] = diffs;
       return diffs;
     });
@@ -211,7 +215,7 @@ module.exports = (function () {
           return true;
         } 
         // User has been tagged in pad
-        return d.splices.some(diffText => diffText.toLowerCase().includes(userTag));
+        return d.splices.some(diffText => diffText[2].toLowerCase().includes(userTag));
       });
 
       if (actualChanges.length == 0) {
@@ -220,7 +224,7 @@ module.exports = (function () {
 
       var mailList = [u._id];
 
-      return watcher.fn.sendMailChanges(mailList, watcher.fn.generateUserDigestSubject(g), actualChanges, callback);
+      return watcher.fn.sendMailChanges(mailList, watcher.fn.generateUserDigestSubject(u), actualChanges, callback);
     });
   }
 
@@ -230,7 +234,7 @@ module.exports = (function () {
         if (err) {
           return outerReject(err);
         }
-        return outerResolve ( Promise.allSettled(groupIds.map(gid => {
+        return outerResolve ( Promise.all(groupIds.map(gid => {
           return new Promise((resolve, reject) => {
             watcher.reportGroupChanges(gid, startTime, (err, result) => {
               if (err) {
@@ -247,7 +251,7 @@ module.exports = (function () {
   }
 
   watcher.reportAllUsers = function(startTime) {
-    return Promise.allSettled(userCache.logins.map(lid => {
+    return Promise.all(Object.keys(userCache.logins).map(lid => {
       return new Promise((resolve, reject) => { 
         watcher.reportUserChanges(lid, startTime, (err, result) => {
           if (err) {
@@ -267,9 +271,10 @@ module.exports = (function () {
       if (err) {
         // FIXME determine proper logging
         console.log(err);
+        return;
       }
-      var changePromises = [reportAllGroups(startTime), reportAllUsers(startTime)];
-      Promise.allSettled(changePromises).then(watcher.fn.clearCache);
+      var changePromises = [watcher.reportAllGroups(startTime), watcher.reportAllUsers(startTime)];
+      Promise.all(changePromises).finally(watcher.fn.clearCache);
     });
   }
 

@@ -1,14 +1,14 @@
 exports.postAceInit = function(hook, context) {
 
-  var userId = getUrlVars()['findUser'];
-  if (userId) {
-    findAndScrollTo(containsText, '@' + userId.toLowerCase());
-    return;
-  }
-
   var lineNumber = getUrlVars()['lineNumber'];
   if (lineNumber) {
     findAndScrollTo(isLine, lineNumber);
+    return;
+  }
+
+  var userId = getUrlVars()['findUser'];
+  if (userId) {
+    findAndScrollTo(containsText, '@' + userId.toLowerCase());
     return;
   }
 
