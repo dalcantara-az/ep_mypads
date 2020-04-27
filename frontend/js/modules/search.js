@@ -9,8 +9,6 @@ module.exports = (function () {
     var auth      = require('../auth.js');
     var u         = auth.userInfo;
     var layout    = require('./layout.js');
-    var groupMark = require('./group-mark.js');
-    var padMark   = require('./pad-mark.js');
     var model     = require('../model/group.js');
   
     var search = {};
@@ -38,8 +36,7 @@ module.exports = (function () {
       */
   
       c.computeSearchResults = function () {
-        // change this one to search results
-        var uMarks = u().bookmarks;
+
         var items  = function (data, marks) {
           return  ld(data)
             .values()
@@ -49,8 +46,10 @@ module.exports = (function () {
         };
         console.log(model.groups());
         c.searchResults = {
-          groups: items(model.groups(), uMarks.groups),
-          pads: items(model.pads(), uMarks.pads)
+          groups: items(model.groups(), c.results.groups),
+          pads: items(model.pads(), c.results.pads)
+          // groups: items(model.groups()),
+          // pads: items(model.pads())
         };
       };
   
@@ -62,6 +61,19 @@ module.exports = (function () {
       //   
       //  } 
       console.log(c.search());
+      console.log(conf.URLS.PAD + '/search?q=' + encodeURI(c.search()));
+      m.request({
+        method: 'GET',
+        url: conf.URLS.PAD + '/search?q=' + encodeURI(c.search()),
+      }).then(function (resp) {
+        c.results ={
+          groups: resp.body.groups,
+          pads: resp.body.pads
+        }
+       
+      }, function (err) {
+        notif.error({ body: ld.result(conf.LANG, err.error) });
+      });
       // c.computeSearchResults();
     };
   
