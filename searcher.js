@@ -22,14 +22,13 @@ module.exports = (function () {
                 if (err) { console.log(err) }
                 
                 var rows = queryResult.rows;
-                console.log(rows);
                 var results = {
                     groups: {},
                     pads: {},
                     headlines: {},
                 };
                 storage.fn.getKeysUncached(rows.map(function (row) {
-                    results.headlines[row.key.substr(4)] = row.headline.replace(/(\r\n|\n|\r)/gm, "");
+                    results.headlines[row.key.substr(4)] = row.headline.replace(/(\r\n+|\n+|\r+)/gm, " ");
                     return 'mypads:' + row.key;
                 }), function(err, newResults) {
                     
