@@ -37,52 +37,40 @@ module.exports = (function () {
   
       c.computeSearchResults = function () {
 
-        var items  = function (data, marks) {
+        var items  = function (data) {
           return  ld(data)
             .values()
-            .filter(function (v) { return ld.includes(marks, v._id); })
             .sortBy('name')
             .value();
         };
         if(c.results != null){
           c.searchResults = {
-            pads: items(model.pads(), c.results.pads.substr(4))
-            // groups: items(model.groups()),
-            // pads: items(model.pads())
+            pads: items(model.pads(), c.results)
           };
         }
         else{
           c.searchResults = {
             pads: []
-            // groups: items(model.groups()),
-            // pads: items(model.pads())
           };
         }
-        console.log("hehe");
-        console.log(model.pads());
-        
       };
   
 
 
     c.search       = m.prop('');
     c.filterSearch = function () {
-      // console.log(c.search());
-      // console.log(conf.URLS.PAD + '/search?q=' + encodeURI(c.search()));
       m.request({
         method: 'GET',
         url: conf.URLS.PAD + '/search?q=' + encodeURI(c.search()),
       }).then(function (resp) {
-        console.log(resp);
         c.results ={
-         // groups: resp.body.groups,
           pads: resp.results.pads
         }
-        console.log(c.results.pads);
+        model.fetch(c.computeSearchResults());
       }, function (err) {
         notif.error({ body: ld.result(conf.LANG, err.error) });
       });
-       model.fetch(c.computeSearchResults());
+       
     };
   
       // Bootstrapping
@@ -124,16 +112,14 @@ module.exports = (function () {
       } else {
         return m('ul.list-unstyled', ld.map(c.searchResults[type], function (item) {
           var route;
-          // if (type === 'groups') {
-          //   route = '/mypads/group/' + item._id + '/view';
-          // } else {
             route = '/mypads/group/' + item.group + '/pad/view/' + item._id;
-          //}
+          return m('li', [
+            m('a', { href: route, config: m.route }, item.name)
+          ]);
         }));
       }
     };
   
-    // view.groups = ld.partialRight(view._items, 'groups');
     view.pads   = ld.partialRight(view._items, 'pads');
   
     view.aside = function () {
@@ -167,12 +153,6 @@ module.exports = (function () {
               conf.LANG.SEARCH.TITLE)
           ),
         ]),
-        // m('section.panel.panel-primary', [
-        //   m('.panel-heading',
-        //     m('h3.panel-title', conf.LANG.GROUP.GROUPS)
-        //   ),
-        //   m('.panel-body', view.groups(c))
-        // ]),
         m('section.panel.panel-info', [
           m('.panel-heading',
             m('h3.panel-title', conf.LANG.GROUP.PAD.PADS)
