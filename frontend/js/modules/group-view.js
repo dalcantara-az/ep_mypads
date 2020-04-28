@@ -545,16 +545,16 @@ module.exports = (function () {
 
   view.main = function (c) {
     var isBookmarked = (auth.isAuthenticated()) ? (ld.includes(u().bookmarks.groups, c.group._id)) : false;
-    if(u().watchlist!= null){
+    // if(u().watchlist!= null){
       var isWatched = (auth.isAuthenticated()) ? (ld.includes(u().watchlist.groups, c.group._id)) : false;
-    }
-    else{
-      u().watchlist = {
-        groups: [],
-        pads: [],
-      };
+    // }
+    // else{
+    //   u().watchlist = {
+    //     groups: [],
+    //     pads: [],
+    //   };
       var isWatched = false;
-    }
+    //}
     
     var h2Elements   = [ m('span', [
       m('button.btn.btn-link.btn-lg', {

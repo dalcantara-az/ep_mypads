@@ -34,11 +34,6 @@ module.exports = (function () {
       * `computeSearchResults` is an internal function that gathers search groups
       * and pads.
       */
-      c.searchResults = {
-        pads: []
-        // groups: items(model.groups()),
-        // pads: items(model.pads())
-      };
   
       c.computeSearchResults = function () {
 
@@ -51,11 +46,20 @@ module.exports = (function () {
         };
         if(c.results != null){
           c.searchResults = {
-            pads: items(model.pads(), c.results.pads)
+            pads: items(model.pads(), c.results.pads.substr(4))
             // groups: items(model.groups()),
             // pads: items(model.pads())
           };
         }
+        else{
+          c.searchResults = {
+            pads: []
+            // groups: items(model.groups()),
+            // pads: items(model.pads())
+          };
+        }
+        console.log("hehe");
+        console.log(model.pads());
         
       };
   
@@ -69,16 +73,16 @@ module.exports = (function () {
         method: 'GET',
         url: conf.URLS.PAD + '/search?q=' + encodeURI(c.search()),
       }).then(function (resp) {
-        console.log(resp.body);
+        console.log(resp);
         c.results ={
          // groups: resp.body.groups,
-          pads: resp.body
+          pads: resp.results.pads
         }
-       
+        console.log(c.results.pads);
       }, function (err) {
         notif.error({ body: ld.result(conf.LANG, err.error) });
       });
-      // c.computeSearchResults();
+       model.fetch(c.computeSearchResults());
     };
   
       // Bootstrapping
