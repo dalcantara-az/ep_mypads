@@ -40,7 +40,7 @@ module.exports = (function () {
         var items  = function (data) {
           return  ld(data)
             .values()
-            .sortBy('name')
+            //.sortBy('name')
             .value();
         };
         if(c.results != null){
@@ -66,10 +66,13 @@ module.exports = (function () {
         c.results ={
           pads: []
         };
+        c.headlines = resp.results.headlines;
         c.results ={
           pads: resp.results.pads
         }
         model.fetch(c.computeSearchResults());
+        console.log(c.results);
+        console.log(c.headlines);
       }, function (err) {
         notif.error({ body: ld.result(conf.LANG, err.error) });
       });
@@ -117,7 +120,8 @@ module.exports = (function () {
           var route;
             route = '/mypads/group/' + item.group + '/pad/view/' + item._id;
           return m('li', [
-            m('a', { href: route, config: m.route }, item.name)
+            m('a', { href: route, config: m.route }, item.name),
+            m('p', { style: {fontSize: '12px'} }, m.trust(c.headlines[item._id])),
           ]);
         }));
       }
