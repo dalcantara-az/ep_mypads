@@ -203,7 +203,7 @@ module.exports = (function () {
       if (err) {
         return callback(err);
       }
-      var userTag = '@' + u.login;
+      var userTag = '@' + u.login + '@';
       var watchlist = u.watchlist ? u.watchlist.pads : [];
       var actualChanges = padDiffs.filter(d => {
         // No change to pad

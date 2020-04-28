@@ -1443,7 +1443,7 @@ module.exports = (function () {
             g.watchers = [];
           }
           for(var i=0; i< g.watchers.length; i++){
-            user.get(g.watchers[i].slice(0, -8), function(err, u){
+            user.getByUId(g.watchers[i], function(err, u){
               if (err) { return res.status(404).send({ error: err.message }); }
                user.unwatch(u.login, type, g_id, function(err){ if (err) { return res.status(404).send({ error: err.message }); }});
             })

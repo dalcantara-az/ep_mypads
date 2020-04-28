@@ -432,6 +432,16 @@ module.exports = (function () {
 
   user.get = ld.partial(user.fn.getDel, false);
 
+  /***
+   * ### getByUId
+   *
+   * User reading by uid
+   *
+   * This function uses common.getDel wtih 'del' to *false*.  It takes
+   * mandatory 'user id' string and 'callback function'
+   */
+  user.getByUId = ld.partial(common.getDel, false, UPREFIX);
+
   /**
   * ### del
   *

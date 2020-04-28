@@ -210,7 +210,7 @@ module.exports = (function () {
     throw new TypeError('BACKEND.ERROR.TYPE.CALLBACK_FN');
   }
   // legacy safety check
-  if (!user.watchlist) {
+  if (!user.watchlist || !user.watchlist.groups || user.watchlist.groups.length == 0) {
     return callback(null, {});
   }
   storage.fn.getKeys(
