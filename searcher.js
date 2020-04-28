@@ -27,21 +27,32 @@ module.exports = (function () {
             
                     var rows = queryResult.rows;
                     console.log(rows);
-                    var results = {
-                        groups: {},
-                        pads: {},
-                    };
-                    rows.forEach(function (row) {
-                        try {
-                            if (!ld.isNull(row)) {
-                                results.pads[row.key] = JSON.parse(row.value);
-                            }
-                        } catch (e) {
-                            console.log(e.message);
-                            console.error('JSON-PROBLEM:' + row.value);
-                        }
-                    });
-                    return callback(null, results);
+                    // rows.forEach(function (row) {
+                    //     try {
+                    //         if (!ld.isNull(row)) {
+                    //             results.pads[row.key] = JSON.parse(row.value);
+                    //         }
+                    //     } catch (e) {
+                    //         console.log(e.message);
+                    //         console.error('JSON-PROBLEM:' + row.value);
+                    //     }
+                    // });
+                    storage.fn.getKeysUncached(rows.map(function (row) {
+                        return 'mypads:' + row.key; // remove pad: prefix
+                    }), function(err, newResults) {
+                        var results = {
+                            groups: {},
+                            pads: {},
+                        };
+                        if (err) { console.log(err) }
+
+                        console.log(newResults);
+                        Object.keys(newResults).forEach(function(key) {
+                            results.pads[key.substr(storage.DBPREFIX.PAD.length)] = newResults[key];
+                        })
+                        return callback(null, results);
+                    })
+                    
                 });
             }
             // storage.fn.getKeysUncached(padIds, function(err, results) {

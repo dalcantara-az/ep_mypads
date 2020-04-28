@@ -455,11 +455,8 @@ module.exports = (function () {
 
 
   pad.getAllPadIds = function(callback) {
-    console.log(storage.db);
     storage.db.findKeys(PPREFIX.substr(storage.DBPREFIX.GLOBAL.length) + '*', '*:*:*', function (err, res) {
       if (err) { return callback(err); }
-      console.log(PPREFIX.substr(storage.DBPREFIX.GLOBAL.length) + '*');
-      console.log(res);
       return callback(null, res);
       // return callback(null, ld.map(res, key => key.substr(PPREFIX.length)));
     });

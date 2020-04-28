@@ -69,7 +69,7 @@ module.exports = (function () {
         method: 'GET',
         url: conf.URLS.PAD + '/search?q=' + encodeURI(c.search()),
       }).then(function (resp) {
-        console.log(resp.body);
+        console.log(resp);
         c.results ={
          // groups: resp.body.groups,
           pads: resp.body
