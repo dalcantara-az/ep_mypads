@@ -45,7 +45,7 @@ module.exports = (function () {
         };
         if(c.results != null){
           c.searchResults = {
-            pads: items(model.pads(), c.results)
+            pads: items(c.results.pads)
           };
         }
         else{
@@ -63,6 +63,9 @@ module.exports = (function () {
         method: 'GET',
         url: conf.URLS.PAD + '/search?q=' + encodeURI(c.search()),
       }).then(function (resp) {
+        c.results ={
+          pads: []
+        };
         c.results ={
           pads: resp.results.pads
         }
