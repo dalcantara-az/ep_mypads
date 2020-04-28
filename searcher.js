@@ -16,61 +16,34 @@ module.exports = (function () {
 
     searcher.fn.searchPads = function (searchQuery, callback) {
         console.log("searched for: " + searchQuery);
-        padDB.getAllPadIds(function(err, padIds) {
-            if (err) {
-                console.log(err);
-            }
-            if (storage.db && (storage.db.type === 'postgres' || storage.db.type === 'postgrespool')) {
-                var query = 'SELECT ts_rank_cd(to_tsvector(value::json -> \'atext\' ->> \'text\'), plainto_tsquery($1)) AS score, key, ts_headline(\'english\', value::json -> \'atext\' ->> \'text\', plainto_tsquery($2)) AS headline  FROM store WHERE to_tsvector(value::json -> \'atext\' ->> \'text\') @@ plainto_tsquery($3) ORDER BY score DESC';
-                storage.db.db.wrappedDB.db.query(query, [searchQuery, searchQuery, searchQuery], function (err, queryResult) {
+        if (storage.db && (storage.db.type === 'postgres' || storage.db.type === 'postgrespool')) {
+            var query = 'SELECT ts_rank_cd(to_tsvector(value::json -> \'atext\' ->> \'text\'), plainto_tsquery($1)) AS score, key, ts_headline(\'english\', value::json -> \'atext\' ->> \'text\', plainto_tsquery($2)) AS headline  FROM store WHERE to_tsvector(value::json -> \'atext\' ->> \'text\') @@ plainto_tsquery($3) ORDER BY score DESC';
+            storage.db.db.wrappedDB.db.query(query, [searchQuery, searchQuery, searchQuery], function (err, queryResult) {
+                if (err) { console.log(err) }
+                
+                var rows = queryResult.rows;
+                console.log(rows);
+                var results = {
+                    groups: {},
+                    pads: {},
+                    headlines: {},
+                };
+                storage.fn.getKeysUncached(rows.map(function (row) {
+                    results.headlines[row.key.substr(4)] = row.headline.replace(/(\r\n|\n|\r)/gm, "");
+                    return 'mypads:' + row.key;
+                }), function(err, newResults) {
+                    
                     if (err) { console.log(err) }
-                    
-                    var rows = queryResult.rows;
-                    console.log(rows);
-                    var results = {
-                        groups: {},
-                        pads: {},
-                        headlines: {},
-                    };
-                    // rows.forEach(function (row) {
-                    //     try {
-                    //         if (!ld.isNull(row)) {
-                    //             results.pads[row.key] = JSON.parse(row.value);
-                    //         }
-                    //     } catch (e) {
-                    //         console.log(e.message);
-                    //         console.error('JSON-PROBLEM:' + row.value);
-                    //     }
-                    // });
-                    storage.fn.getKeysUncached(rows.map(function (row) {
-                        results.headlines[row.key.substr(4)] = row.headline.replace(/(\r\n|\n|\r)/gm, "");
-                        return 'mypads:' + row.key; // remove pad: prefix
-                    }), function(err, newResults) {
-                        
-                        if (err) { console.log(err) }
 
-                        console.log(newResults);
-                        Object.keys(newResults).forEach(function(key) {
-                            results.pads[key.substr(storage.DBPREFIX.PAD.length)] = newResults[key];
-                        })
-                        return callback(null, results);
+                    console.log(newResults);
+                    Object.keys(newResults).forEach(function(key) {
+                        results.pads[key.substr(storage.DBPREFIX.PAD.length)] = newResults[key];
                     })
-                    
-                });
-            }
-            // storage.fn.getKeysUncached(padIds, function(err, results) {
-            //     var pads = {};
-            //     if (err) {
-            //         console.log(err);
-            //     }
-            //     console.log('results:');
-            //     console.log(results);
-            //     Object.keys(results).forEach(function(key){
-            //         pads[key] = results[key];
-            //     });
-            //     return callback(null, pads);
-            // })
-        });
+                    return callback(null, results);
+                })
+                
+            });
+        }
     };
     
     return searcher;
