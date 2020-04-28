@@ -21,12 +21,17 @@ module.exports = (function () {
                 console.log(err);
             }
             if (storage.db && (storage.db.type === 'postgres' || storage.db.type === 'postgrespool')) {
-                var query = 'SELECT ts_rank_cd(to_tsvector(value::json -> \'atext\' ->> \'text\'), plainto_tsquery($1)) AS score, key, value FROM store WHERE to_tsvector(value::json -> \'atext\' ->> \'text\') @@ plainto_tsquery($2) ORDER BY score DESC';
-                storage.db.db.wrappedDB.db.query(query, [searchQuery, searchQuery], function (err, queryResult) {
+                var query = 'SELECT ts_rank_cd(to_tsvector(value::json -> \'atext\' ->> \'text\'), plainto_tsquery($1)) AS score, key, ts_headline(\'english\', value::json -> \'atext\' ->> \'text\', plainto_tsquery($2)) AS headline  FROM store WHERE to_tsvector(value::json -> \'atext\' ->> \'text\') @@ plainto_tsquery($3) ORDER BY score DESC';
+                storage.db.db.wrappedDB.db.query(query, [searchQuery, searchQuery, searchQuery], function (err, queryResult) {
                     if (err) { console.log(err) }
-            
+                    
                     var rows = queryResult.rows;
                     console.log(rows);
+                    var results = {
+                        groups: {},
+                        pads: {},
+                        headlines: {},
+                    };
                     // rows.forEach(function (row) {
                     //     try {
                     //         if (!ld.isNull(row)) {
@@ -38,12 +43,10 @@ module.exports = (function () {
                     //     }
                     // });
                     storage.fn.getKeysUncached(rows.map(function (row) {
+                        results.headlines[row.key.substr(4)] = row.headline.replace(/(\r\n|\n|\r)/gm, "");
                         return 'mypads:' + row.key; // remove pad: prefix
                     }), function(err, newResults) {
-                        var results = {
-                            groups: {},
-                            pads: {},
-                        };
+                        
                         if (err) { console.log(err) }
 
                         console.log(newResults);
