@@ -203,11 +203,15 @@ module.exports = (function () {
   */
 
  group.getWatchedGroupsByUser = function (user, callback) {
-  if (!ld.isObject(user) || !ld.isArray(user.watchlist.groups)) {
+  if (!ld.isObject(user)) {
     throw new TypeError('BACKEND.ERROR.TYPE.USER_INVALID');
   }
   if (!ld.isFunction(callback)) {
     throw new TypeError('BACKEND.ERROR.TYPE.CALLBACK_FN');
+  }
+  // legacy safety check
+  if (!user.watchlist) {
+    return callback(null, {});
   }
   storage.fn.getKeys(
     ld.map(user.watchlist.groups, function (g) { return GPREFIX + g; }),

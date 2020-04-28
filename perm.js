@@ -243,6 +243,15 @@ module.exports = (function () {
     var refuse = function () {
       var mypadsRoute = conf.get('rootUrl') + '/mypads/index.html?/mypads/group/' +
         params.pg.group._id + '/pad/view/' + params.pg.pad._id;
+
+      //FIXME Messy to hardcode query params to include in redirect
+      // might be better to include all querystring param instead
+      if (req.query.lineNumber) {
+        mypadsRoute += '?lineNumber=' + req.query.lineNumber; 
+      } else if (req.query.findUser) {
+        mypadsRoute += '?findUser=' + req.query.findUser; 
+      }
+
       return res.redirect(mypadsRoute);
     };
     params = {

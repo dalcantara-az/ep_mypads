@@ -170,6 +170,7 @@ module.exports = (function () {
     var a  = (auth.isAuthenticated() ? '&auth_token=' + auth.token() : '');
     var n  = '';
     var co = '';
+    var anchor = '';
     if (u) {
       if (((u.useLoginAndColorInPads || conf.SERVER.useFirstLastNameInPads) && u.color)) {
         co = '&userColor=' + u.color;
@@ -182,8 +183,17 @@ module.exports = (function () {
       } else {
         n = '&userName=' + (u.padNickname ? u.padNickname : u.login);
       }
+
+      var lineNumber = m.route.param('lineNumber');
+      if (lineNumber) {
+        anchor = '&lineNumber=' + lineNumber;
+      } else {
+        // always look for the login user
+        anchor = '&findUser=' + (m.route.param('findUser') || u.login);
+      }
     }
-    var link = conf.URLS.RAWBASE.replace('mypads/', '') + 'p/' + c.pad._id + '?' + p + a + co + n;
+
+    var link = conf.URLS.RAWBASE.replace('mypads/', '') + 'p/' + c.pad._id + '?' + p + a + co + n + anchor;
     return [
       m('p.text-right', [
         m('a.btn.btn-default.expand-toggle', {

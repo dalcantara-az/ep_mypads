@@ -1809,14 +1809,25 @@ module.exports = (function () {
 
     app.get(statsRoute + '/watch', fn.ensureAdmin, function(req, res) {
       var watcherUtils = require('./watcher');
-      watcherUtils.reportAllGroups();
+      watcherUtils.reportAll();
       res.send({});
     });
 
-    app.get(statsRoute + '/watch/:key', fn.ensureAdmin, function (req, res) {
+    app.get(statsRoute + '/watchGroup/:key', fn.ensureAdmin, function (req, res) {
       var watcherUtils = require('./watcher');
       var startTime = Date.now() - parseInt(req.query.ago);
       watcherUtils.reportGroupChanges(req.params.key, startTime, function(err, result) {
+        if (err) {
+          return res.send({error: err.stack});
+        }
+        return res.send({result});
+      });
+    })
+
+    app.get(statsRoute + '/watchUser/:key', fn.ensureAdmin, function (req, res) {
+      var watcherUtils = require('./watcher');
+      var startTime = Date.now() - parseInt(req.query.ago);
+      watcherUtils.reportUserChanges(req.params.key, startTime, function(err, result) {
         if (err) {
           return res.send({error: err.stack});
         }
