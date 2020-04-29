@@ -40,7 +40,7 @@ module.exports = (function () {
         var items  = function (data) {
           return  ld(data)
             .values()
-            // //.sortBy('name')
+            //.sortBy('name')
             .value();
         };
         if(c.results != null){
@@ -62,13 +62,17 @@ module.exports = (function () {
       m.request({
         method: 'GET',
         url: conf.URLS.PAD + '/search?q=' + encodeURI(c.search()),
-      }).then(function (resp) {     
+      }).then(function (resp) {
+        c.results ={
+          pads: []
+        };
         c.headlines = resp.results.headlines;
         c.results ={
           pads: resp.results.pads
         }
         model.fetch(c.computeSearchResults());
-        
+        console.log(c.results);
+        console.log(c.headlines);
       }, function (err) {
         notif.error({ body: ld.result(conf.LANG, err.error) });
       });
@@ -112,25 +116,14 @@ module.exports = (function () {
       if (ld.size(c.searchResults[type]) === 0) {
         return m('p', noneMsg);
       } else {
-        var keys = [];
-        for(var i = 0; i< ld.size(c.searchResults[type]); i++){
-          Object.keys(c.results.pads[i]).forEach(function(key) {
-            keys[i]= key
-          })
-        }
-        return m('ul.list-unstyled', ld.map(c.searchResults.pads, function (item) {
-          var itemKey;
-          Object.keys(item).forEach(function(key) {
-              itemKey = key
-          })
+        return m('ul.list-unstyled', ld.map(c.searchResults[type], function (item) {
           var route;
-          route = '/mypads/group/' + item[itemKey].group + '/pad/view/' + item[itemKey]._id;
+            route = '/mypads/group/' + item.group + '/pad/view/' + item._id;
           return m('li', [
-            m('a', { href: route, config: m.route }, item[itemKey].name),
-            m('p', { style: {fontSize: '12px'} }, m.trust(c.headlines[item[itemKey]._id])),
+            m('a', { href: route, config: m.route }, item.name),
+            m('p', { style: {fontSize: '12px'} }, m.trust(c.headlines[item._id])),
           ]);
         }));
-        
       }
     };
   

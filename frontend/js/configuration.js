@@ -53,7 +53,6 @@ module.exports = (function () {
   config.URLS.PASSRECOVER          = config.URLS.BASE + '/passrecover';
   config.URLS.ACCOUNT_CONFIRMATION = config.URLS.BASE + '/accountconfirm';
   config.URLS.CACHECHECK           = config.URLS.BASE + '/cache/check';
-  config.URLS.SEARCH               = config.URLS.PAD + '/search';
   config.SERVER                    = m.prop();
   // default to en
   var USERLANG_DEFAULT = 'en';
