@@ -59,6 +59,14 @@ module.exports = (function () {
 
     c.search       = m.prop('');
     c.filterSearch = function () {
+
+      var x = {
+        method: "GET",
+        url: conf.URLS.PAD + "/search",
+        params: {q: encodeURI(c.search())}
+      }
+
+      console.log(x);
       m.request({
         method: 'GET',
         url: conf.URLS.PAD + '/search?q=' + encodeURI(c.search()),
