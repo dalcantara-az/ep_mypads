@@ -1520,7 +1520,6 @@ module.exports = (function () {
     */
 
     var canAct = function (edit, successFn, req, res) {
-      console.log('in canAct');
       pad.get(req.params.key, function (err, p) {
         var token = req.body.auth_token || req.query.auth_token;
         if (!token || !auth.fn.getUser(token)) { return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.MUST_BE'); }
@@ -1593,9 +1592,8 @@ module.exports = (function () {
 
     
     app.get(padRoute + '/search', function (req, res) {
-      console.log('searching...');
       var searcherUtil = require('./searcher');
-      searcherUtil.fn.searchPads(req.query.q, function(err, results) {
+      searcherUtil.searchPads(req.query.q, function(err, results) {
         if (err) {
           return res.status(400).send({ success: false, error: err });
         }
@@ -1614,7 +1612,6 @@ module.exports = (function () {
     // TODO: + admin, no pass needed...
     app.get(padRoute + '/:key',
       ld.partial(canAct, false, function (req, res, val) {
-        console.log('in /key');
         return res.send({ key: req.params.key, value: val });
       })
     );

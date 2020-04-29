@@ -26,54 +26,54 @@
 */
 
 module.exports = (function () {
-    'use strict';
-    // Dependencies
-    var m     = require('mithril');
-    var ld    = require('lodash');
-    var auth  = require('../auth.js');
-    var conf  = require('../configuration.js');
-    var notif = require('../widgets/notification.js');
-    var model = require('../model/group.js');
-  
-    /**
-    * ## Main function
-    *
-    * Takes a group object and adds or removes it from the bookmarks of the
-    * current user. An optional `successFn` can be given, called with no
-    * argument after successfull operation.
-    */
-  
-    return function (pad, successFn) {
-      var pid  = pad._id;
-      var user = auth.userInfo();
-      if (ld.includes(user.watchlist.pads, pid)) {
-        ld.pull(user.watchlist.pads, pid);
-      } else {
-        user.watchlist.pads.push(pid);
+  'use strict';
+  // Dependencies
+  var m     = require('mithril');
+  var ld    = require('lodash');
+  var auth  = require('../auth.js');
+  var conf  = require('../configuration.js');
+  var notif = require('../widgets/notification.js');
+  var model = require('../model/group.js');
+
+  /**
+  * ## Main function
+  *
+  * Takes a group object and adds or removes it from the bookmarks of the
+  * current user. An optional `successFn` can be given, called with no
+  * argument after successfull operation.
+  */
+
+  return function (pad, successFn) {
+    var pid  = pad._id;
+    var user = auth.userInfo();
+    if (ld.includes(user.watchlist.pads, pid)) {
+      ld.pull(user.watchlist.pads, pid);
+    } else {
+      user.watchlist.pads.push(pid);
+    }
+    if (typeof(model.watchlist().pads[pid]) !== 'undefined') {
+      delete model.watchlist().pads[pid];
+    } else {
+      model.watchlist().pads[pid] = pad;
+    }
+    m.request({
+      url: conf.URLS.USERWATCH,
+      method: 'POST',
+      data: {
+        type: 'pads',
+        key: pid,
+        auth_token: auth.token(),
       }
-      if (typeof(model.watchlist().pads[pid]) !== 'undefined') {
-        delete model.watchlist().pads[pid];
-      } else {
-        model.watchlist().pads[pid] = pad;
-      }
-      m.request({
-        url: conf.URLS.USERWATCH,
-        method: 'POST',
-        data: {
-          type: 'pads',
-          key: pid,
-          auth_token: auth.token(),
+    }).then(function () {
+      notif.success({ body: conf.LANG.GROUP.WATCH_SUCCESS });
+      if(c!=null){
+          model.fetch(c.computeGroups);
         }
-      }).then(function () {
-        notif.success({ body: conf.LANG.GROUP.WATCH_SUCCESS });
-        if(c!=null){
-            model.fetch(c.computeGroups);
-          }
-        if (successFn) { successFn(); }
-      }, function (err) {
-        return notif.error({ body: ld.result(conf.LANG, err.error) });
-      });
-    };
+      if (successFn) { successFn(); }
+    }, function (err) {
+      return notif.error({ body: ld.result(conf.LANG, err.error) });
+    });
+  };
   
-  }).call(this);
+}).call(this);
   
