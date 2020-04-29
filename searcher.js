@@ -5,14 +5,7 @@ var padDB = require('./model/pad.js');
 module.exports = (function () {
   'use strict';
 
-  var _bulkRetrieve = function(prefix, list, callback) {
-    var keys = list.map(id => prefix + id);
-    storage.fn.getKeys(keys, callback);
-  }
-
   var searcher = {};
-
-  searcher.fn = {};
 
   searcher.searchPads = function (searchQuery, callback) {
     if (storage.db && (storage.db.type === 'postgres' || storage.db.type === 'postgrespool')) {
