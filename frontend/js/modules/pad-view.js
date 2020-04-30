@@ -64,7 +64,7 @@ module.exports = (function () {
     c.isAuth    = auth.isAuthenticated();
     c.isGuest   = !c.isAuth;
     c.bookmarks = (c.isAuth ? auth.userInfo().bookmarks.pads : []);
-    if(auth.userInfo().watchlist != null){
+    if((c.isAuth && auth.userInfo().watchlist != null){
       c.watchlist = (c.isAuth ? auth.userInfo().watchlist.pads : []);
     }
     else{
