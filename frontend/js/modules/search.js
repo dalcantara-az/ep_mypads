@@ -5,11 +5,11 @@ module.exports = (function () {
   var ld = require('lodash');
 
   // Local dependencies
-  var conf      = require('../configuration.js');
-  var auth      = require('../auth.js');
-  var u         = auth.userInfo;
-  var layout    = require('./layout.js');
-  var model     = require('../model/group.js');
+  var conf = require('../configuration.js');
+  var auth = require('../auth.js');
+  var u = auth.userInfo;
+  var layout = require('./layout.js');
+  var model = require('../model/group.js');
 
   var search = {};
 
@@ -38,10 +38,7 @@ module.exports = (function () {
     c.computeSearchResults = function () {
 
       var items  = function (data) {
-        return  ld(data)
-          .values()
-          // //.sortBy('name')
-          .value();
+        return data;
       };
       if(c.results != null){
         c.searchResults = {
