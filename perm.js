@@ -207,7 +207,7 @@ module.exports = (function () {
     var g = params.pg.group;
     var p = params.pg.pad;
     if (p.readonly || (g.readonly && p.readonly === null)) {
-      return getPad(params.pg.pad._id, function (err, p) {
+      return getPad(params.pg.pad._id, null, function (err, p) {
         if (err) { return params.unexpected(err); }
         getPadHTML(p, undefined, function (err, html) {
           if (err) { return params.unexpected(err); }
