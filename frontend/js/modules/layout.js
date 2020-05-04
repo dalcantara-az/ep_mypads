@@ -67,6 +67,12 @@ module.exports = (function () {
           txt: conf.LANG.MENU.WATCHLIST
         },
         {
+          route: '/search',
+          icon: 'search',
+          txt: conf.LANG.MENU.SEARCH
+        },
+
+        {
           route: '/myuserlists',
           icon: 'user',
           txt: conf.LANG.MENU.USERLIST

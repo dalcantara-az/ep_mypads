@@ -1590,6 +1590,17 @@ module.exports = (function () {
       });
     };
 
+    
+    app.get(padRoute + '/search', function (req, res) {
+      var searcherUtil = require('./searcher');
+      searcherUtil.searchPads(req.query.q, function(err, results) {
+        if (err) {
+          return res.status(400).send({ success: false, error: err });
+        }
+        return res.send({results});
+      });
+    });
+
     /**
     * GET method : `pad.get` unique id
     * Only for group admin or users, and global admin
@@ -1602,7 +1613,8 @@ module.exports = (function () {
     app.get(padRoute + '/:key',
       ld.partial(canAct, false, function (req, res, val) {
         return res.send({ key: req.params.key, value: val });
-      }));
+      })
+    );
 
     // `set` for POST and PUT, see below
     var _set = function (req, res) {
@@ -1718,6 +1730,8 @@ module.exports = (function () {
         }
       });
     });
+
+    
   };
 
   cacheAPI = function (app) {
