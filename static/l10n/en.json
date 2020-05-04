@@ -329,8 +329,8 @@
       "REMOVE": "Remove",
       "REMOVE_CHAT_HISTORY": "Remove chat history",
       "SEARCH": {
-         "HELP": "Search on common fields with at least 2 characters",
-         "TITLE": "Search",
+         "HELP": "Filter on common fields with at least 2 characters",
+         "TITLE": "Filter",
          "TYPE": "Type here"
       },
       "SHARE": "Share",
