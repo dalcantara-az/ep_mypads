@@ -59,6 +59,9 @@ module.exports = (function () {
     m.request({
       method: 'GET',
       url: conf.URLS.PAD + '/search?q=' + encodeURI(c.search()),
+      data: {
+        auth_token: auth.token(),
+      }
     }).then(function (resp) {     
       c.headlines = resp.results.headlines;
       c.results ={
