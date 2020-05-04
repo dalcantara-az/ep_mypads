@@ -28,7 +28,7 @@ module.exports = (function () {
           INNER JOIN store
           ON subquery.key = SUBSTRING(store.key, ${mypadStartIndex})
           WHERE ((store.value)::json ->> 'visibility' IS NULL AND 
-            CONCAT('mypads:group:', (store.value)::json ->> 'group') IN (
+            CONCAT('${storage.DBPREFIX.GROUP}', (store.value)::json ->> 'group') IN (
               SELECT key
               FROM store, LATERAL (
                 SELECT array_agg(value) AS ids
