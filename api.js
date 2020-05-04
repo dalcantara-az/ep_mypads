@@ -1593,7 +1593,12 @@ module.exports = (function () {
     
     app.get(padRoute + '/search', function (req, res) {
       var searcherUtil = require('./searcher');
-      searcherUtil.searchPads(req.query.q, function(err, results) {
+      var u = auth.fn.getUser(req.body.auth_token || req.query.auth_token);
+      if (!u) {
+        return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.MUST_BE');
+      }
+      var userId = auth.tokens[u.login]._id;
+      searcherUtil.searchPads(userId, req.query.q, function(err, results) {
         if (err) {
           return res.status(400).send({ success: false, error: err });
         }
