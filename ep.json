@@ -6,11 +6,16 @@
       "hooks": {
         "init_ep_mypads": "ep_mypads/hooks:init",
         "expressConfigure": "ep_mypads/hooks:expressConfigure",
-        "pluginUninstall": "ep_mypads/hooks:removeAllData"
+        "pluginUninstall": "ep_mypads/hooks:removeAllData",
+        "eejsBlock_scripts": "ep_mypads/hooks:eejsBlock_scripts",
+        "eejsBlock_mySettings": "ep_mypads/hooks:eejsBlock_mySettings",
+        "clientVars": "ep_mypads/hooks:clientVars"
       },
       "client_hooks": {
         "postToolbarInit": "ep_mypads/static/js/clientHooks:postToolbarInit",
-        "postAceInit": "ep_mypads/static/js/scrollTo:postAceInit"
+        "postAceInit": "ep_mypads/static/js/scrollTo:postAceInit",
+        "aceEditorCSS": "ep_mypads/static/js/inlineToolbar:aceEditorCSS",
+        "aceSelectionChanged": "ep_mypads/static/js/inlineToolbar:aceSelectionChanged"
       }
     }
   ]
