@@ -163,6 +163,8 @@ function drawAt(XY){
     $(toolbar).css("background", "none");
     $(toolbar).css("border-bottom", "none");
     $(toolbar).css("max-width", "30%");
+    $(toolbar).find(".menu_left").append("<div>Hi</div>")
+    // $(toolbar).find(".menu_left").append("<li data-type='button' data-key='redo'><a class='grouped-right' data-l10n-id='pad.toolbar.redo.title' title='Redo (Ctrl+Y)' aria-label='Redo (Ctrl+Y)'><button class='buttonicon buttonicon-redo' data-l10n-id='pad.toolbar.redo.title' title='Redo (Ctrl+Y)' aria-label='Redo (Ctrl+Y)'></button></a></li>")
   }
   var toolbar = padOuter.find("#inline_toolbar");
 
@@ -171,6 +173,7 @@ function drawAt(XY){
   });
   $(toolbar).css("left", XY[0]);
   $(toolbar).css("top", XY[1]-20);
+  
 }
 
 
