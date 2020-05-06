@@ -33,6 +33,12 @@ exports.aceSelectionChanged = function(hook, context){
   }
 }
 
+exports.aceKeyEvent = function(hook, context){
+  if(context.evt.key == "Enter"){
+    console.log("enter")
+  }
+}
+
 exports.aceEditorCSS = function(hook, context){
 }
 
@@ -162,7 +168,7 @@ function drawAt(XY){
     $(toolbar).find(".menu_left").css("margin-left", "0px");
     $(toolbar).css("background", "none");
     $(toolbar).css("border-bottom", "none");
-    $(toolbar).css("max-width", "30%");
+    $(toolbar).css("max-width", "50%");
     $(toolbar).find(".menu_left").append("<div>Hi</div>")
     // $(toolbar).find(".menu_left").append("<li data-type='button' data-key='redo'><a class='grouped-right' data-l10n-id='pad.toolbar.redo.title' title='Redo (Ctrl+Y)' aria-label='Redo (Ctrl+Y)'><button class='buttonicon buttonicon-redo' data-l10n-id='pad.toolbar.redo.title' title='Redo (Ctrl+Y)' aria-label='Redo (Ctrl+Y)'></button></a></li>")
   }
