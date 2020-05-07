@@ -3,11 +3,9 @@ var lines = 0;
 var manuallySelected;
 
 exports.aceSelectionChanged = function(hook, context){
-  console.log(context);
   var selStart = context.rep.selStart;
   var selEnd = context.rep.selEnd;
   if((selStart[0] !== selEnd[0]) || (selStart[1] !== selEnd[1])){
-    // console.log("selection made, showing inline toolbar");
     iT.show(selStart, selEnd);
   }else{
     iT.hide();
@@ -20,7 +18,6 @@ exports.postAceInit = function(hook, context) {
   $('iframe[name="ace_outer"]').contents().find('iframe').contents().find("#innerdocbody").contents().each(function() {
     lines++;
   });
-  console.log(lines);
 }
 
 function attachContextMenu() {
@@ -72,10 +69,10 @@ exports.aceSelectionChanged = function(hook, context){
 }
 
 exports.aceKeyEvent = function(hook, context){
-  if((context.evt.key == "Enter"||context.evt.key == "Backspace") && context.rep.alines.length!= lines){
-    console.log("lines changed")
+  if((context.evt.key == "Enter"||context.evt.key == "Backspace") && context.rep.alines.length != lines){
+    lines = context.rep.alines.length;
+    attachContextMenu();
   }
-
 }
 
 function onRightClick(lineNumber) {
@@ -137,7 +134,6 @@ function drawContextMenu(x, y){
       $item.on('click', {
         item: items[i]
       }, function(event){
-        console.log(event.data.item);
         event.data.item.onclick();
         $(contextMenu).hide();
       });
