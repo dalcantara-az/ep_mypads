@@ -1,5 +1,6 @@
 var selectedLineNumber;
 var lines = 0;
+var manuallySelected;
 
 exports.aceSelectionChanged = function(hook, context){
   console.log(context);
@@ -46,6 +47,15 @@ jQuery.fn.selectText = function() {
   return this;
 }
 
+jQuery.fn.copyText = function() {
+  var obj = this[0];
+  var ownerDocument = obj.ownerDocument;
+  var textarea = ownerDocument.querySelector('#text_to_copy');
+  textarea.focus();
+  textarea.select();
+  ownerDocument.execCommand('copy');
+}
+
 exports.aceSelectionChanged = function(hook, context){
   var selStart = context.rep.selStart;
   var selEnd = context.rep.selEnd;
@@ -84,7 +94,16 @@ function drawContextMenu(x, y){
     {
       label: "Copy Link",
       onclick: function() {
-        console.log('copied link')
+        console.log('copied link');
+        var padOuter = $('iframe[name="ace_outer"]').contents().find("body");
+        
+        var $textarea = $("<textarea>", {id: "text_to_copy"});
+        var innerDocWindow = $('iframe[name="ace_outer"]').contents().find('iframe')[0].contentWindow;
+        $textarea.val(innerDocWindow.getSelection().toString() + '\n' + window.parent.parent.location.href + '?lineNumber=' + (selectedLineNumber + 1));
+        console.log($textarea.val());
+        padOuter.append($textarea);
+        $textarea.copyText();
+        $textarea.remove();
       }
     },
     {
