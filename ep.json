@@ -16,7 +16,7 @@
         "postAceInit": "ep_mypads/static/js/scrollTo:postAceInit",
         "aceEditorCSS": "ep_mypads/static/js/inlineToolbar:aceEditorCSS",
         "aceSelectionChanged": "ep_mypads/static/js/inlineToolbar:aceSelectionChanged",
-        "aceKeyEvent": "ep_mypads/static/js/inlineToolbar:aceKeyEvent"
+        "aceKeyEvent": "ep_mypads/static/js/scrollTo:aceKeyEvent"
 
       }
     }

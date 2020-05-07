@@ -1,5 +1,11 @@
-exports.postAceInit = function(hook, context) {
+var lines;
 
+exports.postAceInit = function(hook, context) {
+  lines = 0;
+  $('iframe[name="ace_outer"]').contents().find('iframe').contents().find("#innerdocbody").contents().each(function() {
+    lines++;
+  });
+  console.log(lines);
   var lineNumber = getUrlVars()['lineNumber'];
   if (lineNumber) {
     findAndScrollTo(isLine, lineNumber);
@@ -13,6 +19,13 @@ exports.postAceInit = function(hook, context) {
   }
 
 };
+
+exports.aceKeyEvent = function(hook, context){
+  if((context.evt.key == "Enter"||context.evt.key == "Backspace") && context.rep.alines.length!= lines){
+    console.log("lines changed")
+  }
+
+}
 
 function isLine(elem, count, param) {
   return count == param;

@@ -33,11 +33,7 @@ exports.aceSelectionChanged = function(hook, context){
   }
 }
 
-exports.aceKeyEvent = function(hook, context){
-  if(context.evt.key == "Enter"){
-    console.log("enter")
-  }
-}
+
 
 exports.aceEditorCSS = function(hook, context){
 }
