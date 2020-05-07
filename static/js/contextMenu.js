@@ -1,4 +1,5 @@
 var selectedLineNumber;
+var lines = 0;
 
 exports.aceSelectionChanged = function(hook, context){
   console.log(context);
