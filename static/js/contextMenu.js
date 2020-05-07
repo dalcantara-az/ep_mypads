@@ -50,7 +50,7 @@ jQuery.fn.copyText = function() {
   var obj = this[0];
   var ownerDocument = obj.ownerDocument;
   var textarea = ownerDocument.querySelector('#text_to_copy');
-  textarea.focus();
+  textarea.focus({preventScroll: true});
   textarea.select();
   ownerDocument.execCommand('copy');
 }
