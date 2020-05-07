@@ -14,19 +14,22 @@ exports.aceSelectionChanged = function(hook, context){
 }
 
 exports.postAceInit = function(hook, context) {
+  attachContextMenu();
+}
+
+function attachContextMenu() {
   var count = 0;
   var innerDocBody = $('iframe[name="ace_outer"]').contents().find('iframe').contents().find("#innerdocbody");
-  var padOuter = $('iframe[name="ace_outer"]').contents().find("body");
   
   $(innerDocBody).children().each(function() {
     var currentLine = count;
+    $(this).off('contextmenu');
     $(this).bind('contextmenu', function(e) {
       e.preventDefault();
       onRightClick(currentLine);
       drawContextMenu(e.clientX, e.clientY);
     })
     count++;
-    
   });
 }
 
@@ -80,13 +83,11 @@ function drawContextMenu(x, y){
     {
       label: "Copy Link",
       onclick: function() {
-        console.log('copied link');
         var padOuter = $('iframe[name="ace_outer"]').contents().find("body");
         
         var $textarea = $("<textarea>", {id: "text_to_copy"});
         var innerDocWindow = $('iframe[name="ace_outer"]').contents().find('iframe')[0].contentWindow;
         $textarea.val(innerDocWindow.getSelection().toString() + '\n' + window.parent.parent.location.href + '?lineNumber=' + (selectedLineNumber + 1));
-        console.log($textarea.val());
         padOuter.append($textarea);
         $textarea.copyText();
         $textarea.remove();
