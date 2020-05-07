@@ -1,4 +1,5 @@
 var selectedLineNumber;
+var lines = 0;
 var manuallySelected;
 
 exports.aceSelectionChanged = function(hook, context){
@@ -15,6 +16,11 @@ exports.aceSelectionChanged = function(hook, context){
 
 exports.postAceInit = function(hook, context) {
   attachContextMenu();
+  lines = 0;
+  $('iframe[name="ace_outer"]').contents().find('iframe').contents().find("#innerdocbody").contents().each(function() {
+    lines++;
+  });
+  console.log(lines);
 }
 
 function attachContextMenu() {
@@ -63,6 +69,13 @@ exports.aceSelectionChanged = function(hook, context){
     selectedLineNumber = null;
     contextMenu.hide();
   }
+}
+
+exports.aceKeyEvent = function(hook, context){
+  if((context.evt.key == "Enter"||context.evt.key == "Backspace") && context.rep.alines.length!= lines){
+    console.log("lines changed")
+  }
+
 }
 
 function onRightClick(lineNumber) {
