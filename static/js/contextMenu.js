@@ -13,6 +13,12 @@ exports.aceSelectionChanged = function(hook, context){
 }
 
 exports.postAceInit = function(hook, context) {
+  lines = 0;
+  $('iframe[name="ace_outer"]').contents().find('iframe').contents().find("#innerdocbody").contents().each(function() {
+    lines++;
+  });
+  console.log(lines);
+
   var count = 0;
   var innerDocBody = $('iframe[name="ace_outer"]').contents().find('iframe').contents().find("#innerdocbody");
   var padOuter = $('iframe[name="ace_outer"]').contents().find("body");
@@ -50,6 +56,13 @@ exports.aceSelectionChanged = function(hook, context){
     selectedLineNumber = null;
     contextMenu.hide();
   }
+}
+
+exports.aceKeyEvent = function(hook, context){
+  if((context.evt.key == "Enter"||context.evt.key == "Backspace") && context.rep.alines.length!= lines){
+    console.log("lines changed")
+  }
+
 }
 
 function onRightClick(lineNumber) {
