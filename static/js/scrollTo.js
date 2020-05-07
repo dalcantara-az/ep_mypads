@@ -1,5 +1,6 @@
-exports.postAceInit = function(hook, context) {
 
+
+exports.postAceInit = function(hook, context) {
   var lineNumber = getUrlVars()['lineNumber'];
   if (lineNumber) {
     findAndScrollTo(isLine, lineNumber);
