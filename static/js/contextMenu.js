@@ -121,16 +121,28 @@ function drawContextMenu(x, y){
     $(contextMenu).css("border-color", "rgb(190, 190, 190)");
     $(contextMenu).css("background-color", "white");
     $(contextMenu).css("border-radius", "10px");
-    $(contextMenu).css("padding", "10px");
+    $(contextMenu).css("padding-top", "10px");
+    $(contextMenu).css("padding-bottom", "10px");
+    $(contextMenu).css("padding-right", "10px");
     $(contextMenu).css("-webkit-box-shadow", "10px 7px 13px -8px rgba(0,0,0,0.43)");
     $(contextMenu).css("-moz-box-shadow", "10px 7px 13px -8px rgba(0,0,0,0.43)");
     $(contextMenu).css("box-shadow", "10px 7px 13px -8px rgba(0,0,0,0.43)");
     $(contextMenu).css("font-size", "16px");
     $(contextMenu).append("<ul id='context_menu_items' style='list-style:none'></ul>");
     var menuItems = contextMenu.find('#context_menu_items');
+    $(menuItems).css("padding-right", "10px");
     for (var i = 0; i < items.length; i++) {
       var $item = $("<li>", {"class": "context_menu_item"});
+      $item.css("padding-left", "10px")
       $item.text(items[i].label);
+      $item.hover(
+        function(){
+          $(this).css('background', '#E8E8E8');
+        },function() {
+          //mouse out
+          $(this).css('background', '	#FFFFFF')
+        }
+      )
       $item.on('click', {
         item: items[i]
       }, function(event){
