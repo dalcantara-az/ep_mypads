@@ -33,6 +33,9 @@ var rFS      = require('fs').readFileSync;
 var ld       = require('lodash');
 var passport = require('passport');
 var jwt      = require('jsonwebtoken');
+var bodyParser = require('body-parser');
+var urlencodedParser = bodyParser.urlencoded({ extended: false });
+
 var testMode = false;
 var express;
 try {
@@ -1111,16 +1114,17 @@ module.exports = (function () {
       });
     });
 
-    app.post(notifyUsersRoute, function(req, res) {
-      console.log('request:');
-      console.log(req);
+    app.post(notifyUsersRoute, urlencodedParser, function(req, res) {
       var copiedText = req.body.copiedText;
       var users = {
         present: [],
         absent: [],
       }
-      var lm = req.body.loginsOrEmails;
+      var lm = req.body['loginsOrEmails[]'];
       if (lm) { 
+        if (!(lm instanceof Array)) {
+          lm = [lm];
+        }
         users = userCache.fn.getIdsFromLoginsOrEmails(lm); 
       }
       console.log('sending the text:\n' + copiedText + '\nto the following users:');
