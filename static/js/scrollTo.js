@@ -1,6 +1,3 @@
-var lines;
-
-  
 exports.postAceInit = function(hook, context) {
   var lineNumber = getUrlVars()['lineNumber'];
   if (lineNumber) {

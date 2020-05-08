@@ -630,6 +630,8 @@ module.exports = (function () {
     var allUsersRoute    = api.initialRoute + 'all-users';
     var searchUsersRoute = api.initialRoute + 'search-users';
     var userlistRoute    = api.initialRoute + 'userlist';
+    var notifyUsersRoute = api.initialRoute + 'notify-users';
+    var userExistRoute   = api.initialRoute + 'user-exist';
 
     /**
     * GET method : `user.userlist` with crud fixed to *get* and current login.
@@ -1107,6 +1109,32 @@ module.exports = (function () {
           res.send({ success: true, login: val.login });
         });
       });
+    });
+
+    app.post(notifyUsersRoute, function(req, res) {
+      console.log('request:');
+      console.log(req);
+      var copiedText = req.body.copiedText;
+      var users = {
+        present: [],
+        absent: [],
+      }
+      var lm = req.body.loginsOrEmails;
+      if (lm) { 
+        users = userCache.fn.getIdsFromLoginsOrEmails(lm); 
+      }
+      console.log('sending the text:\n' + copiedText + '\nto the following users:');
+      for (var i = 0; i< users.present.length; i++){
+        console.log(users.present[i] + '\n');
+      }
+      res.send({success: true});
+    });
+
+    app.get(userExistRoute + '/:key', function(req, res) {
+      var users = userCache.fn.searchUserInfos(req.params.key);
+      console.log(users);
+      res.send({ userExists: Object.keys(users).length > 0 });
+    
     });
 
   };
