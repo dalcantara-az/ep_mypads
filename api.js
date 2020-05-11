@@ -1165,8 +1165,6 @@ module.exports = (function () {
 
     app.get(userExistRoute + '/:key', function(req, res) {
       var u = auth.fn.getUser(req.query.auth_token);
-      console.log('req query');
-      console.log(req.query);
       if (!u) {
         return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.NOT_AUTH');
       }

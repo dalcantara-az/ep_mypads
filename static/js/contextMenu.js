@@ -23,7 +23,7 @@ function attachContextMenu() {
   var count = 0;
   var innerDocBody = $('iframe[name="ace_outer"]').contents().find('iframe').contents().find("#innerdocbody");
   
-  $innerDocBody.children().each(function() {
+  $(innerDocBody).children().each(function() {
     var currentLine = count;
     $(this).off('contextmenu');
     $(this).bind('contextmenu', function(e) {
@@ -61,7 +61,7 @@ exports.aceSelectionChanged = function(hook, context){
     selectedLineNumber = selStart[0];
   }else{
     var padOuter = $('iframe[name="ace_outer"]').contents().find("body");
-    var contextMenu = $padOuter.find("#context_menu");
+    var contextMenu = $(padOuter).find("#context_menu");
     selectedLineNumber = null;
     contextMenu.hide();
   }
