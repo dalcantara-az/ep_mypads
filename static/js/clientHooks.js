@@ -140,3 +140,21 @@ exports.postToolbarInit = function (hook_name, args) {
     }
   });
 }
+
+exports.postAceInit = function(hook, context) {
+  var contextMenu = require('ep_mypads/static/js/contextMenu');
+  var scrollTo = require('ep_mypads/static/js/scrollTo');
+  scrollTo.postAceInit(hook, context);
+  contextMenu.postAceInit(hook, context);
+}
+
+exports.aceKeyEvent = function(hook, context) {
+  var contextMenu = require('ep_mypads/static/js/contextMenu');
+  var scrollTo = require('ep_mypads/static/js/scrollTo');
+  contextMenu.aceKeyEvent(hook, context);
+}
+
+exports.aceSelectionChanged = function(hook, context) {
+  var contextMenu = require('ep_mypads/static/js/contextMenu'); 
+  contextMenu.aceSelectionChanged(hook, context);
+}

@@ -33,6 +33,9 @@ var rFS      = require('fs').readFileSync;
 var ld       = require('lodash');
 var passport = require('passport');
 var jwt      = require('jsonwebtoken');
+var bodyParser = require('body-parser');
+var urlencodedParser = bodyParser.urlencoded({ extended: false });
+
 var testMode = false;
 var express;
 try {
@@ -630,6 +633,8 @@ module.exports = (function () {
     var allUsersRoute    = api.initialRoute + 'all-users';
     var searchUsersRoute = api.initialRoute + 'search-users';
     var userlistRoute    = api.initialRoute + 'userlist';
+    var notifyUsersRoute = api.initialRoute + 'notify-users';
+    var userExistRoute   = api.initialRoute + 'user-exist';
 
     /**
     * GET method : `user.userlist` with crud fixed to *get* and current login.
@@ -1107,6 +1112,59 @@ module.exports = (function () {
           res.send({ success: true, login: val.login });
         });
       });
+    });
+
+    app.post(notifyUsersRoute, urlencodedParser, function(req, res) {
+      var u = auth.fn.getUser(req.body.auth_token);
+      if (!u) {
+        return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.NOT_AUTH');
+      }
+      var users = {
+        present: [],
+        absent: [],
+      }
+      var lm = req.body['loginsOrEmails[]'];
+      if (lm) { 
+        if (!(lm instanceof Array)) {
+          lm = [lm];
+        }
+        users = userCache.fn.getIdsFromLoginsOrEmails(lm); 
+      }
+      var recipients = users.present.join(', ');
+      if (conf.get('checkMails')) {
+        var lang = (function () {
+          if (ld.includes(ld.keys(conf.cache.languages), req.body.lang)) {
+            return req.body.lang;
+          } else {
+            return conf.get('defaultLanguage');
+          }
+        })();
+        var subject = fn.mailMessage('NOTIFY_USER_SUBJECT', {
+          login: u.login
+        });
+        var message = fn.mailMessage('NOTIFY_USER', {
+          login: u.login,
+          url: req.body.url,
+          text: req.body.text,
+        }, lang);
+        mail.send(req.body.email, subject, message, function (err) {
+          if (err) {
+            stop = true;
+            return res.status(501).send({ error: err });
+          }
+        }, lang);
+      }
+      res.send({success: true});
+    });
+
+    app.get(userExistRoute + '/:key', function(req, res) {
+      var u = auth.fn.getUser(req.query.auth_token);
+      if (!u) {
+        return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.NOT_AUTH');
+      }
+      var users = userCache.fn.searchUserInfos(req.params.key);
+      res.send({ userExists: Object.keys(users).length > 0 });
+      
     });
 
   };
