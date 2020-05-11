@@ -146,7 +146,7 @@ module.exports = (function () {
       subject: subject,
       text: message
     };
-    mail.server.send(envelope, callback);
+    mail.sendEnvelope(envelope, callback);
   };
 
   mail.sendEnvelope = function (envelope, callback, retries = 0) {
@@ -158,9 +158,9 @@ module.exports = (function () {
     envelope.from = emailFrom;
     mail.server.send(envelope, function(err, result) {
       if (err && retries < 2) {
-        mail.sendEnvelope(envelope, callback, retries + 1);
+        return mail.sendEnvelope(envelope, callback, retries + 1);
       }
-      callback(err, result);
+      return callback(err, result);
     });
   }
 
