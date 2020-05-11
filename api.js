@@ -1130,7 +1130,14 @@ module.exports = (function () {
         }
         users = userCache.fn.getIdsFromLoginsOrEmails(lm); 
       }
-      var recipients = users.present.join(', ');
+      var recipients = "";
+      for (var i = 0; i < users.present.length; i++) {
+        if (i > 0) {
+          recipients += ', ';
+        }
+        var userInfo = userCache.fn.searchUserInfos(users.present[i]);
+        recipients += userInfo[Object.keys(userInfo)[0]].email;
+      }
       var lang = ld.includes(ld.keys(conf.cache.languages), req.body.lang) ? req.body.lang : conf.get('defaultLanguage');
       var subject = fn.mailMessage('NOTIFY_USER_SUBJECT', {
         login: u.login
@@ -1142,8 +1149,6 @@ module.exports = (function () {
       }, lang);
       mail.send(recipients, subject, message, function (err) {
         if (err) {
-          console.log(recipients);
-          console.log(err);
           return res.status(501).send({ error: err });
         }
         return res.send({success: true});
