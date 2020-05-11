@@ -16,9 +16,7 @@ exports.postAceInit = function(hook, context) {
   
   attachContextMenu();
   lines = 0;
-  $('iframe[name="ace_outer"]').contents().find('iframe').contents().find("#innerdocbody").contents().each(function() {
-    lines++;
-  });
+  lines = $('iframe[name="ace_outer"]').contents().find('iframe').contents().find("#innerdocbody").contents().length;
 }
 
 function attachContextMenu() {
@@ -115,6 +113,9 @@ function drawNotifyModal() {
     $formUserSelect.append($msgUserNotExist);
     $msgUserNotExist.hide();
     $container.append($formUserSelect);
+    $container.css("height", "200");
+    $container.css("display", "inline-block");
+
 
     $container.append('<p style="padding-bottom: 10px; padding-top: 10px;">Selected Users</p>');
     
