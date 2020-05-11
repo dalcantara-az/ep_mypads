@@ -96,10 +96,14 @@ module.exports = (function() {
           },
           success: function(data, textStatus, jqXHR) {
             if (data.success === true) {
-              console.log('notifying success!');
+              alert('Successfully notified selected users.');
             } else {
-              console.log('notifying failed');
+              alert('Something went wrong.');
             }
+          },
+          error: function(jqXHR, textStatus, errorThrown) {
+            console.log(errorThrown);
+            alert('Something went wrong.');
           }
         });
       }
