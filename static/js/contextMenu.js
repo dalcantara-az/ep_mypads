@@ -128,12 +128,15 @@ function drawNotifyModal() {
     })
     $btnCancel.text('CANCEL')
     var $btnNotify = $('<button>', {'class': 'custom-button'});
+    var copiedText = getTextToCopy();
     $btnNotify.on('click', function(e) {
       $.ajax({
         method: 'POST',
         url: baseURL +'/mypads/api/notify-users',
         data: {
-          copiedText: getTextToCopy(),
+          auth_token: localStorage.getItem('token'),
+          url: copiedText.url,
+          text: copiedText.text,
           loginsOrEmails: loginOrEmails
         },
         success: function(data, textStatus, jqXHR) {
@@ -168,10 +171,12 @@ function drawNotifyModal() {
       
       console.log(baseURL);
       console.log(loginOrEmail);
-      console.log('sending ajax request');
       $.ajax({
         method: 'GET',
         url: baseURL+'/mypads/api/user-exist/' + loginOrEmail,
+        data: {
+          auth_token: localStorage.getItem('token')
+        },
         success: function(data, textStatus, jqXHR) {
           console.log('response: ');
           console.log(data);
@@ -275,7 +280,13 @@ function drawNotifyModal() {
 
 function getTextToCopy() {
   var innerDocWindow = $('iframe[name="ace_outer"]').contents().find('iframe')[0].contentWindow;
-  return innerDocWindow.getSelection().toString() + '\n' + window.parent.parent.location.href + '?lineNumber=' + (selectedLineNumber + 1)
+  console.log('copying text, url = ');
+  console.log(window.location.href.slice(0, window.location.href.indexOf('?')) + '?lineNumber=' + (selectedLineNumber + 1));
+  
+  return {
+    url: window.location.href.slice(0, window.location.href.indexOf('?')) + '?lineNumber=' + (selectedLineNumber + 1),
+    text: innerDocWindow.getSelection().toString()
+  }
 }
 
 function drawContextMenu(x, y){
@@ -289,14 +300,15 @@ function drawContextMenu(x, y){
       onclick: function() {
         var padOuter = $('iframe[name="ace_outer"]').contents().find("body");
         var $textarea = $("<textarea>", {id: "text_to_copy"});
-        $textarea.val(getTextToCopy());
+        var copiedText = getTextToCopy();
+        $textarea.val(copiedText.text + '\n' + copiedText.url);
         padOuter.append($textarea);
         $textarea.copyText();
         $textarea.remove();
       }
     },
     {
-      label: "Notify",
+      label: "Email selected text",
       onclick: function() {
         drawNotifyModal();
       }
