@@ -73,9 +73,9 @@ module.exports = (function () {
     c.isGuest = !auth.isAuthenticated();
 
     var init = function (err) {
-      if (err) { return m.route('/mypads'); }
+      if (c.isGuest || err) { return m.route('/mypads'); }
       var _init = function (err) {
-        if (err) { return m.route('/mypads'); }
+        if (c.isGuest || err) { return m.route('/mypads'); }
         var data = c.isGuest ? model.tmp() : model;
         c.group  = data.groups()[key];
         if (!c.isGuest) {

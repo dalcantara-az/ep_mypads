@@ -1131,30 +1131,23 @@ module.exports = (function () {
         users = userCache.fn.getIdsFromLoginsOrEmails(lm); 
       }
       var recipients = users.present.join(', ');
-      if (conf.get('checkMails')) {
-        var lang = (function () {
-          if (ld.includes(ld.keys(conf.cache.languages), req.body.lang)) {
-            return req.body.lang;
-          } else {
-            return conf.get('defaultLanguage');
-          }
-        })();
-        var subject = fn.mailMessage('NOTIFY_USER_SUBJECT', {
-          login: u.login
-        });
-        var message = fn.mailMessage('NOTIFY_USER', {
-          login: u.login,
-          url: req.body.url,
-          text: req.body.text,
-        }, lang);
-        mail.send(req.body.email, subject, message, function (err) {
-          if (err) {
-            stop = true;
-            return res.status(501).send({ error: err });
-          }
-        }, lang);
-      }
-      res.send({success: true});
+      var lang = ld.includes(ld.keys(conf.cache.languages), req.body.lang) ? req.body.lang : conf.get('defaultLanguage');
+      var subject = fn.mailMessage('NOTIFY_USER_SUBJECT', {
+        login: u.login
+      });
+      var message = fn.mailMessage('NOTIFY_USER', {
+        login: u.login,
+        url: req.body.url,
+        text: req.body.text,
+      }, lang);
+      mail.send(recipients, subject, message, function (err) {
+        if (err) {
+          console.log(recipients);
+          console.log(err);
+          return res.status(501).send({ error: err });
+        }
+        return res.send({success: true});
+      });
     });
 
     app.get(userExistRoute + '/:key', function(req, res) {
