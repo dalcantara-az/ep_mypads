@@ -1130,13 +1130,7 @@ module.exports = (function () {
         }
         users = userCache.fn.getIdsFromLoginsOrEmails(lm); 
       }
-      var recipients = "";
-      for (var i = 0; i< users.present.length; i++){
-        if (i > 0) {
-          recipients += ', ';
-        }
-        recipients += users.present[i];
-      }
+      var recipients = users.present.join(', ');
       if (conf.get('checkMails')) {
         var lang = (function () {
           if (ld.includes(ld.keys(conf.cache.languages), req.body.lang)) {
