@@ -179,12 +179,13 @@ module.exports = (function() {
           event.data.item.onclick();
           contextMenu.hide();
         });
-        $(menuItems).append($item);
+        menuItems.append($item);
       }
-      $(menuItems).find('.context_menu_item').css("padding", "10px");
-      $(menuItems).find('.context_menu_item').hover(function() {
-        $(this).css("background-color", "f8f8f8");
-        $(this).css("cursor", "pointer");
+      menuItems.find('.context_menu_item').css("padding", "10px");
+      menuItems.find('.context_menu_item').hover(function() {
+        var item = $(this);
+        item.css("background-color", "f8f8f8");
+        item.css("cursor", "pointer");
       })
     }
     contextMenu.css("left", newX);
