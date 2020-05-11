@@ -1115,7 +1115,10 @@ module.exports = (function () {
     });
 
     app.post(notifyUsersRoute, urlencodedParser, function(req, res) {
-      var copiedText = req.body.copiedText;
+      var u = auth.fn.getUser(req.body.auth_token);
+      if (!u) {
+        return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.NOT_AUTH');
+      }
       var users = {
         present: [],
         absent: [],
@@ -1127,18 +1130,50 @@ module.exports = (function () {
         }
         users = userCache.fn.getIdsFromLoginsOrEmails(lm); 
       }
-      console.log('sending the text:\n' + copiedText + '\nto the following users:');
+      var recipients = "";
       for (var i = 0; i< users.present.length; i++){
-        console.log(users.present[i] + '\n');
+        if (i > 0) {
+          recipients += ', ';
+        }
+        recipients += users.present[i];
+      }
+      if (conf.get('checkMails')) {
+        var lang = (function () {
+          if (ld.includes(ld.keys(conf.cache.languages), req.body.lang)) {
+            return req.body.lang;
+          } else {
+            return conf.get('defaultLanguage');
+          }
+        })();
+        var subject = fn.mailMessage('NOTIFY_USER_SUBJECT', {
+          login: u.login
+        });
+        var message = fn.mailMessage('NOTIFY_USER', {
+          login: u.login,
+          url: req.body.url,
+          text: req.body.text,
+        }, lang);
+        mail.send(req.body.email, subject, message, function (err) {
+          if (err) {
+            stop = true;
+            return res.status(501).send({ error: err });
+          }
+        }, lang);
       }
       res.send({success: true});
     });
 
     app.get(userExistRoute + '/:key', function(req, res) {
+      var u = auth.fn.getUser(req.query.auth_token);
+      console.log('req query');
+      console.log(req.query);
+      if (!u) {
+        return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.NOT_AUTH');
+      }
       var users = userCache.fn.searchUserInfos(req.params.key);
       console.log(users);
       res.send({ userExists: Object.keys(users).length > 0 });
-    
+      
     });
 
   };
