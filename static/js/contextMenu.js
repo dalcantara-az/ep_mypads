@@ -23,7 +23,7 @@ function attachContextMenu() {
   var count = 0;
   var innerDocBody = $('iframe[name="ace_outer"]').contents().find('iframe').contents().find("#innerdocbody");
   
-  $innerDocBody.children().each(function() {
+  $(innerDocBody).children().each(function() {
     var currentLine = count;
     $(this).off('contextmenu');
     $(this).bind('contextmenu', function(e) {
@@ -297,7 +297,7 @@ function drawContextMenu(x, y){
       }
     },
     {
-      label: "Email Selected Text",
+      label: "Notify",
       onclick: function() {
         drawNotifyModal();
       }
