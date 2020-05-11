@@ -1169,7 +1169,6 @@ module.exports = (function () {
         return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.NOT_AUTH');
       }
       var users = userCache.fn.searchUserInfos(req.params.key);
-      console.log(users);
       res.send({ userExists: Object.keys(users).length > 0 });
       
     });
