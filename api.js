@@ -1175,9 +1175,7 @@ module.exports = (function () {
         return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.MUST_BE');
       }
       var query = req.query.q; 
-      console.log('beginning search');
       searcherUtil.searchUsers(query, function(err, results) {
-        console.log('done searching...');
         if (err) {
           return res.status(400).send({ success: false, error: err });
         }

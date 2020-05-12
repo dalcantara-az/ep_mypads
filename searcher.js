@@ -48,7 +48,7 @@ module.exports = (function () {
           ORDER BY subquery.score DESC`;
       storage.db.db.wrappedDB.db.query(query, [], function (err, queryResult) {
         if (err) { 
-          console.log(err) 
+          return callback(err, null);
         }
         var rows = queryResult.rows;
         var results = {
@@ -79,19 +79,16 @@ module.exports = (function () {
         FROM store
         WHERE key LIKE '${storage.DBPREFIX.USER}%' AND value::json ->> 'login' LIKE '${searchQuery}%'
       `;
-      console.log(query)
       var results = [];
     
       storage.db.db.wrappedDB.db.query(query, [], function (err, queryResult) {
         if (err) { 
-          console.log(err) 
+          return callback(err, null); 
         }
         var rows = queryResult.rows;
-        console.log(rows);
         rows.forEach(function(row) {
           results.push(row.loginoremail);
         });
-        console.log(results)
         return callback(null, results);
       });
     }
