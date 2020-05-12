@@ -16,6 +16,7 @@ module.exports = (function() {
     var notifyModal = padOuter.find('#notifyModal');
     notifyModal.find('#userList').empty();
     notifyModal.find('#emailField').val('');
+    notifyModal.find('#msgUserNotExist').hide();
     loginOrEmails = [];
     notifyModal.fadeToggle(250);
   }

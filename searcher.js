@@ -70,34 +70,29 @@ module.exports = (function () {
   searcher.searchUsers = function(searchQuery, callback) {
     if (storage.db && (storage.db.type === 'postgres' || storage.db.type === 'postgrespool')) {
       
-      var loginQuery = `
-        SELECT (value::json) ->> 'login' AS login
+      var query = `
+        SELECT (value::json) ->> 'email' AS loginOrEmail
         FROM store
-        WHERE key LIKE '${storage.DBPREFIX.USER}%' AND value::json ->> 'login' LIKE '${searchQuery}%'`;
-      var emailQuery = `
-        SELECT (value::json) ->> 'email' AS email
+        WHERE key LIKE '${storage.DBPREFIX.USER}%' AND value::json ->> 'email' LIKE '${searchQuery}%'
+        UNION
+        SELECT (value::json) ->> 'login' AS loginOrEmail
         FROM store
-        WHERE key LIKE '${storage.DBPREFIX.USER}%' AND value::json ->> 'email' LIKE '${searchQuery}%'`;
+        WHERE key LIKE '${storage.DBPREFIX.USER}%' AND value::json ->> 'login' LIKE '${searchQuery}%'
+      `;
+      console.log(query)
       var results = [];
     
-      storage.db.db.wrappedDB.db.query(loginQuery, [], function (err, queryResult) {
+      storage.db.db.wrappedDB.db.query(query, [], function (err, queryResult) {
         if (err) { 
           console.log(err) 
         }
         var rows = queryResult.rows;
+        console.log(rows);
         rows.forEach(function(row) {
-          results.push(row.login);
+          results.push(row.loginoremail);
         });
-        storage.db.db.wrappedDB.db.query(emailQuery, [], function (err, queryResult) {
-          if (err) { 
-            console.log(err) 
-          }
-          var rows = queryResult.rows;
-          rows.forEach(function(row) {
-            results.push(row.email);
-          });
-          return callback(null, results);
-        })
+        console.log(results)
+        return callback(null, results);
       });
     }
   }
