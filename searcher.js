@@ -66,6 +66,41 @@ module.exports = (function () {
       });
     }
   };
+
+  searcher.searchUsers = function(searchQuery, callback) {
+    if (storage.db && (storage.db.type === 'postgres' || storage.db.type === 'postgrespool')) {
+      
+      var loginQuery = `
+        SELECT (value::json) ->> 'login' AS login
+        FROM store
+        WHERE key LIKE '${storage.DBPREFIX.USER}%' AND value::json ->> 'login' LIKE '${searchQuery}%'`;
+      var emailQuery = `
+        SELECT (value::json) ->> 'email' AS email
+        FROM store
+        WHERE key LIKE '${storage.DBPREFIX.USER}%' AND value::json ->> 'email' LIKE '${searchQuery}%'`;
+      var results = [];
+    
+      storage.db.db.wrappedDB.db.query(loginQuery, [], function (err, queryResult) {
+        if (err) { 
+          console.log(err) 
+        }
+        var rows = queryResult.rows;
+        rows.forEach(function(row) {
+          results.push(row.login);
+        });
+        storage.db.db.wrappedDB.db.query(emailQuery, [], function (err, queryResult) {
+          if (err) { 
+            console.log(err) 
+          }
+          var rows = queryResult.rows;
+          rows.forEach(function(row) {
+            results.push(row.email);
+          });
+          return callback(null, results);
+        })
+      });
+    }
+  }
   
   return searcher;
 }).call(this);

@@ -7,6 +7,16 @@ module.exports = (function() {
 
   var notifyModal = require('ep_mypads/static/js/notifyModal'); 
 
+
+  contextMenu.aceEditorCSS = function(hook, context) {
+    var css = ["/ep_mypads/static/css/contextMenu.css"];
+    var notifyModalCSS = notifyModal.aceEditorCSS(hook, context);
+    for (var i = 0; i < notifyModalCSS.length; i++) {
+      css.push(notifyModalCSS[i]);
+    }
+    return css;
+  }
+
   contextMenu.postAceInit = function(hook, context) {
     attachContextMenu();
     lines = 0;
@@ -144,35 +154,11 @@ module.exports = (function() {
     if(contextMenu.length === 0){
       padOuter.append("<div id ='context_menu'></div>");
       contextMenu = padOuter.find("#context_menu");
-      contextMenu.css("position", "absolute");
-      contextMenu.css("width", "150px");
-      contextMenu.css("left", newX);
-      contextMenu.css("top", newY);
-      contextMenu.css("border", "1px solid");
-      contextMenu.css("border-color", "rgb(190, 190, 190)");
-      contextMenu.css("background-color", "white");
-      contextMenu.css("padding-top", "0px");
-      contextMenu.css("padding-bottom", "0px");
-      contextMenu.css("padding-right", "0px");
-      contextMenu.css("padding-left", "0px");
-      contextMenu.css("-webkit-box-shadow", "10px 7px 13px -8px rgba(0,0,0,0.43)");
-      contextMenu.css("-moz-box-shadow", "10px 7px 13px -8px rgba(0,0,0,0.43)");
-      contextMenu.css("box-shadow", "10px 7px 13px -8px rgba(0,0,0,0.43)");
-      contextMenu.css("font-size", "14px");
       contextMenu.append("<ul id='context_menu_items' style='list-style:none; margin-left: 0px; padding-right: 0px;'></ul>");
       var menuItems = contextMenu.find('#context_menu_items');
       for (var i = 0; i < items.length; i++) {
         var $item = $("<li>", {"class": "context_menu_item"});
-        $item.css("padding-left", "10px")
         $item.text(items[i].label);
-        $item.hover(
-          function(){
-            $(this).css('background', '#E8E8E8');
-          },function() {
-            //mouse out
-            $(this).css('background', '	#FFFFFF')
-          }
-        )
         $item.on('click', {
           item: items[i]
         }, function(event){
@@ -181,12 +167,6 @@ module.exports = (function() {
         });
         menuItems.append($item);
       }
-      menuItems.find('.context_menu_item').css("padding", "10px");
-      menuItems.find('.context_menu_item').hover(function() {
-        var item = $(this);
-        item.css("background-color", "f8f8f8");
-        item.css("cursor", "pointer");
-      })
     }
     contextMenu.css("left", newX);
     contextMenu.css("top", newY);

@@ -41,6 +41,11 @@ automaticReconnect.showCountDownTimerToReconnectOnModal = function($modal, pad) 
   }
 };
 
+exports.aceEditorCSS = function(hook, context) {
+  var contextMenu = require("ep_mypads/static/js/contextMenu");
+  return contextMenu.aceEditorCSS(hook, context);
+}
+
 exports.postToolbarInit = function (hook_name, args) {
   /*
    * Fix links with auth_token
