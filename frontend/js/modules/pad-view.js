@@ -235,7 +235,7 @@ module.exports = (function () {
   view.main = function (c) {
     var isPrivate = (function () {
       if (c.pad) {
-        return (c.pad.visibility === 'private');
+        return ((c.pad.visibility || c.group.visibility) === 'private');
       } else {
         return (c.group.visibility && c.group.visibility === 'private');
       }
