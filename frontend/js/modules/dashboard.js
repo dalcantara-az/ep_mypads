@@ -40,6 +40,7 @@ module.exports = (function () {
   
       c.computePads = function () {
         c.pads = ld(model.pads()).values().value();
+        c.pads = ld(u().watchlist.pads).values().value();
         console.log(c.pads);
       };
 
