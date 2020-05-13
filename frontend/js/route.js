@@ -61,6 +61,7 @@ module.exports = (function () {
   var adminUsersCreate     = require('./modules/admin-users-create.js');
   var adminUserForm        = require('./modules/admin-users-form.js');
   var adminUserRemove      = require('./modules/admin-users-remove.js');
+  var dashboard            = require('./modules/dashboard.js');
 
   var route = { model: {} };
 
@@ -79,6 +80,7 @@ module.exports = (function () {
     '/accountconfirm/:token': accountConfirm,
     '/subscribe': subscribe,
     '/myprofile': subscribe,
+    '/dashboard': dashboard,
     '/mybookmarks': bookmark,
     '/mywatchlist': watchlist,
     '/search': search,
