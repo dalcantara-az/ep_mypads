@@ -52,11 +52,6 @@ module.exports = (function () {
     var _routes = {
       auth: [
         {
-          route: '/dashboard',
-          icon: 'dashboard',
-          txt: conf.LANG.MENU.DASHBOARD
-        },
-        {
           route: '/mypads',
           icon: 'duplicate',
           txt: conf.LANG.MENU.PAD

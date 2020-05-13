@@ -201,10 +201,6 @@
       "HELP": "<p>Search page offers you the ability to search elements from MyPads.</p>",
       "TITLE": "Search"
    },
-   "DASHBOARD": {
-      "HELP": "<p>Dashboard page offers you the ability to view and search pads in one page.</p>",
-      "TITLE": "Dashboard"
-   },
    
 
    "GLOBAL": {
@@ -367,8 +363,7 @@
       "USERLIST": "My Userlists",
       "USERS": "Users",
       "WATCHLIST": "My Watchlist",
-      "SEARCH": "Search",
-      "DASHBOARD": "Dashboard"
+      "SEARCH": "Search"
    },
    "NOTIFICATION": {
       "ERROR": "Error",
