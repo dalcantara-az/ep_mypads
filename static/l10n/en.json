@@ -388,8 +388,8 @@
       "AUTH": {
          "PROFILE_SUCCESS": "Profile successfully updated.",
          "SUBSCRIBE_CONFIRM_SUCCESS": "Successful subscription. An email has been sent to you in order to confirm your email address before you can login.",
-         "SUBSCRIBE_SUCCESS": "Successful subscription ! Welcome.",
-         "SUCCESS": "Successful authentication ! Welcome.",
+         "SUBSCRIBE_SUCCESS": "Successful subscription! Welcome.",
+         "SUCCESS": "Successful authentication! Welcome.",
          "SUCCESS_OUT": "You have been successfully disconnected.",
          "WELCOME": "Welcome"
       },

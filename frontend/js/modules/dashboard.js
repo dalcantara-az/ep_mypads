@@ -32,17 +32,22 @@ module.exports = (function () {
       var c = {};
   
       /**
+      * ### computePads
+      *
+      * `computePads` is an internal function that gathers user's pads.
+      */
+  
+      c.computePads = function () {
+        c.pads = ld(model.pads()).values().value();
+        console.log(c.pads);
+      };
+
+      /**
       * ### computeSearchResults
       *
       * `computeSearchResults` is an internal function that gathers search groups
       * and pads.
       */
-  
-      c.computePads = function () {
-        c.pads = ld(model.pads()).values().value();
-        c.pads = ld(u().watchlist.pads).values().value();
-        console.log(c.pads);
-      };
 
       c.computeSearchResults = function () {
 
@@ -397,7 +402,7 @@ module.exports = (function () {
                   config: m.route,
                   title: conf.LANG.GROUP.VIEW
                 }, padName),
-                m('span.pull-right', "last modified"),
+                m('span.pull-right', "Last Modified: "+ Date(p.ctime).slice(4,-45)),
                 m('', "Folder " + p.group)
                 ]),
               
