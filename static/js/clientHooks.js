@@ -42,8 +42,16 @@ automaticReconnect.showCountDownTimerToReconnectOnModal = function($modal, pad) 
 };
 
 exports.aceEditorCSS = function(hook, context) {
-  var contextMenu = require("ep_mypads/static/js/contextMenu");
-  return contextMenu.aceEditorCSS(hook, context);
+  var contextMenuCSS = require("ep_mypads/static/js/contextMenu").aceEditorCSS(hook, context);
+  var autocompleteCSS = require("ep_mypads/static/js/autocomplete").aceEditorCSS(hook, context);
+  var css = [];
+  for (var i = 0; i < contextMenuCSS.length; i++) {
+    css.push(contextMenuCSS[i]);
+  }
+  for (var i = 0; i < autocompleteCSS.length; i++) {
+    css.push(autocompleteCSS[i]);
+  }
+  return css;
 }
 
 exports.postToolbarInit = function (hook_name, args) {
@@ -149,17 +157,29 @@ exports.postToolbarInit = function (hook_name, args) {
 exports.postAceInit = function(hook, context) {
   var contextMenu = require('ep_mypads/static/js/contextMenu');
   var scrollTo = require('ep_mypads/static/js/scrollTo');
+  var autocomplete = require("ep_mypads/static/js/autocomplete");
   scrollTo.postAceInit(hook, context);
   contextMenu.postAceInit(hook, context);
+  autocomplete.postAceInit(hook, context);
 }
 
 exports.aceKeyEvent = function(hook, context) {
   var contextMenu = require('ep_mypads/static/js/contextMenu');
-  var scrollTo = require('ep_mypads/static/js/scrollTo');
+  var autocomplete = require("ep_mypads/static/js/autocomplete");
   contextMenu.aceKeyEvent(hook, context);
+  autocomplete.aceKeyEvent(hook, context);
+  return true;
 }
 
 exports.aceSelectionChanged = function(hook, context) {
   var contextMenu = require('ep_mypads/static/js/contextMenu'); 
+  var autocomplete = require("ep_mypads/static/js/autocomplete");
   contextMenu.aceSelectionChanged(hook, context);
+  autocomplete.aceSelectionChanged(hook, context);
+  
+}
+
+exports.aceEditEvent = function(hook, context) {
+  var autocomplete = require("ep_mypads/static/js/autocomplete");
+  // autocomplete.aceEditEvent(hook, context);
 }

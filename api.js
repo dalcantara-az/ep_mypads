@@ -634,7 +634,6 @@ module.exports = (function () {
     var searchUsersRoute = api.initialRoute + 'search-users';
     var userlistRoute    = api.initialRoute + 'userlist';
     var notifyUsersRoute = api.initialRoute + 'notify-users';
-    var userExistRoute   = api.initialRoute + 'user-exist';
     var autocompleteRoute= api.initialRoute + 'autocomplete';
 
     /**
@@ -1120,6 +1119,7 @@ module.exports = (function () {
       if (!u) {
         return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.NOT_AUTH');
       }
+      console.log(req.body);
       var users = {
         present: [],
         absent: [],
@@ -1158,30 +1158,22 @@ module.exports = (function () {
       res.send({success: true});
     });
 
-    app.get(userExistRoute + '/:key', function(req, res) {
-      var u = auth.fn.getUser(req.query.auth_token);
-      if (!u) {
-        return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.NOT_AUTH');
-      }
-      var users = userCache.fn.searchUserInfos(req.params.key);
-      res.send({ userExists: Object.keys(users).length > 0 });
-      
-    });
-
     app.get(autocompleteRoute, function(req, res) {
-      var searcherUtil = require('./searcher');
       var u = auth.fn.getUser(req.body.auth_token || req.query.auth_token);
       if (!u) {
         return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.MUST_BE');
       }
-      var query = req.query.q; 
-      searcherUtil.searchUsers(query, function(err, results) {
-        if (err) {
-          return res.status(400).send({ success: false, error: err });
-        }
-        return res.send({results});
-      });
-
+      var emails  = ld.reduce(userCache.emails, function (result, n, key) {
+        result[n] = key;
+        return result;
+      }, {});
+      var users = ld.reduce(userCache.logins, function (result, n, key) {
+        result[key] = {
+          email: emails[n],
+        };
+        return result;
+      }, {});
+      res.send({ users: users, usersCount: ld.size(users) });
 
     });
 

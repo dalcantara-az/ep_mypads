@@ -70,3 +70,9 @@
   background-color: darkgray;
   padding: 5px;
 }
+
+.ui-autocomplete {
+  max-height: 200px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
