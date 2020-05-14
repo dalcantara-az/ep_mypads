@@ -1119,7 +1119,6 @@ module.exports = (function () {
       if (!u) {
         return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.NOT_AUTH');
       }
-      console.log(req.body);
       var users = {
         present: [],
         absent: [],
