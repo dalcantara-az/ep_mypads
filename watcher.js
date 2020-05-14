@@ -79,9 +79,11 @@ module.exports = (function () {
 
   watcher.fn.generateDigestFormattedMessage = function(actualChanges, padNames) {
     return actualChanges.map(padChange => {
-      var subResult = `<h1><a href="${_getPadUrl(padChange.padId)}">${padNames[padChange.padId]}</a></h1><br>`;
+      var padUrl = _getPadUrl(padChange.padId);
+      var subResult = `<h1><a href="${padUrl}">${padNames[padChange.padId]}</a></h1><br>`;
       subResult+= `<h2>Authors: ${padChange.authors.join(" ")}</h2><br>`;
-      subResult+= padChange.splices.filter(s => s[2]).map(s => `<pre>${s[2]}</pre>`).join("<br>");
+      subResult+= padChange.splices.filter(s => s[2])
+          .map(s => `<div style="white-space:pre-wrap"><a href="${padUrl}?lineNumber=${s[3]}">[ ${s[3]} ]</a>  ${s[2]}</div>`).join("<br>");
       subResult+="<br>";
       return subResult;
     }).join("<br>");
