@@ -178,8 +178,3 @@ exports.aceSelectionChanged = function(hook, context) {
   autocomplete.aceSelectionChanged(hook, context);
   
 }
-
-exports.aceEditEvent = function(hook, context) {
-  var autocomplete = require("ep_mypads/static/js/autocomplete");
-  // autocomplete.aceEditEvent(hook, context);
-}
