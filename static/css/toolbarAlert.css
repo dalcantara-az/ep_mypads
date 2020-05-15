@@ -1,0 +1,11 @@
+#sidedivinner > div {
+  cursor: pointer;
+}
+
+.buttonicon-copylink:before {
+  content: "\1f4cb";
+}
+
+.buttonicon-emailtext:before {
+  content: "\2709";
+}
