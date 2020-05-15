@@ -94,8 +94,10 @@ module.exports = (function() {
 
   autocomplete.aceKeyEvent = function(hook, context) {
     var rect = innerDocWindow.getSelection().getRangeAt(0).getBoundingClientRect();
-    $suggestionsMarker.css('left', (rect.left + 60) + 'px');
-    $suggestionsMarker.css('top', (rect.bottom + 20) + 'px');
+    var offsetX = parseInt($padOuter.css("padding-left"), 10) + parseInt($padOuter.find('iframe').css("padding-left"), 10);
+    var offsetY = parseInt($padOuter.css("padding-top"), 10) + parseInt($padOuter.find('iframe').css("padding-top"), 10);
+    $suggestionsMarker.css('left', (rect.left + offsetX) + 'px');
+    $suggestionsMarker.css('top', (rect.bottom + offsetY) + 'px');
   }
 
   function getQuery(context) {
