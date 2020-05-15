@@ -2,38 +2,74 @@ module.exports = (function() {
   'use strict';
 
   var loginOrEmails = [];
+  var userList = [];
   var modal = {};
-  
-  modal.toggle = function() {
+
+  modal.aceEditorCSS = function(hook, context) {
+    return [
+      "/ep_mypads/static/css/notifyModal.css",
+      "/ep_mypads/static/css/jquery-ui.css",
+    ];
+  }
+
+  modal.toggle = function(recipient) {
     var padOuter = $('iframe[name="ace_outer"]').contents().find("body");
     var notifyModal = padOuter.find('#notifyModal');
-    notifyModal.find('#userList').empty();
-    notifyModal.find('#emailField').val('');
-    loginOrEmails = [];
-    notifyModal.fadeToggle(250);
+    if (recipient) {
+      notifyModal.find('#notifyModalContent').css('height', '50px');
+      notifyModal.find('.toggle-multiple').hide();
+      notifyModal.find('.toggle-single').text('Send notification to ' + recipient + '?');
+      notifyModal.find('.toggle-single').show();
+      loginOrEmails = [recipient];
+      notifyModal.fadeToggle(250)
+    } else {
+      notifyModal.find('#notifyModalContent').css('height', '200px');
+      notifyModal.find('.toggle-multiple').show();
+      notifyModal.find('.toggle-single').hide();
+      notifyModal.find('#userList').empty();
+      notifyModal.find('#emailField').val('');
+      notifyModal.find('#msgUserNotExist').hide();
+      loginOrEmails = [];
+      notifyModal.fadeToggle(250);
+    }
   }
 
   modal.init = function(onNotify) {
+    var baseURL = window.location.href.slice(0, window.location.href.split('/', 3).join('/').length);
+    $.ajax({
+      url: baseURL +'/mypads/api/autocomplete',
+      dataType: "json",
+      data: {
+        auth_token: localStorage.getItem('token'),
+      },
+      success: function(data) {
+        Object.keys(data.users).forEach(function(key) {
+          userList.push(key);
+          userList.push(data.users[key].email);
+        })
+      }
+    });
     var padOuter = $('iframe[name="ace_outer"]').contents().find("body");
     var modalHTML = 
       '<div id="notifyModal" class="modal">' +
         '<div id="notifyModalContent">' +
           '<div class="container" style="height:200px; display:inline-block;">' +
             '<span id="btnCloseModal" class="display-topright clickable">&times;</span>' +
-            '<div style="font-size:large">Notify Users</div>' +
+            '<div class="toggle-multiple" style="font-size:large">Notify Users</div>' +
             
-            '<div style="padding-top: 10px; padding-bottom: 10px">' +
+            '<div class="toggle-multiple" style="padding-top: 10px; padding-bottom: 10px">' +
               '<p style="padding-bottom: 5px; padding-top: 10px;">User Selection</p>' +
-              '<input id="emailField" type="text" style="padding:5px;" placeholder="Email or Login">' +
+              '<input id="emailField" type="text" style="padding:5px; width:200px;" placeholder="Email or Login">' +
               '<span style="margin-right:10px;"></span>' +
               '<button id="btnSelectUser" class="custom-button">ADD</button>' +
               '<div id="msgUserNotExist" style="font-size: 12px; color: red; padding-top: 5px;">User does not exist</div>' +
             '</div>' +
-            '<p style="padding-bottom: 10px; padding-top: 10px;">Selected Users</p>' +
+            '<p class="toggle-multiple" style="padding-bottom: 10px; padding-top: 10px;">Selected Users</p>' +
               
-            '<div id="userList">' +
+            '<div class="toggle-multiple" id="userList">' +
             '</div>' +
 
+            '<div class="toggle-single" style="font-size:large"></div>' + 
             '<div class = "display-bottomright">' +
               '<button id="btnCancel" class="custom-button">CANCEL</button>' +
               '<span style="margin-right:15px;"></span>' +
@@ -53,6 +89,15 @@ module.exports = (function() {
     var $modalContent = notifyModal.find("#notifyModalContent");
     var $emailField = notifyModal.find("#emailField");
     var $userList = notifyModal.find("#userList");
+    var baseURL = window.location.href.slice(0, window.location.href.split('/', 3).join('/').length);
+      
+    $emailField.autocomplete({
+      source: userList,
+      select: function(event, ui) {
+        $emailField.val(ui.item.label);
+        $btnSelectUser.click();
+      },
+    });
     
     $msgUserNotExist.hide();
     $btnCloseModal.on('click', function(e) {
@@ -73,108 +118,29 @@ module.exports = (function() {
     })
 
     $btnSelectUser.on('click', function(e) {
-      var baseURL = window.location.href.slice(0, window.location.href.split('/', 3).join('/').length);
       var loginOrEmail = $emailField.val();
       if (loginOrEmails.includes(loginOrEmail)) {
         return;
       }
-      $.ajax({
-        method: 'GET',
-        url: baseURL+'/mypads/api/user-exist/' + loginOrEmail,
-        data: {
-          auth_token: localStorage.getItem('token')
-        },
-        success: function(data, textStatus, jqXHR) {
-          if (data.userExists === true) {
-            $msgUserNotExist.hide();
-            loginOrEmails.push(loginOrEmail);
-            
-            var $selectedUser = $("<span>" + loginOrEmail + "<span style='padding-left:5px; font-size: large' class = 'clickable'>&times;</span></span>");
-            $selectedUser.css('border-radius', "5px");
-            $selectedUser.css('background-color', "darkgray");
-            $selectedUser.css('padding', "5px");
-            $selectedUser.find('.clickable').css('cursor', 'pointer');
-            $selectedUser.find('.clickable').on('click', function(e) {
-              var index = loginOrEmails.indexOf(loginOrEmail);
-              if (index > -1) {
-                loginOrEmails.splice(index, 1);
-              }
-              $selectedUser.remove();
-            });
-            $userList.append($selectedUser);
-          } else {
-            $msgUserNotExist.show();
+      if (userList.includes(loginOrEmail)) {
+        $msgUserNotExist.hide();
+        loginOrEmails.push(loginOrEmail);
+        
+        var $selectedUser = $("<span class='selected-user'>" + loginOrEmail + "<span style='padding-left:5px; font-size: large' class = 'clickable'>&times;</span></span>");
+        $selectedUser.find('.clickable').on('click', function(e) {
+          var index = loginOrEmails.indexOf(loginOrEmail);
+          if (index > -1) {
+            loginOrEmails.splice(index, 1);
           }
-        }
-      });
+          $selectedUser.remove();
+        });
+        $userList.append($selectedUser);
+      } else {
+        $msgUserNotExist.show();
+      }
+      $emailField.val('');
+        
     })
-
-
-    notifyModal.css({
-      "position": "absolute",
-      "left": "0px",
-      "top": "0px",
-      "z-index":"3",
-      "padding-top":"100px",
-      "position":"fixed",
-      "left":"0px",
-      "top":"0px",
-      "width":"100%",
-      "height":"100%",
-      "overflow":"auto",
-      "background-color":"rgb(0,0,0)",
-      "background-color":"rgba(0,0,0,0.4)"
-    });
-
-    notifyModal.find('.display-topright').css({
-      "color": "#C4C4C4",
-      "position":"absolute",
-      "right":"20px",
-      "top":"10px",
-      "font-size": "xx-large"
-    });
-
-    notifyModal.find('.display-bottomright').css({
-      "position":"absolute",
-      "right":"20px",
-      "bottom": "20px"
-    });
-
-    notifyModal.find('#notifyModalContent').css({
-      "font-size": "14px",
-      "cursor": "default",
-      "margin":"auto",
-      "background-color":"#fff",
-      "position": "absolute",
-      "padding": "20px",
-      "left": "0px",
-      "right": "0px",
-      "outline":"0px",
-      "width":"300px",
-      "border-radius": "10px",
-      "-webkit-box-shadow": "10px 7px 13px -8px rgba(0,0,0,0.43)",
-      "-moz-box-shadow": "10px 7px 13px -8px rgba(0,0,0,0.43)",
-      "box-shadow": "10px 7px 13px -8px rgba(0,0,0,0.43)",
-    });
-
-    notifyModal.find('.selected-user').css({
-      "display": "inline-block",
-      "padding":"1%",
-      "width": "fit-content"
-    });
-
-    notifyModal.find('.clickable').css("cursor", "pointer");
-
-    notifyModal.find('.custom-button').css({
-      "background-color": "Transparent",
-      "background-repeat":"no-repeat",
-      "color": "#1C96CF",
-      "border": "none",
-      "cursor":"pointer",
-      "overflow": "hidden",
-      "outline":"none",
-    });
-    
     notifyModal.fadeToggle(0);
   }
   return modal;

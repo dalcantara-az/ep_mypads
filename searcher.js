@@ -48,7 +48,7 @@ module.exports = (function () {
           ORDER BY subquery.score DESC`;
       storage.db.db.wrappedDB.db.query(query, [], function (err, queryResult) {
         if (err) { 
-          console.log(err) 
+          return callback(err, null);
         }
         var rows = queryResult.rows;
         var results = {
@@ -66,6 +66,33 @@ module.exports = (function () {
       });
     }
   };
+
+  searcher.searchUsers = function(searchQuery, callback) {
+    if (storage.db && (storage.db.type === 'postgres' || storage.db.type === 'postgrespool')) {
+      
+      var query = `
+        SELECT (value::json) ->> 'email' AS loginOrEmail
+        FROM store
+        WHERE key LIKE '${storage.DBPREFIX.USER}%' AND value::json ->> 'email' LIKE '${searchQuery}%'
+        UNION
+        SELECT (value::json) ->> 'login' AS loginOrEmail
+        FROM store
+        WHERE key LIKE '${storage.DBPREFIX.USER}%' AND value::json ->> 'login' LIKE '${searchQuery}%'
+      `;
+      var results = [];
+    
+      storage.db.db.wrappedDB.db.query(query, [], function (err, queryResult) {
+        if (err) { 
+          return callback(err, null); 
+        }
+        var rows = queryResult.rows;
+        rows.forEach(function(row) {
+          results.push(row.loginoremail);
+        });
+        return callback(null, results);
+      });
+    }
+  }
   
   return searcher;
 }).call(this);

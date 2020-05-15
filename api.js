@@ -634,7 +634,7 @@ module.exports = (function () {
     var searchUsersRoute = api.initialRoute + 'search-users';
     var userlistRoute    = api.initialRoute + 'userlist';
     var notifyUsersRoute = api.initialRoute + 'notify-users';
-    var userExistRoute   = api.initialRoute + 'user-exist';
+    var autocompleteRoute= api.initialRoute + 'autocomplete';
 
     /**
     * GET method : `user.userlist` with crud fixed to *get* and current login.
@@ -1155,14 +1155,23 @@ module.exports = (function () {
       });
     });
 
-    app.get(userExistRoute + '/:key', function(req, res) {
-      var u = auth.fn.getUser(req.query.auth_token);
+    app.get(autocompleteRoute, function(req, res) {
+      var u = auth.fn.getUser(req.body.auth_token || req.query.auth_token);
       if (!u) {
-        return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.NOT_AUTH');
+        return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.MUST_BE');
       }
-      var users = userCache.fn.searchUserInfos(req.params.key);
-      res.send({ userExists: Object.keys(users).length > 0 });
-      
+      var emails  = ld.reduce(userCache.emails, function (result, n, key) {
+        result[n] = key;
+        return result;
+      }, {});
+      var users = ld.reduce(userCache.logins, function (result, n, key) {
+        result[key] = {
+          email: emails[n],
+        };
+        return result;
+      }, {});
+      res.send({ users: users, usersCount: ld.size(users) });
+
     });
 
   };
