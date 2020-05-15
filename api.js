@@ -1736,6 +1736,24 @@ module.exports = (function () {
       });
     });
 
+    app.get(padRoute + '/getLastEdited/:key', function (req, res) {
+      var utils = require('./utils');
+      var etherpadAPI = require('ep_etherpad-lite/node/db/API');
+
+      var padId = req.params.key; 
+
+      return etherpadAPI.getLastEdited(padId).catch(err => {
+    
+        return {padId}; 
+      }).then(lastEdited => {
+        return res.send({
+              result: lastEdited
+            });
+      });
+      
+    });
+
+
     
   };
 
@@ -1810,6 +1828,7 @@ module.exports = (function () {
       });
     });
 
+   
     app.get(statsRoute + '/watch', fn.ensureAdmin, function(req, res) {
       var watcherUtils = require('./watcher');
       watcherUtils.reportAll();

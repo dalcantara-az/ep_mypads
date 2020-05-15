@@ -39,6 +39,26 @@ module.exports = (function () {
   
       c.computePads = function () {
         c.pads = ld(model.pads()).values().value();
+        // var lastEdits = [];
+        // for(var i = 0; i < c.pads.length; i++){
+        //   var id = c.pads[i]._id;
+        //   var url = conf.URLS.PAD + '/getLastEdited/' + id;
+          
+        //   c.pads[i].lastEdited = 0;
+        //   m.request({
+        //     method: 'GET',
+        //     url: url,
+        //   }).then(function (resp) { 
+        //     console.log(resp.result.lastEdited);
+        //     lastEdits.push(resp.result.lastEdited);
+        //   });
+        // }
+        // console.log(lastEdits.entries());
+       
+        // for(var  j = 0; j < c.pads.length; j++){
+          
+        //   c.pads[j].lastEdited = lastEdits.pop();
+        // }
         console.log(c.pads);
       };
 
@@ -251,34 +271,8 @@ module.exports = (function () {
 
     view.pads = function (c) {
      
-      // var route   = '/mypads/group/' + c.group._id;
       var GROUP   = conf.LANG.GROUP;
-      var PAD = conf.LANG.PAD;
-      // var addView = m('p.col-sm-4.text-center', [
-      //   m('a.btn.btn-default', { href: route + '/pad/add', config: m.route }, [
-      //     m('i.glyphicon.glyphicon-plus.text-success'),
-      //     ' '+conf.LANG.GROUP.PAD.ADD
-      //   ])
-      // ]);
-      // var moveView = m('p.text-center', [
-      //   m('a.btn.btn-default', { href: route + '/pad/move', config: m.route }, [
-      //     m('i.glyphicon.glyphicon-transfer'),
-      //     ' '+conf.LANG.GROUP.PAD.MOVE
-      //   ])
-      // ]);
-      // var filterView = m('p.col-sm-4.text-center.form-inline', [
-      //   m('.form-group', [
-      //     m('label', {
-      //       for: 'pad-filter-form'
-      //     }, conf.LANG.GROUP.SEARCH.TITLE+' '),
-      //     m('input.form-control', {
-      //       id: 'pad-filter-form',
-      //       type: 'search',
-      //       placeholder: conf.LANG.GROUP.SEARCH.TYPE,
-      //       oninput: m.withAttr('value', filterPads.filterKeyword)
-      //     }),
-      //   ])
-      // ]);
+     
       var sortIcon = (function () {
         if (c.sortField()) {
           return (c.sortAsc() ? 'top' : 'bottom');
@@ -286,7 +280,7 @@ module.exports = (function () {
           return 'arrow-combo';
         }
       })();
-      var sortView = m('p.col-sm-4.text-right.small', [
+      var sortView = m('p.col-sm-6.text-right.small', [
         m('span', ' '+conf.LANG.GROUP.PAD.SORT_BY),
         m('button.btn.btn-default.btn-xs', {
           type: 'button',
@@ -298,7 +292,14 @@ module.exports = (function () {
           type: 'button',
           onclick: ld.partial(c.sortBy, 'name')
         }, [ conf.LANG.GROUP.PAD.SORT_BY_NAME+' ',
-          m('i.small.glyphicon glyphicon-triangle-' + sortIcon)])
+          m('i.small.glyphicon glyphicon-triangle-' + sortIcon)]),
+          m('button.btn.btn-default.btn-xs', {
+            type: 'button',
+            onclick: ld.partial(c.sortBy, 'lastEdited')
+          }, ["date modified"+' ',
+            m('i.small.glyphicon glyphicon-triangle-' + sortIcon)]
+          ),
+          
       ]);
       var padView = (function () {
         if (ld.size(c.pads) === 0) {
@@ -396,16 +397,25 @@ module.exports = (function () {
                   ]);
                 }
               })(),
-              m('span.name', [
-                m('a', {
-                  href: '/mypads/group/'+ p.group + '/pad/view/' + p._id,
-                  config: m.route,
-                  title: conf.LANG.GROUP.VIEW
-                }, padName),
-                m('span.pull-right', "Last Modified: "+ Date(p.ctime).slice(4,-45)),
-                m('', "Folder " + p.group)
-                ]),
-              
+              (function (){
+                var id = p._id;
+                var url = conf.URLS.PAD + '/getLastEdited/' + id;
+                m.request({
+                  method: 'GET',
+                  url: url,
+                }).then(function (resp) { 
+                  p.lastEdited = resp.result.lastEdited
+                });
+                return m('span.name', [
+                  m('a', {
+                    href: '/mypads/group/'+ p.group + '/pad/view/' + p._id,
+                    config: m.route,
+                    title: conf.LANG.GROUP.VIEW
+                  }, padName),
+                  m('span.pull-right', "Last Modified: "+ Date(p.lastEdited)),
+                  m('', "Folder " + p.group)
+                  ]);
+              })()
             ]);
           }));
         }
