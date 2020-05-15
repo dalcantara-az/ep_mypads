@@ -187,9 +187,9 @@ module.exports = (function() {
           },
           success: function(data, textStatus, jqXHR) {
             if (data.success === true) {
-              console.log('notifying success!');
+              alert('The mentioned user was successfully notified.');
             } else {
-              console.log('notifying failed');
+              alert('Something went wrong.');
             }
           }
         });
