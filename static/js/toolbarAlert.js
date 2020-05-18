@@ -116,7 +116,6 @@ module.exports = (function() {
       var $textarea = $padOuter.find('#text_to_copy');
       var copiedText = getTextToCopy();
       $textarea.val(copiedText.text + '\n' + copiedText.url);
-      $padOuter.append($textarea);
       $textarea.copyText();
       $textarea.remove();
     });
