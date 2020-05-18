@@ -32,6 +32,11 @@
 
 var $ = require('ep_etherpad-lite/static/js/rjquery').$;
 
+var autocomplete = require("ep_mypads/static/js/autocomplete");
+var toolbarAlert = require("ep_mypads/static/js/toolbarAlert");
+// var contextMenu = require('ep_mypads/static/js/contextMenu');
+
+
 // Reload page on disconnect to prevent unauthorized access
 var automaticReconnect = require('ep_etherpad-lite/static/js/pad_automatic_reconnect');
 var showCountDownTimerToReconnectOnModal = automaticReconnect.showCountDownTimerToReconnectOnModal;
@@ -43,8 +48,8 @@ automaticReconnect.showCountDownTimerToReconnectOnModal = function($modal, pad) 
 
 exports.aceEditorCSS = function(hook, context) {
   var contextMenuCSS = require("ep_mypads/static/js/contextMenu").aceEditorCSS(hook, context);
-  var autocompleteCSS = require("ep_mypads/static/js/autocomplete").aceEditorCSS(hook, context);
-  var toolbarAlertCSS = require("ep_mypads/static/js/toolbarAlert").aceEditorCSS(hook, context);
+  var autocompleteCSS = autocomplete.aceEditorCSS(hook, context);
+  var toolbarAlertCSS = toolbarAlert.aceEditorCSS(hook, context);
   var css = [];
   for (var i = 0; i < contextMenuCSS.length; i++) {
     css.push(contextMenuCSS[i]);
@@ -159,29 +164,22 @@ exports.postToolbarInit = function (hook_name, args) {
 }
 
 exports.postAceInit = function(hook, context) {
-  $.getScript("http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js", function(script, textStatus, jqXHR) {});
-  // var contextMenu = require('ep_mypads/static/js/contextMenu');
+  $.getScript("http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js", function(script, textStatus, jqXHR) {
+    autocomplete.postAceInit(hook, context);
+    toolbarAlert.postAceInit(hook, context);
+  });
   var scrollTo = require('ep_mypads/static/js/scrollTo');
-  var autocomplete = require("ep_mypads/static/js/autocomplete");
-  var toolbarAlert = require("ep_mypads/static/js/toolbarAlert");
   scrollTo.postAceInit(hook, context);
   // contextMenu.postAceInit(hook, context);
-  autocomplete.postAceInit(hook, context);
-  toolbarAlert.postAceInit(hook, context);
 }
 
 exports.aceKeyEvent = function(hook, context) {
-  // var contextMenu = require('ep_mypads/static/js/contextMenu');
-  var autocomplete = require("ep_mypads/static/js/autocomplete");
   // contextMenu.aceKeyEvent(hook, context);
   autocomplete.aceKeyEvent(hook, context);
   return true;
 }
 
 exports.aceSelectionChanged = function(hook, context) {
-  // var contextMenu = require('ep_mypads/static/js/contextMenu'); 
-  var toolbarAlert = require('ep_mypads/static/js/toolbarAlert'); 
-  var autocomplete = require("ep_mypads/static/js/autocomplete");
   // contextMenu.aceSelectionChanged(hook, context);
   autocomplete.aceSelectionChanged(hook, context);
   toolbarAlert.aceSelectionChanged(hook, context);
