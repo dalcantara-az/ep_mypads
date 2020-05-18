@@ -14,16 +14,23 @@ module.exports = (function () {
       var query = 
           `SELECT subquery.key AS key, store.value AS value, subquery.headline AS headline
           FROM (
-            SELECT ts_rank_cd(
-              to_tsvector(value::json -> 'atext' ->> 'text'),
-              plainto_tsquery('${searchQuery}'))
-            AS score, SUBSTRING(key, ${padStartIndex}) AS key, ts_headline(
+            SELECT 
+            ts_rank_cd(
+              to_tsvector(CONCAT(subsubquery.title, ' ', value::json -> 'atext' ->> 'text')),
+              plainto_tsquery('${searchQuery}')) AS score,
+            ts_headline(
               'english',
-              value::json -> 'atext' ->> 'text',
-              plainto_tsquery('${searchQuery}'))
-            AS headline
-            FROM store
-            WHERE to_tsvector(value::json -> 'atext' ->> 'text') @@ plainto_tsquery('${searchQuery}')
+              CONCAT(subsubquery.title, ' ', value::json -> 'atext' ->> 'text'),
+              plainto_tsquery('${searchQuery}')) AS headline,
+            SUBSTRING(store.key, ${padStartIndex}) AS key
+            FROM (
+              SELECT value::json ->> 'name' AS title,
+              SUBSTRING(key, ${mypadStartIndex}) AS key
+              FROM store
+            ) AS subsubquery 
+            INNER JOIN store
+            ON SUBSTRING(store.key, ${padStartIndex}) = subsubquery.key
+            WHERE to_tsvector(CONCAT(subsubquery.title, ' ', value::json -> 'atext' ->> 'text')) @@ plainto_tsquery('${searchQuery}')
           ) AS subquery
           INNER JOIN store
           ON subquery.key = SUBSTRING(store.key, ${mypadStartIndex})
