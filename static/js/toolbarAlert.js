@@ -16,6 +16,7 @@ module.exports = (function() {
   toolbarAlert.postAceInit = function(hook, context) {
     $padOuter =  $('iframe[name="ace_outer"]').contents().find("body");
     $padOuter.append($("<textarea>", {id: "text_to_copy"}));
+    $padOuter.find("#text_to_copy").hide();
     selectedLineNumber = 0;
     drawToolbarAlert();
     attachLineOnclick();
@@ -114,16 +115,17 @@ module.exports = (function() {
     
     $toolbar.find('#btnCopyLink').on('click', function(e) {
       var $textarea = $padOuter.find('#text_to_copy');
+      $textarea.show();
       var copiedText = getTextToCopy();
       $textarea.val(copiedText.text + '\n' + copiedText.url);
       $textarea.copyText();
+      $textarea.hide();
     });
     
     $toolbar.find('#btnEmailText').on('click', function(e) {
       drawNotifyModal();
     });
-
-    // $toolbar.find('.buttonicon-copylink').text('📋');
+    
     $toolbar.find('.buttonicon-copylink').text('\ud83d\udccb');
     $toolbar.find('.buttonicon-emailtext').text('\u2709');
   }
