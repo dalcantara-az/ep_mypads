@@ -18,8 +18,6 @@ module.exports = (function() {
   }
 
   contextMenu.postAceInit = function(hook, context) {
-    $.getScript("http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js", function(script, textStatus, jqXHR) {
-    });
     attachContextMenu();
     lines = 0;
     lines = $('iframe[name="ace_outer"]').contents().find('iframe').contents().find("#innerdocbody").contents().length;
