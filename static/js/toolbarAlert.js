@@ -117,7 +117,6 @@ module.exports = (function() {
       var copiedText = getTextToCopy();
       $textarea.val(copiedText.text + '\n' + copiedText.url);
       $textarea.copyText();
-      $textarea.remove();
     });
     
     $toolbar.find('#btnEmailText').on('click', function(e) {
