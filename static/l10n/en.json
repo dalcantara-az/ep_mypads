@@ -303,6 +303,7 @@
          "EDIT_PROMPT": "Enter the new name of the pad",
          "EXPAND": "Expand",
          "FROM_GROUP": "folder:",
+         "MARK_SUCCESS": "Pad added to My Bookmarks successfully",
          "MOVE": "Move pads to another folder",
          "MOVE_HELP": "<p>Please select the wanted folder for your migration. Only folders on which you are admin are listed.</p><p>Once chosen, click on the submit button and wait for a moment.</p>",
          "MOVE_TITLE": "Pads migration of the folder ",
@@ -320,10 +321,13 @@
          "SORT_BY_NAME": "name",
          "SORT_BY_UPDATE": "last update",
          "TITLE": "Title",
+         "UNMARK_SUCCESS": "Pad removed from My Bookmarks successfully",
+         "UNWATCH_SUCCESS": "Pad removed from My Watchlist successfully",
          "USERS": "Users",
          "USERS_NONE": "No user",
          "VIEW_HELP": "<p>Here is the main interface of the current pad.</p><p>If the folder or the pad is private, you need to enter the password to be able to access to it.</p><p>If you want to show the folder and if you have the permission to, you can click on the folder name.</p>",
-         "VISIBILITY": "Visibility"
+         "VISIBILITY": "Visibility",
+         "WATCH_SUCCESS": "Pad added to My Watchlist successfully"
       },
       "PROPERTIES": "Properties",
       "QUIT_GROUP": "Unsubscribe from the folder",
@@ -348,11 +352,13 @@
       },
       "UNMARK": "Unmark",
       "UNWATCH": "Unwatch",
+      "UNMARK_SUCCESS": "Folder removed from My Bookmarks successfully",
+      "UNWATCH_SUCCESS": "Folder removed from My Watchlist successfully",
       "VIEW": "View",
       "VIEW_HELP": "<p>The details of the folder show you:<ul><li>options defined when folder has been created or updated;</li><li>list of pads created for this folder;</li><li>and list of admins and users of the folder.</li></ul></p><p>From there, you can: <ul><li>create new pads, edit them, remove or mark them;</li><li>share administration of your folder with other users;</li><li>invite other users to view and edit pads of the folder.</li></ul></p>",
       "VIEW_MANAGE": "View and manage folder and its pads",
       "WATCH": "Watch",
-      "WATCH_SUCCESS": "Folder removed from My Watchlist successfully"
+      "WATCH_SUCCESS": "Folder added to My Watchlist successfully"
    },
    "MENU": {
       "ADMIN": "Administration",
