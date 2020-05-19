@@ -34,7 +34,6 @@ var $ = require('ep_etherpad-lite/static/js/rjquery').$;
 
 var autocomplete = require("ep_mypads/static/js/autocomplete");
 var toolbarAlert = require("ep_mypads/static/js/toolbarAlert");
-// var contextMenu = require('ep_mypads/static/js/contextMenu');
 
 
 // Reload page on disconnect to prevent unauthorized access
@@ -47,13 +46,9 @@ automaticReconnect.showCountDownTimerToReconnectOnModal = function($modal, pad) 
 };
 
 exports.aceEditorCSS = function(hook, context) {
-  var contextMenuCSS = require("ep_mypads/static/js/contextMenu").aceEditorCSS(hook, context);
   var autocompleteCSS = autocomplete.aceEditorCSS(hook, context);
   var toolbarAlertCSS = toolbarAlert.aceEditorCSS(hook, context);
   var css = [];
-  for (var i = 0; i < contextMenuCSS.length; i++) {
-    css.push(contextMenuCSS[i]);
-  }
   for (var i = 0; i < autocompleteCSS.length; i++) {
     css.push(autocompleteCSS[i]);
   }
@@ -170,17 +165,13 @@ exports.postAceInit = function(hook, context) {
   });
   var scrollTo = require('ep_mypads/static/js/scrollTo');
   scrollTo.postAceInit(hook, context);
-  // contextMenu.postAceInit(hook, context);
 }
 
 exports.aceKeyEvent = function(hook, context) {
-  // contextMenu.aceKeyEvent(hook, context);
   autocomplete.aceKeyEvent(hook, context);
-  return true;
 }
 
 exports.aceSelectionChanged = function(hook, context) {
-  // contextMenu.aceSelectionChanged(hook, context);
   autocomplete.aceSelectionChanged(hook, context);
   toolbarAlert.aceSelectionChanged(hook, context);
 }
