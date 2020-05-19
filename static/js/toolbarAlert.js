@@ -10,7 +10,12 @@ module.exports = (function() {
   var $padOuter;
   
   toolbarAlert.aceEditorCSS = function(hook, context) {
-    return ["/ep_mypads/static/css/toolbarAlert.css"]
+    var css = ["/ep_mypads/static/css/toolbarAlert.css"];
+    var notifyModalCSS = notifyModal.aceEditorCSS(hook, context);
+    for (var i = 0; i < notifyModalCSS.length; i++) {
+      css.push(notifyModalCSS[i]);
+    }
+    return css;
   }
 
   toolbarAlert.postAceInit = function(hook, context) {

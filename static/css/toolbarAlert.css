@@ -1,3 +1,29 @@
+#context_menu {
+  position: absolute;
+  width: 150px;
+  border: 1px solid;
+  border-color: rgb(190, 190, 190);
+  background-color: white;
+  padding-top: 0px;
+  padding-bottom: 0px;
+  padding-right: 0px;
+  padding-left: 0px;
+  -webkit-box-shadow: 10px 7px 13px -8px rgba(0,0,0,0.43);
+  -moz-box-shadow: 10px 7px 13px -8px rgba(0,0,0,0.43);
+  box-shadow: 10px 7px 13px -8px rgba(0,0,0,0.43);
+  font-size: 14px;
+  z-index: 3;
+}
+
+.context_menu_item {
+  padding: 10px;
+}
+
+.context_menu_item:hover {
+  background-color: #E8E8E8;
+  cursor: pointer;
+}
+
 #sidedivinner > div {
   cursor: pointer;
 }
