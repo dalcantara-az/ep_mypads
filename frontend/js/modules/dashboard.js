@@ -39,28 +39,29 @@ module.exports = (function () {
   
       c.computePads = function () {
         c.pads = ld(model.pads()).values().value();
-        // var lastEdits = [];
-        // for(var i = 0; i < c.pads.length; i++){
-        //   var id = c.pads[i]._id;
-        //   var url = conf.URLS.PAD + '/getLastEdited/' + id;
+
+        m.request({
+          method: 'GET',
+          url: conf.URLS.PAD + '/getRelevantPads/' + auth.token()
+        }).then(function (resp) {     
+        for(var i = 0; i < Object.keys(resp.value.watchlist.pads).length; i++){
+          if(!ld.includes(c.pads, resp.value.watchlist.pads[i])){
+             c.pads.push(resp.value.watchlist.pads[i]);
+          }
           
-        //   c.pads[i].lastEdited = 0;
-        //   m.request({
-        //     method: 'GET',
-        //     url: url,
-        //   }).then(function (resp) { 
-        //     console.log(resp.result.lastEdited);
-        //     lastEdits.push(resp.result.lastEdited);
-        //   });
-        // }
-        // console.log(lastEdits.entries());
-       
-        // for(var  j = 0; j < c.pads.length; j++){
-          
-        //   c.pads[j].lastEdited = lastEdits.pop();
-        // }
-        console.log(c.pads);
+        }
+        for(var i = 0; i < Object.keys(resp.value.watchlist.fromGroups).length; i++){
+            if(!ld.includes(c.pads, resp.value.watchlist.fromGroups[i])){
+               c.pads.push(resp.value.watchlist.fromGroups[i]);
+            }      
+          }
+
+        }, function (err) {
+          //notif.error({ body: ld.result(conf.LANG, err.error) });
+        });
+        
       };
+      
 
       /**
       * ### computeSearchResults
@@ -166,7 +167,6 @@ module.exports = (function () {
       } else {
         
         return m('ul.list-unstyled', ld.map(c.pads, function (item) {
-          console.log(item);
           var route;
           route = '/mypads/group/' + item.group + '/pad/view/' + item._id;
           return m('li', [

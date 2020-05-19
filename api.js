@@ -1627,6 +1627,8 @@ module.exports = (function () {
       fn.set(setFn, req.body._id, req.body, req, res);
     };
 
+    
+
     /**
     * POST method : `pad.set` with user value for pad creation
     *
@@ -1752,6 +1754,71 @@ module.exports = (function () {
       });
       
     });
+
+
+    app.get(padRoute + '/getRelevantPads/:u', function (req, res){
+      var data = {};
+      data.watchlist = { groups: {}, pads: {}, fromGroups:{}};
+      var u = auth.fn.getUser(req.params.u);
+      group.getWatchedGroupsByUser(u, function(err, watchlist) {
+       if (err) {
+         return res.status(404).send({
+           error: err.message
+         });
+       }
+       var index = 0;
+       data.watchlist.groups = ld.transform(watchlist,
+         function(memo, val, key) {
+           memo[index] = ld.omit(val, 'password');
+           index ++;
+         }
+       );
+ 
+       pad.getWatchedPadsByUser(u, function(err, watchlist) {
+         if (err) {
+           return res.status(404).send({
+             error: err.message
+           });
+         }
+
+         var index = 0;
+         data.watchlist.pads = ld.transform(watchlist,
+           function(memo, val, key) {
+             memo[index] = ld.omit(val, 'password');
+             index++;
+           }
+         );
+         var padsFromGroups = [];
+         if(Object.keys(data.watchlist.groups).length > 0 ){
+          for(var i = 0; i < Object.keys(data.watchlist.groups).length; i++){
+            for(var j = 0; j < Object.keys(data.watchlist.groups[i].pads).length; j++){
+              pad.get(data.watchlist.groups[i].pads[j], function(err, p) {
+               padsFromGroups.push(p)
+               var index = 0;
+               data.watchlist.fromGroups = ld.transform(padsFromGroups,
+                 function(memo, val, key) {
+                   memo[index] = ld.omit(val, 'password');
+                   index++;
+                 }
+               );
+               
+               if(i == (Object.keys(data.watchlist.groups).length)-1 && j == (Object.keys(data.watchlist.groups[i].pads).length)-1 ){
+                res.set('Expires', '-1');
+                res.send({ value: data });
+               }
+              });
+            }
+              console.log(data.watchlist.fromGroups);
+           }
+         }
+         else{
+          res.set('Expires', '-1');
+          res.send({ value: data });
+         }
+       })
+     })
+     
+     });
 
 
     
