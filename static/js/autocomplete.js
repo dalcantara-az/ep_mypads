@@ -7,6 +7,7 @@ module.exports = (function() {
   var atIndex;
   var length;
   var userList = [];
+  var authToken;
 
   var $padOuter; 
   var innerDocWindow;
@@ -16,12 +17,13 @@ module.exports = (function() {
   var notifyModal = require('ep_mypads/static/js/notifyModal'); 
 
   autocomplete.postAceInit = function(hook, context) {
+    authToken = getUrlVars()['auth_token'];
     var baseURL = window.location.href.slice(0, window.location.href.split('/', 3).join('/').length);
     $.ajax({
       url: baseURL +'/mypads/api/autocomplete',
       dataType: "json",
       data: {
-        auth_token: localStorage.getItem('token'),
+        auth_token: authToken,
       },
       success: function(data) {
         Object.keys(data.users).forEach(function(key) {
@@ -180,7 +182,7 @@ module.exports = (function() {
           method: 'POST',
           url: baseURL +'/mypads/api/notify-users',
           data: {
-            auth_token: localStorage.getItem('token'),
+            auth_token: auth_token,
             url: copiedText.url,
             text: copiedText.text,
             loginsOrEmails: loginOrEmails
@@ -194,11 +196,28 @@ module.exports = (function() {
           }
         });
       }
-      notifyModal.init(onNotify);
+      notifyModal.init(onNotify, authToken);
     }
     notifyModal.toggle(recipient);
   }
   
+  function getUrlVars() {
+    var vars = [], hash;
+    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+    for(var i = 0; i < hashes.length; i++) {
+      hash = hashes[i].split('=');
+      vars.push(hash[0]);
+      vars[hash[0]] = hash[1];
+    }
+    var hashes = window.location.href.slice(window.location.href.indexOf('#') + 1).split('&');
+    for(var i = 0; i < hashes.length; i++) {
+      hash = hashes[i].split('=');
+      vars.push(hash[0]);
+      vars[hash[0]] = hash[1];
+    }
+    return vars;
+  }
+
   return autocomplete;
 
 }).call(this);

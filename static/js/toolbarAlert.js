@@ -2,6 +2,7 @@ module.exports = (function() {
   'use strict';
 
   var selectedLineNumber;
+  var authToken;
 
   var toolbarAlert = {};
 
@@ -23,6 +24,7 @@ module.exports = (function() {
     $padOuter.append($("<textarea>", {id: "text_to_copy"}));
     $padOuter.find("#text_to_copy").hide();
     selectedLineNumber = 0;
+    authToken = getUrlVars()['auth_token'];
     drawToolbarAlert();
     attachLineOnclick();
   }
@@ -69,7 +71,7 @@ module.exports = (function() {
           method: 'POST',
           url: baseURL +'/mypads/api/notify-users',
           data: {
-            auth_token: localStorage.getItem('token'),
+            auth_token: authToken,
             url: copiedText.url,
             text: copiedText.text,
             loginsOrEmails: loginOrEmails
@@ -87,7 +89,7 @@ module.exports = (function() {
           }
         });
       }
-      notifyModal.init(onNotify);
+      notifyModal.init(onNotify, authToken);
     }
     notifyModal.toggle();
   }
@@ -133,6 +135,23 @@ module.exports = (function() {
     
     $toolbar.find('.buttonicon-copylink').text('\ud83d\udccb');
     $toolbar.find('.buttonicon-emailtext').text('\u2709');
+  }
+
+  function getUrlVars() {
+    var vars = [], hash;
+    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+    for(var i = 0; i < hashes.length; i++) {
+      hash = hashes[i].split('=');
+      vars.push(hash[0]);
+      vars[hash[0]] = hash[1];
+    }
+    var hashes = window.location.href.slice(window.location.href.indexOf('#') + 1).split('&');
+    for(var i = 0; i < hashes.length; i++) {
+      hash = hashes[i].split('=');
+      vars.push(hash[0]);
+      vars[hash[0]] = hash[1];
+    }
+    return vars;
   }
 
   return toolbarAlert;

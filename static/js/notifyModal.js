@@ -34,13 +34,13 @@ module.exports = (function() {
     }
   }
 
-  modal.init = function(onNotify) {
+  modal.init = function(onNotify, authToken) {
     var baseURL = window.location.href.slice(0, window.location.href.split('/', 3).join('/').length);
     $.ajax({
       url: baseURL +'/mypads/api/autocomplete',
       dataType: "json",
       data: {
-        auth_token: localStorage.getItem('token'),
+        auth_token: authToken,
       },
       success: function(data) {
         Object.keys(data.users).forEach(function(key) {
