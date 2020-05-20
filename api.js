@@ -1815,26 +1815,26 @@ module.exports = (function () {
                       }
                     );
 
-                    // pad.getWatchedPadsFromGroups(u, function(err, watchlist) {
-                    //   if (err) {
-                    //     return res.status(404).send({
-                    //       error: err.message
-                    //     });
-                    //   }
-                    //   /*  Fix IE11 stupid habit of caching AJAX calls
-                    //   *  See http://www.dashbay.com/2011/05/internet-explorer-caches-ajax/
-                    //   *  and https://framagit.org/framasoft/Etherpad/ep_mypads/issues/220
-                    //   */
-                    //  index = 0;
-                    //   data.watchlist.padsFromGroups = ld.transform(watchlist,
-                    //     function(memo, val, key) {
-                    //       memo[index] = ld.omit(val, 'password');
-                    //       index++;
-                    //     }
-                    //   );
+                    pad.getWatchedPadsFromGroups(data.watchlist.groups, function(err, watchlist) {
+                      if (err) {
+                        return res.status(404).send({
+                          error: err.message
+                        });
+                      }
+                      /*  Fix IE11 stupid habit of caching AJAX calls
+                      *  See http://www.dashbay.com/2011/05/internet-explorer-caches-ajax/
+                      *  and https://framagit.org/framasoft/Etherpad/ep_mypads/issues/220
+                      */
+                     index = 0;
+                      data.watchlist.padsFromGroups = ld.transform(watchlist,
+                        function(memo, val, key) {
+                          memo[index] = ld.omit(val, 'password');
+                          index++;
+                        }
+                      );
                     res.set('Expires', '-1');
                     res.send({ value: data });
-                  // })
+                  })
                   })
                   
                 })

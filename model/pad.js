@@ -399,7 +399,7 @@ module.exports = (function () {
     // legacy safety check
     if (!user.watchlist || !user.watchlist.pads || user.watchlist.pads.length == 0) {
       return callback(null, {});
-    }
+   }
     storage.fn.getKeys(
       ld.map(user.watchlist.pads, function (p) { return PPREFIX + p; }),
       function (err, pads) {
@@ -414,41 +414,25 @@ module.exports = (function () {
     );
   };
 
-  pad.getWatchedPadsFromGroups = function (user, callback) {
-    if (!ld.isObject(user)) {
-      throw new TypeError('BACKEND.ERROR.TYPE.USER_INVALID');
-    }
-    if (!ld.isFunction(callback)) {
-      throw new TypeError('BACKEND.ERROR.TYPE.CALLBACK_FN');
-    }
-    // legacy safety check
-    if (!user.watchlist || !user.watchlist.groups || user.watchlist.groups.length == 0) {
-      return callback(null, {});
+  pad.getWatchedPadsFromGroups = function (groups, callback) {
+    var pads = [];
+
+    for(var i = 0; i < Object.keys(groups).length; i++){
+      for(var j=0; j< groups[i].pads.length; j++){
+        pads.push(groups[i].pads[j]);
+      }
     }
     storage.fn.getKeys(
-      ld.map(user.watchlist.groups, function (g) { return GPREFIX + g; }),
+      ld.map(pads, function (p) { return PPREFIX + p; }),
       function (err, groups) {
         console.log(groups);
-        var padsFromWatchedGroups = [];
         if (err) { return callback(err); }
         groups = ld.reduce(groups, function (memo, val, key) {
-          key       = key.substr(GPREFIX.length);
+          key       = key.substr(PPREFIX.length);
           memo[key] = val;
-          storage.fn.getKeys(
-            ld.map(val.pads, function (p) { return PPREFIX + p; }),
-            function (err, pads) {
-              if (err) { return callback(err); }
-              padsFromWatchedGroups = ld.reduce(pads, function (memo, val, key) {
-                key       = key.substr(PPREFIX.length);
-                memo[key] = val;
-                
-                return memo;
-              }, {});
-              
-            }
-          );
+          return memo;
         }, {});
-        callback(null, padsFromWatchedGroups);
+        callback(null, groups);
       }
     );
   };

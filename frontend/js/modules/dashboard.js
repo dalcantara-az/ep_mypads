@@ -44,7 +44,7 @@ module.exports = (function () {
         method: 'GET',
         url: conf.URLS.PAD + '/getRelevantPads/' + auth.token()
       }).then(function (resp) {  
-
+        console.log(resp);
       for(var i = 0; i < Object.keys(resp.value.pads).length; i++){
         // var exists = false;
         // var index = 0;
@@ -62,10 +62,10 @@ module.exports = (function () {
         var exists = false;
         var index = 0;
         while(!exists && index < c.pads.length){
-          console.log(resp.value.watchlist.pads[i]._id);
-          console.log(c.pads[i]._id);
-          console.log(resp.value.watchlist.pads[i]._id == c.pads[i]._id);
-          console.log('--');
+          // console.log(resp.value.watchlist.pads[i]._id);
+          // console.log(c.pads[i]._id);
+          // console.log(resp.value.watchlist.pads[i]._id == c.pads[i]._id);
+          // console.log('--');
           if(resp.value.watchlist.pads[i]._id == c.pads[i]._id){
             exists = true;
           }
@@ -75,20 +75,20 @@ module.exports = (function () {
           c.pads.push(resp.value.watchlist.pads[i]);
         } 
       }
-      // for(var i = 0; i < Object.keys(resp.value.watchlist.padsFromGroups).length; i++){
-      //   var exists = false;
-      //   var index = 0;
-      //   while(!exists && index < c.pads.length){
-      //     if(resp.value.watchlist.padsFromGroups[i]._id == c.pads[i]._id){
-      //       exists = true;
-      //     }
-      //     index++;
-      //   } 
-      //   if(!exists){
-      //     c.pads.push(resp.value.watchlist.padsFromGroups[i]);
-      //   } 
+      for(var i = 0; i < Object.keys(resp.value.watchlist.padsFromGroups).length; i++){
+        var exists = false;
+        var index = 0;
+        while(!exists && index < c.pads.length){
+          if(resp.value.watchlist.padsFromGroups[i]._id == c.pads[i]._id){
+            exists = true;
+          }
+          index++;
+        } 
+        if(!exists){
+          c.pads.push(resp.value.watchlist.padsFromGroups[i]);
+        } 
         
-      // }
+      }
  
 
       }, function (err) {
