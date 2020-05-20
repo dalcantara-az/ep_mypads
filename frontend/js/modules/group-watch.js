@@ -27,10 +27,13 @@ module.exports = (function () {
   return function (group, successFn) {
     var gid  = group._id;
     var user = auth.userInfo();
+    var unwatch;
     if (ld.includes(user.watchlist.groups, gid)) {
       ld.pull(user.watchlist.groups, gid);
+      unwatch = true;
     } else {
       user.watchlist.groups.push(gid);
+      unwatch = false;
     }
     if (typeof(model.watchlist().groups[gid]) !== 'undefined') {
       delete model.watchlist().groups[gid];
@@ -46,7 +49,11 @@ module.exports = (function () {
         auth_token: auth.token(),
       }
     }).then(function () {
-      notif.success({ body: conf.LANG.GROUP.WATCH_SUCCESS });
+      if (unwatch === true) {
+        notif.success({ body: conf.LANG.GROUP.UNWATCH_SUCCESS });
+      } else {
+        notif.success({ body: conf.LANG.GROUP.WATCH_SUCCESS });
+      }
       if(c!=null){
         model.fetch(c.computeGroups);
       }

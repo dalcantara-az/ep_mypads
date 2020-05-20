@@ -517,6 +517,9 @@ module.exports = (function () {
         if(!g.watchers.includes(users.uids[i])){
           g.watchers.push(users.uids[i]);
         }
+        if (!g.users.includes(users.uids[i])) {
+          g.users.push(users.uids[i]);
+        }
       }
 
       group.fn.indexUsers(true, g._id, removed, function (err) {
