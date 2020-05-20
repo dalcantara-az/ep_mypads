@@ -159,7 +159,6 @@ exports.postToolbarInit = function (hook_name, args) {
 }
 
 exports.postAceInit = function(hook, context) {
-  require('ep_mypads/static/js/jquery-ui');
   autocomplete.postAceInit(hook, context);
   toolbarAlert.postAceInit(hook, context);
   var scrollTo = require('ep_mypads/static/js/scrollTo');

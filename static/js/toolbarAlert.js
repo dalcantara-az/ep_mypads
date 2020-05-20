@@ -1,3 +1,5 @@
+require('ep_mypads/static/js/jquery-ui');
+
 module.exports = (function() {
   'use strict';
 
