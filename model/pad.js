@@ -428,7 +428,8 @@ module.exports = (function () {
     storage.fn.getKeys(
       ld.map(user.watchlist.groups, function (g) { return GPREFIX + g; }),
       function (err, groups) {
-        var pads = [];
+        console.log(groups);
+        var padsFromWatchedGroups = [];
         if (err) { return callback(err); }
         groups = ld.reduce(groups, function (memo, val, key) {
           key       = key.substr(GPREFIX.length);
@@ -437,21 +438,17 @@ module.exports = (function () {
             ld.map(val.pads, function (p) { return PPREFIX + p; }),
             function (err, pads) {
               if (err) { return callback(err); }
-              pads = ld.reduce(pads, function (memo, val, key) {
+              padsFromWatchedGroups = ld.reduce(pads, function (memo, val, key) {
                 key       = key.substr(PPREFIX.length);
                 memo[key] = val;
                 
                 return memo;
               }, {});
-              console.log(pads);
-              callback(null, pads);
+              
             }
           );
-          // return memo;
         }, {});
-        // console.log('pads');
-        // console.log(pads);
-        // callback(null, groups);
+        callback(null, padsFromWatchedGroups);
       }
     );
   };
