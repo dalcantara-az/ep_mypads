@@ -10,6 +10,8 @@ module.exports = (function() {
   var authToken;
 
   var $padOuter; 
+  var $innerDocFrame;
+  var $innerDocBody;
   var innerDocWindow;
   var $suggestionsMarker = $("<span id='suggestionsMarker' style='position:absolute;'></span>");
   var $inputField = $("<input id='inputField' type='hidden'>");
@@ -32,6 +34,9 @@ module.exports = (function() {
       }
     });
     $padOuter = $('iframe[name="ace_outer"]').contents().find("body");
+    $innerDocFrame = $padOuter.find('iframe');
+    $innerDocBody = $innerDocFrame.contents().find("#innerdocbody");
+    
     innerDocWindow = $padOuter.find('iframe')[0].contentWindow;
     $padOuter.find('iframe').contents().find("body").on('keydown', function(e) {
       var $autocompleteMenu;
@@ -96,8 +101,16 @@ module.exports = (function() {
 
   autocomplete.aceKeyEvent = function(hook, context) {
     var rect = innerDocWindow.getSelection().getRangeAt(0).getBoundingClientRect();
-    $suggestionsMarker.css('left', (rect.left + 60) + 'px');
-    $suggestionsMarker.css('top', (rect.bottom + 20) + 'px');
+    var innerDocPadding = {
+      left: parseInt($innerDocFrame.css('padding-left'), 10),
+      top: parseInt($innerDocFrame.css('padding-top'), 10)
+    };
+    var outerDocPadding = {
+      left: parseInt($padOuter.css('padding-left'), 10),
+      top: parseInt($padOuter.css('padding-top'), 10)
+    };
+    $suggestionsMarker.css('left', (rect.left + innerDocPadding.left + outerDocPadding.left) + 'px');
+    $suggestionsMarker.css('top', (rect.bottom + innerDocPadding.top + outerDocPadding.top) + 'px');
   }
 
   function getQuery(context) {
@@ -145,8 +158,6 @@ module.exports = (function() {
   }
 
   function replaceText(line, startIndex, length, textToInsert) {
-    var $innerDocBody = $('iframe[name="ace_outer"]').contents().find('iframe').contents().find("#innerdocbody");
-    
     var $line = $innerDocBody.children().eq(line);
     var count = 0;
     var $container;
