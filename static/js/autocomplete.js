@@ -1,14 +1,19 @@
+require('ep_mypads/static/js/jquery-ui');
+
 module.exports = (function() {
   'use strict';
-
+  
   var autocomplete = {};
 
   var lineToReplace;
   var atIndex;
   var length;
   var userList = [];
+  var authToken;
 
   var $padOuter; 
+  var $innerDocFrame;
+  var $innerDocBody;
   var innerDocWindow;
   var $suggestionsMarker = $("<span id='suggestionsMarker' style='position:absolute;'></span>");
   var $inputField = $("<input id='inputField' type='hidden'>");
@@ -16,12 +21,13 @@ module.exports = (function() {
   var notifyModal = require('ep_mypads/static/js/notifyModal'); 
 
   autocomplete.postAceInit = function(hook, context) {
+    authToken = getUrlVars()['auth_token'];
     var baseURL = window.location.href.slice(0, window.location.href.split('/', 3).join('/').length);
     $.ajax({
       url: baseURL +'/mypads/api/autocomplete',
       dataType: "json",
       data: {
-        auth_token: localStorage.getItem('token'),
+        auth_token: authToken,
       },
       success: function(data) {
         Object.keys(data.users).forEach(function(key) {
@@ -30,6 +36,9 @@ module.exports = (function() {
       }
     });
     $padOuter = $('iframe[name="ace_outer"]').contents().find("body");
+    $innerDocFrame = $padOuter.find('iframe');
+    $innerDocBody = $innerDocFrame.contents().find("#innerdocbody");
+    
     innerDocWindow = $padOuter.find('iframe')[0].contentWindow;
     $padOuter.find('iframe').contents().find("body").on('keydown', function(e) {
       var $autocompleteMenu;
@@ -94,8 +103,16 @@ module.exports = (function() {
 
   autocomplete.aceKeyEvent = function(hook, context) {
     var rect = innerDocWindow.getSelection().getRangeAt(0).getBoundingClientRect();
-    $suggestionsMarker.css('left', (rect.left + 60) + 'px');
-    $suggestionsMarker.css('top', (rect.bottom + 20) + 'px');
+    var innerDocPadding = {
+      left: parseInt($innerDocFrame.css('padding-left'), 10),
+      top: parseInt($innerDocFrame.css('padding-top'), 10)
+    };
+    var outerDocPadding = {
+      left: parseInt($padOuter.css('padding-left'), 10),
+      top: parseInt($padOuter.css('padding-top'), 10)
+    };
+    $suggestionsMarker.css('left', (rect.left + innerDocPadding.left + outerDocPadding.left) + 'px');
+    $suggestionsMarker.css('top', (rect.bottom + innerDocPadding.top + outerDocPadding.top) + 'px');
   }
 
   function getQuery(context) {
@@ -143,8 +160,6 @@ module.exports = (function() {
   }
 
   function replaceText(line, startIndex, length, textToInsert) {
-    var $innerDocBody = $('iframe[name="ace_outer"]').contents().find('iframe').contents().find("#innerdocbody");
-    
     var $line = $innerDocBody.children().eq(line);
     var count = 0;
     var $container;
@@ -180,7 +195,7 @@ module.exports = (function() {
           method: 'POST',
           url: baseURL +'/mypads/api/notify-users',
           data: {
-            auth_token: localStorage.getItem('token'),
+            auth_token: auth_token,
             url: copiedText.url,
             text: copiedText.text,
             loginsOrEmails: loginOrEmails
@@ -194,11 +209,28 @@ module.exports = (function() {
           }
         });
       }
-      notifyModal.init(onNotify);
+      notifyModal.init(onNotify, authToken);
     }
     notifyModal.toggle(recipient);
   }
   
+  function getUrlVars() {
+    var vars = [], hash;
+    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+    for(var i = 0; i < hashes.length; i++) {
+      hash = hashes[i].split('=');
+      vars.push(hash[0]);
+      vars[hash[0]] = hash[1];
+    }
+    var hashes = window.location.href.slice(window.location.href.indexOf('#') + 1).split('&');
+    for(var i = 0; i < hashes.length; i++) {
+      hash = hashes[i].split('=');
+      vars.push(hash[0]);
+      vars[hash[0]] = hash[1];
+    }
+    return vars;
+  }
+
   return autocomplete;
 
 }).call(this);

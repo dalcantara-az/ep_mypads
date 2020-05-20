@@ -159,16 +159,17 @@ exports.postToolbarInit = function (hook_name, args) {
 }
 
 exports.postAceInit = function(hook, context) {
-  $.getScript("http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js", function(script, textStatus, jqXHR) {
-    autocomplete.postAceInit(hook, context);
-    toolbarAlert.postAceInit(hook, context);
-  });
+  autocomplete.postAceInit(hook, context);
+  toolbarAlert.postAceInit(hook, context);
   var scrollTo = require('ep_mypads/static/js/scrollTo');
   scrollTo.postAceInit(hook, context);
 }
 
 exports.aceKeyEvent = function(hook, context) {
   autocomplete.aceKeyEvent(hook, context);
+  if (!/Edge/.test(navigator.userAgent)) {
+    return true;  
+  }
 }
 
 exports.aceSelectionChanged = function(hook, context) {
