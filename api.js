@@ -1757,162 +1757,66 @@ module.exports = (function () {
 
 
     app.get(padRoute + '/getRelevantPads/:u', function (req, res){
-      // var data = {};
-
-      // data.watchlist = { groups: {}, pads: {}, fromGroups:{}};
+      var data = {};
+      data.watchlist = { groups: {}, pads: {}, fromGroups:{}};
       var u = auth.fn.getUser(req.params.u);
+      group.getWatchedGroupsByUser(u, function(err, watchlist) {
+       if (err) {
+         return res.status(404).send({
+           error: err.message
+         });
+       }
+       var index = 0;
+       data.watchlist.groups = ld.transform(watchlist,
+         function(memo, val, key) {
+           memo[index] = ld.omit(val, 'password');
+           index ++;
+         }
+       );
+ 
+       pad.getWatchedPadsByUser(u, function(err, watchlist) {
+         if (err) {
+           return res.status(404).send({
+             error: err.message
+           });
+         }
 
-      user.get(u.login, function (err, u) {
-        if (err) { return res.status(400).send({ error: err }); }
-        try {
-          group.getByUser(u, true, function (err, data) {
-            if (err) {
-              return res.status(404).send({
-                error: err.message
+         var index = 0;
+         data.watchlist.pads = ld.transform(watchlist,
+           function(memo, val, key) {
+             memo[index] = ld.omit(val, 'password');
+             index++;
+           }
+         );
+         var padsFromGroups = [];
+         if(Object.keys(data.watchlist.groups).length > 0 ){
+          for(var i = 0; i < Object.keys(data.watchlist.groups).length; i++){
+            for(var j = 0; j < Object.keys(data.watchlist.groups[i].pads).length; j++){
+              pad.get(data.watchlist.groups[i].pads[j], function(err, p) {
+               padsFromGroups.push(p)
+               var index = 0;
+               data.watchlist.fromGroups = ld.transform(padsFromGroups,
+                 function(memo, val, key) {
+                   memo[index] = ld.omit(val, 'password');
+                   index++;
+                 }
+               );
+               
+               if(i == (Object.keys(data.watchlist.groups).length)-1 && j == (Object.keys(data.watchlist.groups[i].pads).length)-1 ){
+                res.set('Expires', '-1');
+                res.send({ value: data });
+               }
               });
             }
-            var index = 0;
-            data.groups = ld.transform(data.groups,
-              function (memo, val, key) {
-                memo[index] = ld.omit(val, 'password');
-                index++;
-              }
-            );
-            index = 0
-            data.pads = ld.transform(data.pads,
-              function (memo, val, key) {
-                memo[index] = ld.omit(val, 'password');
-                index++;
-              }
-            );
-            data.watchlist = { groups: {}, pads: {} };
-          
-                group.getWatchedGroupsByUser(u, function(err, watchlist) {
-                  if (err) {
-                    return res.status(404).send({
-                      error: err.message
-                    });
-                  }
-                  index = 0
-                  data.watchlist.groups = ld.transform(watchlist,
-                    function(memo, val, key) {
-                      memo[index] = ld.omit(val, 'password');
-                      index++;
-                    }
-                  );
-                  pad.getWatchedPadsByUser(u, function(err, watchlist) {
-                    if (err) {
-                      return res.status(404).send({
-                        error: err.message
-                      });
-                    }
-                    /*  Fix IE11 stupid habit of caching AJAX calls
-                    *  See http://www.dashbay.com/2011/05/internet-explorer-caches-ajax/
-                    *  and https://framagit.org/framasoft/Etherpad/ep_mypads/issues/220
-                    */
-                   index = 0;
-                    data.watchlist.pads = ld.transform(watchlist,
-                      function(memo, val, key) {
-                        memo[index] = ld.omit(val, 'password');
-                        index++;
-                      }
-                    );
-
-                    pad.getWatchedPadsFromGroups(u, function(err, watchlist) {
-                      console.log(watchlist);
-                      if (err) {
-                        return res.status(404).send({
-                          error: err.message
-                        });
-                      }
-                      /*  Fix IE11 stupid habit of caching AJAX calls
-                      *  See http://www.dashbay.com/2011/05/internet-explorer-caches-ajax/
-                      *  and https://framagit.org/framasoft/Etherpad/ep_mypads/issues/220
-                      */
-                     index = 0;
-                      data.watchlist.padsFromGroups = ld.transform(watchlist,
-                        function(memo, val, key) {
-                          memo[index] = ld.omit(val, 'password');
-                          index++;
-                        }
-                      );
-                    res.set('Expires', '-1');
-                    res.send({ value: data });
-                  })
-                  })
-                  
-                })
-                // /* Fix IE11 stupid habit of caching AJAX calls
-                //  * See http://www.dashbay.com/2011/05/internet-explorer-caches-ajax/
-                //  * and https://framagit.org/framasoft/Etherpad/ep_mypads/issues/220
-                //  */
-                // res.set('Expires', '-1');
-                // res.send({ value: data });
-            
-          });
-        }
-        catch (e) {
-          res.status(400).send({ error: e.message });
-        }
-      });
-
-    //   group.getWatchedGroupsByUser(u, function(err, watchlist) {
-    //    if (err) {
-    //      return res.status(404).send({
-    //        error: err.message
-    //      });
-    //    }
-    //    var index = 0;
-    //    data.watchlist.groups = ld.transform(watchlist,
-    //      function(memo, val, key) {
-    //        memo[index] = ld.omit(val, 'password');
-    //        index ++;
-    //      }
-    //    );
- 
-    //    pad.getWatchedPadsByUser(u, function(err, watchlist) {
-    //      if (err) {
-    //        return res.status(404).send({
-    //          error: err.message
-    //        });
-    //      }
-
-    //      var index = 0;
-    //      data.watchlist.pads = ld.transform(watchlist,
-    //        function(memo, val, key) {
-    //          memo[index] = ld.omit(val, 'password');
-    //          index++;
-    //        }
-    //      );
-    //      var padsFromGroups = [];
-    //      if(Object.keys(data.watchlist.groups).length > 0 ){
-    //       for(var i = 0; i < Object.keys(data.watchlist.groups).length; i++){
-    //         for(var j = 0; j < Object.keys(data.watchlist.groups[i].pads).length; j++){
-    //           pad.get(data.watchlist.groups[i].pads[j], function(err, p) {
-    //            padsFromGroups.push(p)
-    //            var index = 0;
-    //            data.watchlist.fromGroups = ld.transform(padsFromGroups,
-    //              function(memo, val, key) {
-    //                memo[index] = ld.omit(val, 'password');
-    //                index++;
-    //              }
-    //            );
-               
-    //            if(i == (Object.keys(data.watchlist.groups).length)-1 && j == (Object.keys(data.watchlist.groups[i].pads).length)-1 ){
-    //             res.set('Expires', '-1');
-    //             res.send({ value: data });
-    //            }
-    //           });
-    //         }
-    //           console.log(data.watchlist.fromGroups);
-    //        }
-    //      }
-    //      else{
-    //       res.set('Expires', '-1');
-    //       res.send({ value: data });
-    //      }
-    //    })
-    //  })
+              console.log(data.watchlist.fromGroups);
+           }
+         }
+         else{
+          res.set('Expires', '-1');
+          res.send({ value: data });
+         }
+       })
+     })
      
      });
 

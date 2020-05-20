@@ -414,48 +414,6 @@ module.exports = (function () {
     );
   };
 
-  pad.getWatchedPadsFromGroups = function (user, callback) {
-    if (!ld.isObject(user)) {
-      throw new TypeError('BACKEND.ERROR.TYPE.USER_INVALID');
-    }
-    if (!ld.isFunction(callback)) {
-      throw new TypeError('BACKEND.ERROR.TYPE.CALLBACK_FN');
-    }
-    // legacy safety check
-    if (!user.watchlist || !user.watchlist.groups || user.watchlist.groups.length == 0) {
-      return callback(null, {});
-    }
-    storage.fn.getKeys(
-      ld.map(user.watchlist.groups, function (g) { return GPREFIX + g; }),
-      function (err, groups) {
-        var pads = [];
-        if (err) { return callback(err); }
-        groups = ld.reduce(groups, function (memo, val, key) {
-          key       = key.substr(GPREFIX.length);
-          memo[key] = val;
-          storage.fn.getKeys(
-            ld.map(val.pads, function (p) { return PPREFIX + p; }),
-            function (err, pads) {
-              if (err) { return callback(err); }
-              pads = ld.reduce(pads, function (memo, val, key) {
-                key       = key.substr(PPREFIX.length);
-                memo[key] = val;
-                
-                return memo;
-              }, {});
-              console.log(pads);
-              callback(null, pads);
-            }
-          );
-          // return memo;
-        }, {});
-        // console.log('pads');
-        // console.log(pads);
-        // callback(null, groups);
-      }
-    );
-  };
-
 
   /**
    * ### delChatHistory
