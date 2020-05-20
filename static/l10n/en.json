@@ -396,7 +396,8 @@
          "EMAIL": "The email is required and should be valid.",
          "LOGIN": "Login is required.",
          "LOGOUT": "Log out error: you were not authenticated.",
-         "PASSWORD_MISMATCH": "The entered passwords do not match."
+         "PASSWORD_MISMATCH": "The entered passwords do not match.",
+         "REQUIRED_ALPHANUMERIC": "Special characters were found in alphanumeric fields."
       },
       "FIRSTNAME": "Firstname",
       "FORM": "Login",

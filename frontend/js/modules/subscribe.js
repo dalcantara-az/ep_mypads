@@ -94,6 +94,25 @@ module.exports = (function () {
       return notif.error({ body: ld.result(conf.LANG, err.error) });
     };
 
+    var hasSpecialCharacter = function(strings) {
+      for (var i = 0; i < strings.length; i++) {
+        if (strings[i] === undefined) {
+          continue;
+        }
+        var str = strings[i];
+        var code, len;
+        for (var j = 0, len = str.length; j < len; j++) {
+          code = str.charCodeAt(j);
+          if (!(code > 47 && code < 58) && // numeric (0-9)
+              !(code > 64 && code < 91) && // upper alpha (A-Z)
+              !(code > 96 && code < 123)) { // lower alpha (a-z)
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
     c.submit = {};
 
     /**
@@ -114,6 +133,8 @@ module.exports = (function () {
       if (c.data.password() !== c.data.passwordConfirm()) {
         notif.warning({ body: conf.LANG.USER.ERR.PASSWORD_MISMATCH });
         document.querySelector('input[name="passwordConfirm"]').focus();
+      } else if (hasSpecialCharacter([c.data.login(), c.data.firstname(), c.data.lastname(), c.data.padNickname()]) === true) {
+        notif.warning({ body: conf.LANG.USER.ERR.REQUIRED_ALPHANUMERIC });
       } else {
         c.data.login(c.data.login().trim());
         m.request({
@@ -159,6 +180,10 @@ module.exports = (function () {
 
     c.submit.profileSave = function (e) {
       e.preventDefault();
+      if (hasSpecialCharacter([c.data.login(), c.data.firstname(), c.data.lastname(), c.data.padNickname()]) === true) {
+        notif.warning({ body: conf.LANG.USER.ERR.REQUIRED_ALPHANUMERIC });
+        return;
+      } 
       var passwordUpdate = function () {
         var pass = c.data.password();
         if (!pass || (pass !== c.data.passwordConfirm())) {

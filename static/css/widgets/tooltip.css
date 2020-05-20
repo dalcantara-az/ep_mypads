@@ -16,7 +16,7 @@
 .mp-tooltip:hover:after, .mp-tooltip:focus:after {
   position: absolute;
   bottom: 20px;
-  right: 0;
+  left: 0px;
   padding: 5px;
   width: 250px;
   color: #0C5B7A;
