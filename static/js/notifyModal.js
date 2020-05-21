@@ -51,7 +51,7 @@ module.exports = (function() {
     });
     var padOuter = $('iframe[name="ace_outer"]').contents().find("body");
     var modalHTML = 
-      '<div id="notifyModal" class="modal">' +
+      '<div id="notifyModal" class="modal backdrop">' +
         '<div id="notifyModalContent">' +
           '<div class="container" style="height:200px; display:inline-block;">' +
             '<span id="btnCloseModal" class="display-topright clickable">&times;</span>' +
@@ -113,8 +113,9 @@ module.exports = (function() {
       return false;
     })
     $btnNotify.on('click', function(e) {
-      onNotify(loginOrEmails);
-      notifyModal.fadeToggle(200);
+      notifyModal.fadeToggle(0, function() {
+        onNotify(loginOrEmails);
+      });
     })
 
     $btnSelectUser.on('click', function(e) {

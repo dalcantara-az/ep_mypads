@@ -9,8 +9,10 @@ module.exports = (function() {
   var toolbarAlert = {};
 
   var notifyModal = require('ep_mypads/static/js/notifyModal'); 
-  
+
   var $padOuter;
+
+  var $loader;
   
   toolbarAlert.aceEditorCSS = function(hook, context) {
     var css = ["/ep_mypads/static/css/toolbarAlert.css"];
@@ -25,6 +27,9 @@ module.exports = (function() {
     $padOuter =  $('iframe[name="ace_outer"]').contents().find("body");
     $padOuter.append($("<textarea>", {id: "text_to_copy"}));
     $padOuter.find("#text_to_copy").hide();
+    $loader = $('<div class="backdrop"><div class="loader"></div></div>');
+    $padOuter.append($loader);
+    $loader.hide();
     selectedLineNumber = 0;
     authToken = getUrlVars()['auth_token'];
     drawToolbarAlert();
@@ -69,26 +74,33 @@ module.exports = (function() {
       var baseURL = window.location.href.slice(0, window.location.href.split('/', 3).join('/').length);
       var onNotify = function(loginOrEmails) {
         var copiedText = getTextToCopy();
-        $.ajax({
-          method: 'POST',
-          url: baseURL +'/mypads/api/notify-users',
-          data: {
-            auth_token: authToken,
-            url: copiedText.url,
-            text: copiedText.text,
-            loginsOrEmails: loginOrEmails
-          },
-          success: function(data, textStatus, jqXHR) {
-            if (data.success === true) {
-              alert('Successfully notified selected users.');
-            } else {
-              alert('Something went wrong.');
+        $loader.fadeToggle(0, function() {
+          $.ajax({
+            method: 'POST',
+            url: baseURL +'/mypads/api/notify-users',
+            data: {
+              auth_token: authToken,
+              url: copiedText.url,
+              text: copiedText.text,
+              loginsOrEmails: loginOrEmails
+            },
+            success: function(data, textStatus, jqXHR) {
+              $loader.fadeToggle(200, function() {
+                if (data.success === true) {
+                  alert('Successfully notified selected users.');
+                } else {
+                  alert('Something went wrong.');
+                }
+              });
+              
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+              $loader.fadeToggle(200, function() {
+                console.log(errorThrown);
+                alert('Something went wrong.');
+              });
             }
-          },
-          error: function(jqXHR, textStatus, errorThrown) {
-            console.log(errorThrown);
-            alert('Something went wrong.');
-          }
+          });
         });
       }
       notifyModal.init(onNotify, authToken);
