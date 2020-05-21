@@ -46,10 +46,13 @@ module.exports = (function () {
   return function (group, successFn) {
     var gid  = group._id;
     var user = auth.userInfo();
+    var unmark;
     if (ld.includes(user.bookmarks.groups, gid)) {
       ld.pull(user.bookmarks.groups, gid);
+      unmark = true;
     } else {
       user.bookmarks.groups.push(gid);
+      unmark = false;
     }
     if (typeof(model.bookmarks().groups[gid]) !== 'undefined') {
       delete model.bookmarks().groups[gid];
@@ -65,7 +68,12 @@ module.exports = (function () {
         auth_token: auth.token(),
       }
     }).then(function () {
-      notif.success({ body: conf.LANG.GROUP.MARK_SUCCESS });
+      if (unmark === true) {
+        notif.success({ body: conf.LANG.GROUP.UNMARK_SUCCESS });
+      } else {
+        notif.success({ body: conf.LANG.GROUP.MARK_SUCCESS });
+      }
+      
       if (successFn) { successFn(); }
     }, function (err) {
       return notif.error({ body: ld.result(conf.LANG, err.error) });

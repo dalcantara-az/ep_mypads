@@ -5,6 +5,7 @@ module.exports = (function () {
   var ld = require('lodash');
 
   // Local dependencies
+  var notif = require('../widgets/notification.js');
   var conf = require('../configuration.js');
   var auth = require('../auth.js');
   var u = auth.userInfo;
@@ -106,7 +107,7 @@ module.exports = (function () {
         noneMsg = conf.LANG.GROUP.NONE;
         break;
       case 'pads':
-        noneMsg = conf.LANG.GROUP.PAD.NONE;
+        noneMsg = conf.LANG.GROUP.PAD.NO_RESULT;
         break;
     }
     if (ld.size(c.searchResults[type]) === 0) {

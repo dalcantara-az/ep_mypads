@@ -14,16 +14,23 @@ module.exports = (function () {
       var query = 
           `SELECT subquery.key AS key, store.value AS value, subquery.headline AS headline
           FROM (
-            SELECT ts_rank_cd(
-              to_tsvector(value::json -> 'atext' ->> 'text'),
-              plainto_tsquery('${searchQuery}'))
-            AS score, SUBSTRING(key, ${padStartIndex}) AS key, ts_headline(
+            SELECT 
+            ts_rank_cd(
+              to_tsvector(CONCAT(subsubquery.title, ' ', value::json -> 'atext' ->> 'text')),
+              plainto_tsquery('${searchQuery}')) AS score,
+            ts_headline(
               'english',
-              value::json -> 'atext' ->> 'text',
-              plainto_tsquery('${searchQuery}'))
-            AS headline
-            FROM store
-            WHERE to_tsvector(value::json -> 'atext' ->> 'text') @@ plainto_tsquery('${searchQuery}')
+              CONCAT(subsubquery.title, ' ', value::json -> 'atext' ->> 'text'),
+              plainto_tsquery('${searchQuery}')) AS headline,
+            SUBSTRING(store.key, ${padStartIndex}) AS key
+            FROM (
+              SELECT value::json ->> 'name' AS title,
+              SUBSTRING(key, ${mypadStartIndex}) AS key
+              FROM store
+            ) AS subsubquery 
+            INNER JOIN store
+            ON SUBSTRING(store.key, ${padStartIndex}) = subsubquery.key
+            WHERE to_tsvector(CONCAT(subsubquery.title, ' ', value::json -> 'atext' ->> 'text')) @@ plainto_tsquery('${searchQuery}')
           ) AS subquery
           INNER JOIN store
           ON subquery.key = SUBSTRING(store.key, ${mypadStartIndex})
@@ -48,7 +55,7 @@ module.exports = (function () {
           ORDER BY subquery.score DESC`;
       storage.db.db.wrappedDB.db.query(query, [], function (err, queryResult) {
         if (err) { 
-          console.log(err) 
+          return callback(err, null);
         }
         var rows = queryResult.rows;
         var results = {
@@ -66,6 +73,33 @@ module.exports = (function () {
       });
     }
   };
+
+  searcher.searchUsers = function(searchQuery, callback) {
+    if (storage.db && (storage.db.type === 'postgres' || storage.db.type === 'postgrespool')) {
+      
+      var query = `
+        SELECT (value::json) ->> 'email' AS loginOrEmail
+        FROM store
+        WHERE key LIKE '${storage.DBPREFIX.USER}%' AND value::json ->> 'email' LIKE '${searchQuery}%'
+        UNION
+        SELECT (value::json) ->> 'login' AS loginOrEmail
+        FROM store
+        WHERE key LIKE '${storage.DBPREFIX.USER}%' AND value::json ->> 'login' LIKE '${searchQuery}%'
+      `;
+      var results = [];
+    
+      storage.db.db.wrappedDB.db.query(query, [], function (err, queryResult) {
+        if (err) { 
+          return callback(err, null); 
+        }
+        var rows = queryResult.rows;
+        rows.forEach(function(row) {
+          results.push(row.loginoremail);
+        });
+        return callback(null, results);
+      });
+    }
+  }
   
   return searcher;
 }).call(this);

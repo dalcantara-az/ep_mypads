@@ -73,9 +73,9 @@ module.exports = (function () {
     c.isGuest = !auth.isAuthenticated();
 
     var init = function (err) {
-      if (err) { return m.route('/mypads'); }
+      if (c.isGuest || err) { return m.route('/mypads'); }
       var _init = function (err) {
-        if (err) { return m.route('/mypads'); }
+        if (c.isGuest || err) { return m.route('/mypads'); }
         var data = c.isGuest ? model.tmp() : model;
         c.group  = data.groups()[key];
         if (!c.isGuest) {
@@ -232,6 +232,13 @@ module.exports = (function () {
               m('span.sr-only', conf.LANG.GROUP.PAD.USERS)
             )
           ),
+          (conf.SERVER.allPadsPublicsAuthentifiedOnly) ? null : m(
+            'th',
+            {scope: 'col', title: conf.LANG.GROUP.PAD.WATCHERS},
+            m('i.glyphicon.glyphicon-bookmark',
+              m('span.sr-only', conf.LANG.GROUP.PAD.WATCHERS)
+            )
+          ),
           m('th', {scope: 'col'}, conf.LANG.GROUP.TAGS.TITLE),
         ])
       ),
@@ -253,6 +260,10 @@ module.exports = (function () {
           (conf.SERVER.allPadsPublicsAuthentifiedOnly) ? null : m(
             'td',
             ld.size(c.group.users)
+          ),
+          (conf.SERVER.allPadsPublicsAuthentifiedOnly) ? null : m(
+            'td',
+            ld.size(c.group.watchers)
           ),
           
           m('td', m('ul.list-inline', ld.map(c.group.tags, function (t) {
@@ -545,15 +556,17 @@ module.exports = (function () {
 
   view.main = function (c) {
     var isBookmarked = (auth.isAuthenticated()) ? (ld.includes(u().bookmarks.groups, c.group._id)) : false;
-    if(u().watchlist!= null){
-      var isWatched = (auth.isAuthenticated()) ? (ld.includes(u().watchlist.groups, c.group._id)) : false;
-    }
-    else{
-      u().watchlist = {
-        groups: [],
-        pads: [],
-      };
-      var isWatched = false;
+    var isWatched = false;
+    if(auth.isAuthenticated()) {
+      if (u().watchlist!= null) {
+        isWatched = ld.includes(u().watchlist.groups, c.group._id);
+      }
+      else{
+        u().watchlist = {
+          groups: [],
+          pads: [],
+        };
+      }
     }
     
     var h2Elements   = [ m('span', [

@@ -94,6 +94,30 @@ module.exports = (function () {
     }
   };
 
+  var eejs = require('ep_etherpad-lite/node/eejs/');
+  var settings = require('ep_etherpad-lite/node/utils/Settings');
+
+  hooks.eejsBlock_dd_insert = function (hook_name, args, cb) {
+    args.content = args.content + eejs.require("ep_mypads/templates/menuButtons.ejs");
+    return cb();
+  };
+
+  hooks.eejsBlock_mySettings = function (hook_name, args, cb) {
+    args.content = args.content + eejs.require("ep_mypads/templates/settings.ejs");
+    return cb();
+  };
+
+  hooks.eejsBlock_scripts = function (hook_name, args, cb) {
+    return cb();
+  };
+
+  // not used
+  hooks.clientVars = function (hook, context, cb) {
+    var displayCommentAsIcon = settings.ep_inline_toolbar ? settings.ep_inline_toolbar.displayCommentAsIcon : false;
+    return cb({ "displayCommentAsIcon": displayCommentAsIcon });
+  };
+
+
   return hooks;
 
 }).call(this);

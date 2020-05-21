@@ -32,6 +32,10 @@
 
 var $ = require('ep_etherpad-lite/static/js/rjquery').$;
 
+var autocomplete = require("ep_mypads/static/js/autocomplete");
+var toolbarAlert = require("ep_mypads/static/js/toolbarAlert");
+
+
 // Reload page on disconnect to prevent unauthorized access
 var automaticReconnect = require('ep_etherpad-lite/static/js/pad_automatic_reconnect');
 var showCountDownTimerToReconnectOnModal = automaticReconnect.showCountDownTimerToReconnectOnModal;
@@ -40,6 +44,19 @@ automaticReconnect.showCountDownTimerToReconnectOnModal = function($modal, pad) 
     location.reload();
   }
 };
+
+exports.aceEditorCSS = function(hook, context) {
+  var autocompleteCSS = autocomplete.aceEditorCSS(hook, context);
+  var toolbarAlertCSS = toolbarAlert.aceEditorCSS(hook, context);
+  var css = [];
+  for (var i = 0; i < autocompleteCSS.length; i++) {
+    css.push(autocompleteCSS[i]);
+  }
+  for (var i = 0; i < toolbarAlertCSS.length; i++) {
+    css.push(toolbarAlertCSS[i]);
+  }
+  return css;
+}
 
 exports.postToolbarInit = function (hook_name, args) {
   /*
@@ -139,4 +156,23 @@ exports.postToolbarInit = function (hook_name, args) {
       }
     }
   });
+}
+
+exports.postAceInit = function(hook, context) {
+  autocomplete.postAceInit(hook, context);
+  toolbarAlert.postAceInit(hook, context);
+  var scrollTo = require('ep_mypads/static/js/scrollTo');
+  scrollTo.postAceInit(hook, context);
+}
+
+exports.aceKeyEvent = function(hook, context) {
+  autocomplete.aceKeyEvent(hook, context);
+  if (!/Edge/.test(navigator.userAgent)) {
+    return true;  
+  }
+}
+
+exports.aceSelectionChanged = function(hook, context) {
+  autocomplete.aceSelectionChanged(hook, context);
+  toolbarAlert.aceSelectionChanged(hook, context);
 }

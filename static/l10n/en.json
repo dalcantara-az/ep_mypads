@@ -140,7 +140,7 @@
             "INEXISTENT": "Folder does not exist.",
             "ITEMS_NOT_FOUND": "Some users, admins or pads have not been found.",
             "NOT_USER": "You are not an user of this folder.",
-            "RESIGN_UNIQUE_ADMIN": "You can't resign the unique administrator."
+            "RESIGN_UNIQUE_ADMIN": "You can't remove the unique administrator."
          },
          "PAD": {
             "INEXISTENT": "Pad does not exist.",
@@ -241,7 +241,7 @@
          "ALLOW_USERS_TO_CREATE_PADS": "Allow simple users of the folder to create pads?",
          "ARCHIVED": "Archived",
          "DESCRIPTION": "Description",
-         "GROUP_PARAMS": "Folder parameters?",
+         "GROUP_PARAMS": "Inherit folder parameters?",
          "NAME": "Name",
          "PRIVATE": "Password-Protected",
          "PUBLIC": "Organization-Wide",
@@ -251,7 +251,7 @@
       },
       "FILTERS": {
          "ADMIN": "Folders I am admin",
-         "HELP": "You can select one or several filters, click again on it to deactivate.",
+         "HELP": "You can select one or several filters. Click again on it to deactivate.",
          "TITLE": "Filters",
          "USER": "Folders I have been invited"
       },
@@ -274,12 +274,12 @@
          "PAD_MOVE_NOGROUP": "Sorry but no other folder is available. You should create one before.",
          "PAD_MOVE_SUCCESS": "All pads have been successfully moved.",
          "PAD_REMOVE_SUCCESS": "Pad has been successfully removed.",
-         "PAD_REMOVE_SURE": "Are you sure you want to remove this pad ? WARNING: this action is irreversible, the pad will be deleted for EVERYONE that has access to it.",
+         "PAD_REMOVE_SURE": "Are you sure you want to remove this pad? WARNING: this action is irreversible, the pad will be deleted for EVERYONE that has access to it.",
          "PASSWORD": "Required in private mode",
          "READONLY": "If checked, linked pads will be in readonly mode and the folder will be in the archived folders list unless it's bookmarked.",
          "REMOVE_SUCCESS": "Folder has been successfully removed.",
-         "REMOVE_SURE": "Are you sure you want to remove this folder ? WARNING: this action is irreversible, the folder and its pads will be deleted for EVERYONE that has access to it.",
-         "RESIGN": "Are you sure you want to resign from this folder ?",
+         "REMOVE_SURE": "Are you sure you want to remove this folder? WARNING: This action is irreversible. The folder and its pads will be deleted for EVERYONE that has access to it.",
+         "RESIGN": "Are you sure you want to resign from this folder?",
          "RESIGN_SUCCESS": "You have left the folder successfully.",
          "VISIBILITY": "Required, restricted by default to invited users or admins."
       },
@@ -294,7 +294,7 @@
          "USERS_SELECTION": "Users selection"
       },
       "INVITE_USERLIST": "Invite a list of users",
-      "MARK_SUCCESS": "Marking successfully",
+      "MARK_SUCCESS": "Folder added to My Bookmarks successfully",
       "MYGROUPS": "My Folders",
       "NONE": "No folder",
       "PAD": {
@@ -307,10 +307,12 @@
          "EDIT_PROMPT": "Enter the new name of the pad",
          "EXPAND": "Expand",
          "FROM_GROUP": "folder:",
+         "MARK_SUCCESS": "Pad added to My Bookmarks successfully",
          "MOVE": "Move pads to another folder",
          "MOVE_HELP": "<p>Please select the wanted folder for your migration. Only folders on which you are admin are listed.</p><p>Once chosen, click on the submit button and wait for a moment.</p>",
          "MOVE_TITLE": "Pads migration of the folder ",
          "NONE": "No pad linked",
+         "NO_RESULT": "No pad contains the searched keyword(s)",
          "OPEN_TAB": "Open in a new tab",
          "PAD": "Pad",
          "PADS": "Pads",
@@ -323,10 +325,13 @@
          "SORT_BY_NAME": "name",
          "SORT_BY_UPDATE": "last update",
          "TITLE": "Title",
+         "UNMARK_SUCCESS": "Pad removed from My Bookmarks successfully",
+         "UNWATCH_SUCCESS": "Pad removed from My Watchlist successfully",
          "USERS": "Users",
          "USERS_NONE": "No user",
          "VIEW_HELP": "<p>Here is the main interface of the current pad.</p><p>If the folder or the pad is private, you need to enter the password to be able to access to it.</p><p>If you want to show the folder and if you have the permission to, you can click on the folder name.</p>",
-         "VISIBILITY": "Visibility"
+         "VISIBILITY": "Visibility",
+         "WATCH_SUCCESS": "Pad added to My Watchlist successfully"
       },
       "PROPERTIES": "Properties",
       "QUIT_GROUP": "Unsubscribe from the folder",
@@ -351,18 +356,20 @@
       },
       "UNMARK": "Unmark",
       "UNWATCH": "Unwatch",
+      "UNMARK_SUCCESS": "Folder removed from My Bookmarks successfully",
+      "UNWATCH_SUCCESS": "Folder removed from My Watchlist successfully",
       "VIEW": "View",
       "VIEW_HELP": "<p>The details of the folder show you:<ul><li>options defined when folder has been created or updated;</li><li>list of pads created for this folder;</li><li>and list of admins and users of the folder.</li></ul></p><p>From there, you can: <ul><li>create new pads, edit them, remove or mark them;</li><li>share administration of your folder with other users;</li><li>invite other users to view and edit pads of the folder.</li></ul></p>",
       "VIEW_MANAGE": "View and manage folder and its pads",
       "WATCH": "Watch",
-      "WATCH_SUCCESS": "Watching successfully"
+      "WATCH_SUCCESS": "Folder added to My Watchlist successfully"
    },
    "MENU": {
       "ADMIN": "Administration",
       "BOOKMARK": "My Bookmarks",
       "CONFIG": "Configuration",
       "LOGOUT": "Logout",
-      "PAD": "My Folders & Pads",
+      "PAD": "My Folders",
       "PROFILE": "My Profile",
       "USERLIST": "My Userlists",
       "USERS": "Users",
@@ -402,7 +409,8 @@
          "EMAIL": "The email is required and should be valid.",
          "LOGIN": "Login is required.",
          "LOGOUT": "Log out error: you were not authenticated.",
-         "PASSWORD_MISMATCH": "The entered passwords do not match."
+         "PASSWORD_MISMATCH": "The entered passwords do not match.",
+         "REQUIRED_ALPHANUMERIC": "Special characters were found in alphanumeric fields."
       },
       "FIRSTNAME": "Firstname",
       "FORM": "Login",

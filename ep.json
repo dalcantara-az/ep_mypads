@@ -10,7 +10,10 @@
       },
       "client_hooks": {
         "postToolbarInit": "ep_mypads/static/js/clientHooks:postToolbarInit",
-        "postAceInit": "ep_mypads/static/js/scrollTo:postAceInit"
+        "postAceInit": "ep_mypads/static/js/clientHooks:postAceInit",
+        "aceSelectionChanged": "ep_mypads/static/js/clientHooks:aceSelectionChanged",
+        "aceKeyEvent": "ep_mypads/static/js/clientHooks:aceKeyEvent",
+        "aceEditorCSS": "ep_mypads/static/js/clientHooks:aceEditorCSS"
       }
     }
   ]

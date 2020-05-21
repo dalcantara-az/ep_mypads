@@ -48,10 +48,13 @@ module.exports = (function () {
   return function (pad, successFn) {
     var pid  = pad._id;
     var user = auth.userInfo();
+    var unmark;
     if (ld.includes(user.bookmarks.pads, pid)) {
       ld.pull(user.bookmarks.pads, pid);
+      unmark = true;
     } else {
       user.bookmarks.pads.push(pid);
+      unmark = false;
     }
     if (typeof(model.bookmarks().pads[pid]) !== 'undefined') {
       delete model.bookmarks().pads[pid];
@@ -63,7 +66,12 @@ module.exports = (function () {
       method: 'POST',
       data: { type: 'pads', key: pid, auth_token: auth.token() }
     }).then(function () {
-      notif.success({ body: conf.LANG.GROUP.MARK_SUCCESS });
+      if (unmark === true) {
+        notif.success({ body: conf.LANG.GROUP.PAD.UNMARK_SUCCESS });
+      } else {
+        notif.success({ body: conf.LANG.GROUP.PAD.MARK_SUCCESS });
+      }
+      
       if (successFn) { successFn(); }
     }, function (err) {
       return notif.error({ body: ld.result(conf.LANG, err.error) });

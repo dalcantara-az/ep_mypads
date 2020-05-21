@@ -33,6 +33,9 @@ var rFS      = require('fs').readFileSync;
 var ld       = require('lodash');
 var passport = require('passport');
 var jwt      = require('jsonwebtoken');
+var bodyParser = require('body-parser');
+var urlencodedParser = bodyParser.urlencoded({ extended: false });
+
 var testMode = false;
 var express;
 try {
@@ -630,6 +633,8 @@ module.exports = (function () {
     var allUsersRoute    = api.initialRoute + 'all-users';
     var searchUsersRoute = api.initialRoute + 'search-users';
     var userlistRoute    = api.initialRoute + 'userlist';
+    var notifyUsersRoute = api.initialRoute + 'notify-users';
+    var autocompleteRoute= api.initialRoute + 'autocomplete';
 
     /**
     * GET method : `user.userlist` with crud fixed to *get* and current login.
@@ -1107,6 +1112,66 @@ module.exports = (function () {
           res.send({ success: true, login: val.login });
         });
       });
+    });
+
+    app.post(notifyUsersRoute, urlencodedParser, function(req, res) {
+      var u = auth.fn.getUser(req.body.auth_token);
+      if (!u) {
+        return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.NOT_AUTH');
+      }
+      var users = {
+        present: [],
+        absent: [],
+      }
+      var lm = req.body['loginsOrEmails[]'];
+      if (lm) { 
+        if (!(lm instanceof Array)) {
+          lm = [lm];
+        }
+        users = userCache.fn.getIdsFromLoginsOrEmails(lm); 
+      }
+      var recipients = "";
+      for (var i = 0; i < users.present.length; i++) {
+        if (i > 0) {
+          recipients += ', ';
+        }
+        var userInfo = userCache.fn.searchUserInfos(users.present[i]);
+        recipients += userInfo[Object.keys(userInfo)[0]].email;
+      }
+      var lang = ld.includes(ld.keys(conf.cache.languages), req.body.lang) ? req.body.lang : conf.get('defaultLanguage');
+      var subject = fn.mailMessage('NOTIFY_USER_SUBJECT', {
+        login: u.login
+      });
+      var message = fn.mailMessage('NOTIFY_USER', {
+        login: u.login,
+        url: req.body.url,
+        text: req.body.text,
+      }, lang);
+      mail.send(recipients, subject, message, function (err) {
+        if (err) {
+          return res.status(501).send({ error: err });
+        }
+        return res.send({success: true});
+      });
+    });
+
+    app.get(autocompleteRoute, function(req, res) {
+      var u = auth.fn.getUser(req.body.auth_token || req.query.auth_token);
+      if (!u) {
+        return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.MUST_BE');
+      }
+      var emails  = ld.reduce(userCache.emails, function (result, n, key) {
+        result[n] = key;
+        return result;
+      }, {});
+      var users = ld.reduce(userCache.logins, function (result, n, key) {
+        result[key] = {
+          email: emails[n],
+        };
+        return result;
+      }, {});
+      res.send({ users: users, usersCount: ld.size(users) });
+
     });
 
   };

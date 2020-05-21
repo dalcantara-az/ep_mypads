@@ -46,10 +46,13 @@ module.exports = (function () {
   return function (pad, successFn) {
     var pid  = pad._id;
     var user = auth.userInfo();
+    var unwatch;
     if (ld.includes(user.watchlist.pads, pid)) {
       ld.pull(user.watchlist.pads, pid);
+      unwatch = true;
     } else {
       user.watchlist.pads.push(pid);
+      unwatch = false;
     }
     if (typeof(model.watchlist().pads[pid]) !== 'undefined') {
       delete model.watchlist().pads[pid];
@@ -66,6 +69,14 @@ module.exports = (function () {
       }
     }).then(function () {
       notif.success({ body: conf.LANG.GROUP.WATCH_SUCCESS });
+      if (unwatch === true) {
+        notif.success({ body: conf.LANG.GROUP.PAD.UNWATCH_SUCCESS });
+      } else {
+        notif.success({ body: conf.LANG.GROUP.PAD.WATCH_SUCCESS });
+      }
+      if(c!=null){
+          model.fetch(c.computeGroups);
+        }
       if (successFn) { successFn(); }
     }, function (err) {
       return notif.error({ body: ld.result(conf.LANG, err.error) });
