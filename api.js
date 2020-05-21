@@ -1804,14 +1804,12 @@ module.exports = (function () {
     });
 
     app.get(padRoute + '/getLastEdited/:key', function (req, res) {
-      var utils = require('./utils');
       var etherpadAPI = require('ep_etherpad-lite/node/db/API');
 
       var padId = req.params.key; 
 
       return etherpadAPI.getLastEdited(padId).catch(err => {
-    
-        return {padId}; 
+        return {err}; 
       }).then(lastEdited => {
         return res.send({
               result: lastEdited
@@ -1823,7 +1821,7 @@ module.exports = (function () {
 
     app.get(padRoute + '/getRelevantPads/:u', function (req, res){
       var u = auth.fn.getUser(req.params.u);
-
+      var etherpadAPI = require('ep_etherpad-lite/node/db/API');
       user.get(u.login, function (err, u) {
         if (err) { return res.status(400).send({ error: err }); }
         try {
@@ -1897,8 +1895,30 @@ module.exports = (function () {
                           index++;
                         }
                       );
-                    res.set('Expires', '-1');
-                    res.send({ value: data });
+
+                      var padIds= [];
+                      for(var i = 0; i < Object.keys(data.pads).length; i++){
+                        padIds.push(data.pads[i]._id);
+                      }
+                      for(var i = 0; i < Object.keys(data.watchlist.pads).length; i++){
+                        padIds.push(data.watchlist.pads[i]._id);
+                      }
+                      for(var i = 0; i < Object.keys(data.watchlist.padsFromGroups).length; i++){
+                        padIds.push(data.watchlist.padsFromGroups[i]._id);
+                      }
+                      data.lastEdited={};
+                      var diffPromises = Promise.all(padIds.map(p => etherpadAPI.getLastEdited(p).catch(err => {
+                        return {err}; 
+                      }).then(lastEdited => {
+                        data.lastEdited[p] = lastEdited;
+                        
+                        return {p, lastEdited};
+                      })));
+                      diffPromises.then(diffs => {
+                        res.set('Expires', '-1');
+                        res.send({ value: data });
+                        return diffs ;
+                      })
                   })
                   })
                   

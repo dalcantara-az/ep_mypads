@@ -11,8 +11,8 @@ module.exports = (function () {
   var layout = require('./layout.js');
   var model = require('../model/group.js');
   var sortingPreferences = require('../helpers/sortingPreferences.js');
-  var padWatch           = require('./pad-watch.js');
-  var padMark            = require('./pad-mark.js');
+  var padWatch = require('./pad-watch.js');
+  var padMark = require('./pad-mark.js');
 
   var dashboard = {};
 
@@ -75,7 +75,10 @@ module.exports = (function () {
         } 
         
       }
- 
+      for(var i = 0; i< Object.keys(c.pads).length; i++){
+        var key = c.pads[i]._id;
+        c.pads[i].lastEdited = resp.value.lastEdited[key].lastEdited;
+      }
 
       }, function (err) {
         //notif.error({ body: ld.result(conf.LANG, err.error) });
@@ -419,21 +422,13 @@ module.exports = (function () {
               }
             })(),
             (function (){
-              var id = p._id;
-              var url = conf.URLS.PAD + '/getLastEdited/' + id;
-              m.request({
-                method: 'GET',
-                url: url,
-              }).then(function (resp) { 
-                p.lastEdited = resp.result.lastEdited
-              });
               return m('span.name', [
                 m('a', {
                   href: '/mypads/group/'+ p.group + '/pad/view/' + p._id,
                   config: m.route,
                   title: conf.LANG.GROUP.VIEW
                 }, padName),
-                m('span.pull-right', "Last Modified: "+ Date(p.lastEdited)),
+                 m('span.pull-right', "Last Modified: "+ Date(p.lastEdited)),
                 m('', "Folder " + p.group)
                 ]);
             })()
