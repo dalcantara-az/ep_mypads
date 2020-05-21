@@ -82,7 +82,8 @@ module.exports = (function () {
       }
       model.fetch(c.computeSearchResults());
       
-    }, function (err) {
+    }, function (err) { 
+      loader.visible(false);
       notif.error({ body: ld.result(conf.LANG, err.error) });
     });
   };
