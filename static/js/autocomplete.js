@@ -195,7 +195,7 @@ module.exports = (function() {
           method: 'POST',
           url: baseURL +'/mypads/api/notify-users',
           data: {
-            auth_token: auth_token,
+            auth_token: authToken,
             url: copiedText.url,
             text: copiedText.text,
             loginsOrEmails: loginOrEmails
