@@ -425,7 +425,6 @@ module.exports = (function () {
     storage.fn.getKeys(
       ld.map(pads, function (p) { return PPREFIX + p; }),
       function (err, groups) {
-        console.log(groups);
         if (err) { return callback(err); }
         groups = ld.reduce(groups, function (memo, val, key) {
           key       = key.substr(PPREFIX.length);

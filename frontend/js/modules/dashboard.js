@@ -38,35 +38,20 @@ module.exports = (function () {
     */
 
     c.computePads = function () {
-      // c.pads = ld(model.pads()).values().value();
       c.pads = [];
       m.request({
         method: 'GET',
         url: conf.URLS.PAD + '/getRelevantPads/' + auth.token()
       }).then(function (resp) {  
-        console.log(resp);
       for(var i = 0; i < Object.keys(resp.value.pads).length; i++){
-        // var exists = false;
-        // var index = 0;
-        // while(!exists && index < c.pads.length){
-        //   if(resp.value.pads[i]._id == c.pads[i]._id){
-        //     exists = true;
-        //   }
-        // } 
-        // if(!exists){
           c.pads.push(resp.value.pads[i]);
-        // } 
       }
-      
+      var len = Object.keys(c.pads).length;
       for(var i = 0; i < Object.keys(resp.value.watchlist.pads).length; i++){
         var exists = false;
         var index = 0;
-        while(!exists && index < c.pads.length){
-          // console.log(resp.value.watchlist.pads[i]._id);
-          // console.log(c.pads[i]._id);
-          // console.log(resp.value.watchlist.pads[i]._id == c.pads[i]._id);
-          // console.log('--');
-          if(resp.value.watchlist.pads[i]._id == c.pads[i]._id){
+        while(!exists && index < len){
+          if(String(resp.value.watchlist.pads[i]._id).valueOf().trim() == String(c.pads[index]._id).valueOf().trim()){
             exists = true;
           }
           index++;
@@ -75,11 +60,12 @@ module.exports = (function () {
           c.pads.push(resp.value.watchlist.pads[i]);
         } 
       }
+      var len = Object.keys(c.pads).length;
       for(var i = 0; i < Object.keys(resp.value.watchlist.padsFromGroups).length; i++){
         var exists = false;
         var index = 0;
-        while(!exists && index < c.pads.length){
-          if(resp.value.watchlist.padsFromGroups[i]._id == c.pads[i]._id){
+       while(!exists && index < len){
+         if(String(resp.value.watchlist.padsFromGroups[i]._id).valueOf().trim() == String(c.pads[index]._id).valueOf().trim()){
             exists = true;
           }
           index++;
