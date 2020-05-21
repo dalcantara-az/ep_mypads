@@ -68,6 +68,7 @@ module.exports = (function () {
   c.search       = m.prop('');
   c.filterSearch = function () {
     loader.visible(true);
+    m.redraw();
     m.request({
       method: 'GET',
       url: conf.URLS.PAD + '/search?q=' + encodeURI(c.search()),
@@ -81,7 +82,6 @@ module.exports = (function () {
         pads: resp.results.pads
       }
       model.fetch(c.computeSearchResults());
-      
     }, function (err) { 
       loader.visible(false);
       notif.error({ body: ld.result(conf.LANG, err.error) });
