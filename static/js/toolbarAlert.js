@@ -1,5 +1,3 @@
-require('ep_mypads/static/js/jquery-ui');
-
 module.exports = (function() {
   'use strict';
 
@@ -12,24 +10,15 @@ module.exports = (function() {
 
   var $padOuter;
 
-  var $loader;
   
   toolbarAlert.aceEditorCSS = function(hook, context) {
-    var css = ["/ep_mypads/static/css/toolbarAlert.css"];
-    var notifyModalCSS = notifyModal.aceEditorCSS(hook, context);
-    for (var i = 0; i < notifyModalCSS.length; i++) {
-      css.push(notifyModalCSS[i]);
-    }
-    return css;
+    return ["/ep_mypads/static/css/toolbarAlert.css"];
   }
 
   toolbarAlert.postAceInit = function(hook, context) {
     $padOuter =  $('iframe[name="ace_outer"]').contents().find("body");
     $padOuter.append($("<textarea>", {id: "text_to_copy"}));
     $padOuter.find("#text_to_copy").hide();
-    $loader = $('<div class="backdrop"><div class="loader"></div></div>');
-    $padOuter.append($loader);
-    $loader.hide();
     selectedLineNumber = 0;
     authToken = getUrlVars()['auth_token'];
     drawToolbarAlert();
@@ -69,45 +58,6 @@ module.exports = (function() {
     ownerDocument.execCommand('copy');
   }
   
-  function drawNotifyModal() {
-    if ($padOuter.find('#notifyModal').length === 0) {
-      var baseURL = window.location.href.slice(0, window.location.href.split('/', 3).join('/').length);
-      var onNotify = function(loginOrEmails) {
-        var copiedText = getTextToCopy();
-        $loader.fadeToggle(0, function() {
-          $.ajax({
-            method: 'POST',
-            url: baseURL +'/mypads/api/notify-users',
-            data: {
-              auth_token: authToken,
-              url: copiedText.url,
-              text: copiedText.text,
-              loginsOrEmails: loginOrEmails
-            },
-            success: function(data, textStatus, jqXHR) {
-              $loader.fadeToggle(200, function() {
-                if (data.success === true) {
-                  alert('Successfully notified selected users.');
-                } else {
-                  alert('Something went wrong.');
-                }
-              });
-              
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-              $loader.fadeToggle(200, function() {
-                console.log(errorThrown);
-                alert('Something went wrong.');
-              });
-            }
-          });
-        });
-      }
-      notifyModal.init(onNotify, authToken);
-    }
-    notifyModal.toggle();
-  }
-  
   function getTextToCopy() {
     var innerDocWindow = $('iframe[name="ace_outer"]').contents().find('iframe')[0].contentWindow;
     return {
@@ -124,9 +74,7 @@ module.exports = (function() {
         '<a class="" title="Copy Link" aria-label="Copy Link">' +
           '<button class="buttonicon buttonicon-copylink" title="Copy Link" aria-label="Copy Link"></button>' +
         '</a>' +
-      '</li>'
-    );
-    $toolbar.append(
+      '</li>' +
       '<li id="btnEmailText" data-type="button">' +
         '<a class="" title="Email Selected Text" aria-label="Email Selected Text">' +
           '<button class="buttonicon buttonicon-emailtext" title="Email Selected Text" aria-label="Email Selected Text"></button>' +
@@ -144,7 +92,7 @@ module.exports = (function() {
     });
     
     $toolbar.find('#btnEmailText').on('click', function(e) {
-      drawNotifyModal();
+      notifyModal.show(null, getTextToCopy());
     });
     
     $toolbar.find('.buttonicon-copylink').text('\ud83d\udccb');

@@ -34,6 +34,7 @@ var $ = require('ep_etherpad-lite/static/js/rjquery').$;
 
 var autocomplete = require("ep_mypads/static/js/autocomplete");
 var toolbarAlert = require("ep_mypads/static/js/toolbarAlert");
+var notifyModal = require("ep_mypads/static/js/notifyModal");
 
 
 // Reload page on disconnect to prevent unauthorized access
@@ -48,12 +49,16 @@ automaticReconnect.showCountDownTimerToReconnectOnModal = function($modal, pad) 
 exports.aceEditorCSS = function(hook, context) {
   var autocompleteCSS = autocomplete.aceEditorCSS(hook, context);
   var toolbarAlertCSS = toolbarAlert.aceEditorCSS(hook, context);
+  var notifyModalCSS = notifyModal.aceEditorCSS(hook, context);
   var css = [];
   for (var i = 0; i < autocompleteCSS.length; i++) {
     css.push(autocompleteCSS[i]);
   }
   for (var i = 0; i < toolbarAlertCSS.length; i++) {
     css.push(toolbarAlertCSS[i]);
+  }
+  for (var i = 0; i < notifyModalCSS.length; i++) {
+    css.push(notifyModalCSS[i]);
   }
   return css;
 }
@@ -161,6 +166,8 @@ exports.postToolbarInit = function (hook_name, args) {
 exports.postAceInit = function(hook, context) {
   autocomplete.postAceInit(hook, context);
   toolbarAlert.postAceInit(hook, context);
+  var notifyModal = require('ep_mypads/static/js/notifyModal');
+  notifyModal.postAceInit(hook, context);
   var scrollTo = require('ep_mypads/static/js/scrollTo');
   scrollTo.postAceInit(hook, context);
 }

@@ -8,7 +8,11 @@ module.exports = (function() {
   var lineToReplace;
   var atIndex;
   var length;
-  var userList = [];
+  var userList = ['@folder', '@admins', '@invited', '@all'];
+  var admins = [];
+  var invited = [];
+  var users = [];
+
   var authToken;
 
   var $padOuter; 
@@ -21,18 +25,23 @@ module.exports = (function() {
   var notifyModal = require('ep_mypads/static/js/notifyModal'); 
 
   autocomplete.postAceInit = function(hook, context) {
+    var padId = context.pad.getPadId();
     authToken = getUrlVars()['auth_token'];
     var baseURL = window.location.href.slice(0, window.location.href.split('/', 3).join('/').length);
     $.ajax({
-      url: baseURL +'/mypads/api/autocomplete',
+      url: baseURL +'/mypads/api/user-suggestions',
       dataType: "json",
       data: {
         auth_token: authToken,
+        pad_id: padId
       },
       success: function(data) {
         Object.keys(data.users).forEach(function(key) {
           userList.push(key);
+          users.push(key);
         })
+        admins = data.admins;
+        invited = data.invited;
       }
     });
     $padOuter = $('iframe[name="ace_outer"]').contents().find("body");
@@ -160,6 +169,10 @@ module.exports = (function() {
   }
 
   function replaceText(line, startIndex, length, textToInsert) {
+    var substrInd = 0;
+    if (textToInsert.startsWith('@')) {
+      substrInd = 1;
+    }
     var $line = $innerDocBody.children().eq(line);
     var count = 0;
     var $container;
@@ -172,10 +185,10 @@ module.exports = (function() {
       count += text.length;
     }
     if ($container === undefined && length === 0) {
-      $line.children().last().text($line.children().last().text() + textToInsert + ' ');
+      $line.children().last().text($line.children().last().text() + textToInsert.substr(substrInd) + ' ');
     } else {
       var oldText = $container.text();
-      var newText = oldText.substr(0, startIndex - count) + textToInsert + ' ' + oldText.substr(startIndex - count + length);
+      var newText = oldText.substr(0, startIndex - count) + textToInsert.substr(substrInd) + ' ' + oldText.substr(startIndex - count + length);
       $container.text(newText);
     }
     $inputField.autocomplete("close");
@@ -183,35 +196,29 @@ module.exports = (function() {
   
   }
 
-  function drawNotifyModal(recipient) {
-    if ($padOuter.find('#notifyModal').length === 0) {
-      var baseURL = window.location.href.slice(0, window.location.href.split('/', 3).join('/').length);
-      var onNotify = function(loginOrEmails) {
-        var copiedText = {
-          url: window.location.href.slice(0, window.location.href.indexOf('?')) + '?lineNumber=' + (lineToReplace + 1),
-          text: ""
-        }
-        $.ajax({
-          method: 'POST',
-          url: baseURL +'/mypads/api/notify-users',
-          data: {
-            auth_token: authToken,
-            url: copiedText.url,
-            text: copiedText.text,
-            loginsOrEmails: loginOrEmails
-          },
-          success: function(data, textStatus, jqXHR) {
-            if (data.success === true) {
-              alert('The mentioned user was successfully notified.');
-            } else {
-              alert('Something went wrong.');
-            }
-          }
-        });
+  function drawNotifyModal(text) {
+    var recipients = [];
+    if (text.startsWith('@')) {
+      var group = text.substr(1);
+      if (group === 'all') {
+        recipients = users;
+      } else if (group === 'folder') {
+        recipients = admins.concat(invited);
+      } else if (group === 'admins') {
+        recipients = admins;
+      } else if (group === 'invited') {
+        recipients = invited;
       }
-      notifyModal.init(onNotify, authToken);
+    } else {
+      recipients.push(text);
     }
-    notifyModal.toggle(recipient);
+    notifyModal.show({
+      text: text,
+      recipients: recipients,
+    }, {
+      url: window.location.href.slice(0, window.location.href.indexOf('?')) + '?lineNumber=' + (lineToReplace + 1),
+      text: ""
+    });
   }
   
   function getUrlVars() {

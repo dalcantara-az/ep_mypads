@@ -634,7 +634,7 @@ module.exports = (function () {
     var searchUsersRoute = api.initialRoute + 'search-users';
     var userlistRoute    = api.initialRoute + 'userlist';
     var notifyUsersRoute = api.initialRoute + 'notify-users';
-    var autocompleteRoute= api.initialRoute + 'autocomplete';
+    var userSuggestionsRoute = api.initialRoute + 'user-suggestions';
 
     /**
     * GET method : `user.userlist` with crud fixed to *get* and current login.
@@ -1128,8 +1128,10 @@ module.exports = (function () {
         if (!(lm instanceof Array)) {
           lm = [lm];
         }
-        users = userCache.fn.getIdsFromLoginsOrEmails(lm); 
+      } else {
+        lm = [];
       }
+      users = userCache.fn.getIdsFromLoginsOrEmails(lm); 
       var recipients = "";
       for (var i = 0; i < users.present.length; i++) {
         if (i > 0) {
@@ -1155,23 +1157,47 @@ module.exports = (function () {
       });
     });
 
-    app.get(autocompleteRoute, function(req, res) {
+    app.get(userSuggestionsRoute, function(req, res) {
       var u = auth.fn.getUser(req.body.auth_token || req.query.auth_token);
       if (!u) {
         return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.MUST_BE');
       }
-      var emails  = ld.reduce(userCache.emails, function (result, n, key) {
-        result[n] = key;
-        return result;
-      }, {});
-      var users = ld.reduce(userCache.logins, function (result, n, key) {
-        result[key] = {
-          email: emails[n],
-        };
-        return result;
-      }, {});
-      res.send({ users: users, usersCount: ld.size(users) });
+      var padId = req.query.pad_id;
+      pad.get(padId, function (err, p) {
+        if (err) {
+          return res.send({ success: false, error: err });
+        }
+        var groupId = p.group;
+        group.get(groupId, function (err, g) {
+          var admins = [];
+          var invited = [];
+          var adminIds = g.admins;
+          var invitedIds = g.users;
 
+          var emails  = ld.reduce(userCache.emails, function (result, n, key) {
+            result[n] = key;
+            return result;
+          }, {});
+          var users = ld.reduce(userCache.logins, function (result, n, key) {
+            result[key] = {
+              email: emails[n],
+            };
+            var uid = userCache.logins[key];
+            if (adminIds.includes(uid)) {
+              admins.push(key);
+            }
+            if (invitedIds.includes(uid)) {
+              invited.push(key);
+            }
+            return result;
+          }, {});
+          res.send({ 
+            users: users,
+            admins: admins,
+            invited: invited,
+          });
+        })
+      });
     });
 
   };
