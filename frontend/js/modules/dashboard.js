@@ -368,10 +368,6 @@ module.exports = (function () {
             );
           }
           var padName = p.name;
-          if (p.visibility && (p.visibility !== c.group.visibility)) {
-            var visib = conf.LANG.GROUP.FIELD[p.visibility.toUpperCase()];
-            padName  += ' (' + visib + ')';
-          }
           return m('li.list-group-item.group-pad-item', {
               'data-padname': padName
             }, [
