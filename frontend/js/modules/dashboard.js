@@ -59,7 +59,7 @@ module.exports = (function () {
         if(!exists){
           c.pads.push(resp.value.watchlist.pads[i]);
         } 
-        c.pads        = ld.sortByOrder(c.pads, 'lastEdited', false);
+        
       }
       var len = Object.keys(c.pads).length;
       for(var i = 0; i < Object.keys(resp.value.watchlist.padsFromGroups).length; i++){
@@ -142,7 +142,7 @@ module.exports = (function () {
   * If already sorted by the same field, it reverses order.
   */
 
- c.sortField = m.prop(sortingPreferences.padByField());
+ c.sortField = m.prop(sortingPreferences.lastEdited());
  c.sortAsc   = m.prop(sortingPreferences.padAsc());
  c.sortBy    = function (field, asc) {
    if (c.sortField() === field && typeof(asc) !== 'boolean') {
@@ -330,6 +330,8 @@ module.exports = (function () {
       if (ld.size(c.pads) === 0) {
         return m('p', conf.LANG.GROUP.PAD.NONE);
       } else {
+        c.pads = ld.sortByOrder(c.pads, 'lastEdited', false);
+        ld.partial(c.sortBy, 'lastEdited')
         return m('ul.list-group.col-sm-12', ld.map(c.pads, function (p) {
           if (typeof(p) === 'undefined') { return null; }
 
@@ -445,7 +447,7 @@ module.exports = (function () {
     })();
     var padBlocks = [];
   
-    padBlocks.push(sortView,padView);
+    padBlocks.push(padView);
     return m('section.panel-body', padBlocks);
   };
 

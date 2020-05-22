@@ -39,6 +39,7 @@ module.exports = (function () {
    */
   var currentValues = {
     padByField: 'ctime',
+    lastEdited: 'lastEdited',
     padAsc: true,
     groupByField: 'ctime',
     groupAsc: true
@@ -79,6 +80,9 @@ module.exports = (function () {
    */
   sortingPreferences.padByField = function() {
     return currentValues.padByField;
+  };
+  sortingPreferences.lastEdited = function() {
+    return currentValues.lastEdited;
   };
   sortingPreferences.padAsc = function() {
     return currentValues.padAsc;
