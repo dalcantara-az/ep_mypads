@@ -68,6 +68,7 @@ module.exports = (function () {
         auth_token: auth.token(),
       }
     }).then(function () {
+      notif.success({ body: conf.LANG.GROUP.WATCH_SUCCESS });
       if (unwatch === true) {
         notif.success({ body: conf.LANG.GROUP.PAD.UNWATCH_SUCCESS });
       } else {

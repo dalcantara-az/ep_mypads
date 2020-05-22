@@ -1692,6 +1692,8 @@ module.exports = (function () {
       fn.set(setFn, req.body._id, req.body, req, res);
     };
 
+    
+
     /**
     * POST method : `pad.set` with user value for pad creation
     *
@@ -1801,7 +1803,134 @@ module.exports = (function () {
       });
     });
 
-    
+    app.get(padRoute + '/getLastEdited/:key', function (req, res) {
+      var etherpadAPI = require('ep_etherpad-lite/node/db/API');
+
+      var padId = req.params.key; 
+
+      return etherpadAPI.getLastEdited(padId).catch(err => {
+        return {err}; 
+      }).then(lastEdited => {
+        return res.send({
+              result: lastEdited
+            });
+      });
+      
+    });
+
+
+    app.get(padRoute + '/getRelevantPads/:u', function (req, res){
+      var u = auth.fn.getUser(req.params.u);
+      var etherpadAPI = require('ep_etherpad-lite/node/db/API');
+      user.get(u.login, function (err, u) {
+        if (err) { return res.status(400).send({ error: err }); }
+        try {
+          group.getByUser(u, true, function (err, data) {
+            if (err) {
+              return res.status(404).send({
+                error: err.message
+              });
+            }
+            var index = 0;
+            data.groups = ld.transform(data.groups,
+              function (memo, val, key) {
+                memo[index] = ld.omit(val, 'password');
+                index++;
+              }
+            );
+            index = 0
+            data.pads = ld.transform(data.pads,
+              function (memo, val, key) {
+                memo[index] = ld.omit(val, 'password');
+                index++;
+              }
+            );
+            data.watchlist = { groups: {}, pads: {} };
+          
+                group.getWatchedGroupsByUser(u, function(err, watchlist) {
+                  if (err) {
+                    return res.status(404).send({
+                      error: err.message
+                    });
+                  }
+                  index = 0
+                  data.watchlist.groups = ld.transform(watchlist,
+                    function(memo, val, key) {
+                      memo[index] = ld.omit(val, 'password');
+                      index++;
+                    }
+                  );
+                  pad.getWatchedPadsByUser(u, function(err, watchlist) {
+                    if (err) {
+                      return res.status(404).send({
+                        error: err.message
+                      });
+                    }
+                    /*  Fix IE11 stupid habit of caching AJAX calls
+                    *  See http://www.dashbay.com/2011/05/internet-explorer-caches-ajax/
+                    *  and https://framagit.org/framasoft/Etherpad/ep_mypads/issues/220
+                    */
+                   index = 0;
+                    data.watchlist.pads = ld.transform(watchlist,
+                      function(memo, val, key) {
+                        memo[index] = ld.omit(val, 'password');
+                        index++;
+                      }
+                    );
+
+                    pad.getWatchedPadsFromGroups(data.watchlist.groups, function(err, watchlist) {
+                      if (err) {
+                        return res.status(404).send({
+                          error: err.message
+                        });
+                      }
+                      /*  Fix IE11 stupid habit of caching AJAX calls
+                      *  See http://www.dashbay.com/2011/05/internet-explorer-caches-ajax/
+                      *  and https://framagit.org/framasoft/Etherpad/ep_mypads/issues/220
+                      */
+                     index = 0;
+                      data.watchlist.padsFromGroups = ld.transform(watchlist,
+                        function(memo, val, key) {
+                          memo[index] = ld.omit(val, 'password');
+                          index++;
+                        }
+                      );
+
+                      var padIds= [];
+                      for(var i = 0; i < Object.keys(data.pads).length; i++){
+                        padIds.push(data.pads[i]._id);
+                      }
+                      for(var i = 0; i < Object.keys(data.watchlist.pads).length; i++){
+                        padIds.push(data.watchlist.pads[i]._id);
+                      }
+                      for(var i = 0; i < Object.keys(data.watchlist.padsFromGroups).length; i++){
+                        padIds.push(data.watchlist.padsFromGroups[i]._id);
+                      }
+                      data.lastEdited={};
+                      var diffPromises = Promise.all(padIds.map(p => etherpadAPI.getLastEdited(p).catch(err => {
+                        return {err}; 
+                      }).then(lastEdited => {
+                        data.lastEdited[p] = lastEdited;
+                        
+                        return {p, lastEdited};
+                      })));
+                      diffPromises.then(diffs => {
+                        res.set('Expires', '-1');
+                        res.send({ value: data });
+                        return diffs ;
+                      })
+                  })
+                  })
+                  
+                })
+            
+          });
+        }
+        catch (e) {
+          res.status(400).send({ error: e.message });
+        }
+      });
+     }); 
   };
 
   cacheAPI = function (app) {
@@ -1875,6 +2004,7 @@ module.exports = (function () {
       });
     });
 
+   
     app.get(statsRoute + '/watch', fn.ensureAdmin, function(req, res) {
       var watcherUtils = require('./watcher');
       watcherUtils.reportAll();

@@ -399,7 +399,7 @@ module.exports = (function () {
     // legacy safety check
     if (!user.watchlist || !user.watchlist.pads || user.watchlist.pads.length == 0) {
       return callback(null, {});
-    }
+   }
     storage.fn.getKeys(
       ld.map(user.watchlist.pads, function (p) { return PPREFIX + p; }),
       function (err, pads) {
@@ -410,6 +410,28 @@ module.exports = (function () {
           return memo;
         }, {});
         callback(null, pads);
+      }
+    );
+  };
+
+  pad.getWatchedPadsFromGroups = function (groups, callback) {
+    var pads = [];
+
+    for(var i = 0; i < Object.keys(groups).length; i++){
+      for(var j=0; j< groups[i].pads.length; j++){
+        pads.push(groups[i].pads[j]);
+      }
+    }
+    storage.fn.getKeys(
+      ld.map(pads, function (p) { return PPREFIX + p; }),
+      function (err, groups) {
+        if (err) { return callback(err); }
+        groups = ld.reduce(groups, function (memo, val, key) {
+          key       = key.substr(PPREFIX.length);
+          memo[key] = val;
+          return memo;
+        }, {});
+        callback(null, groups);
       }
     );
   };
