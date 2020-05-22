@@ -8,9 +8,19 @@ module.exports = (function () {
   var notif = require('../widgets/notification.js');
   var conf = require('../configuration.js');
   var auth = require('../auth.js');
-  var u = auth.userInfo;
   var layout = require('./layout.js');
   var model = require('../model/group.js');
+
+  var loader = {};
+
+  loader.visible = m.prop(false);
+  
+  loader.view = function() {
+    return loader.visible() ? m(".backdrop", [
+      m(".loader")
+    ]) : ""
+  }
+
 
   var search = {};
 
@@ -57,6 +67,8 @@ module.exports = (function () {
 
   c.search       = m.prop('');
   c.filterSearch = function () {
+    loader.visible(true);
+    m.redraw();
     m.request({
       method: 'GET',
       url: conf.URLS.PAD + '/search?q=' + encodeURI(c.search()),
@@ -64,16 +76,16 @@ module.exports = (function () {
         auth_token: auth.token(),
       }
     }).then(function (resp) {     
+      loader.visible(false);
       c.headlines = resp.results.headlines;
       c.results ={
         pads: resp.results.pads
       }
       model.fetch(c.computeSearchResults());
-      
-    }, function (err) {
+    }, function (err) { 
+      loader.visible(false);
       notif.error({ body: ld.result(conf.LANG, err.error) });
     });
-     
   };
 
     // Bootstrapping
@@ -119,18 +131,21 @@ module.exports = (function () {
           keys[i]= key
         })
       }
-      return m('ul.list-unstyled', ld.map(c.searchResults.pads, function (item) {
-        var itemKey;
-        Object.keys(item).forEach(function(key) {
-            itemKey = key
-        })
-        var route;
-        route = '/mypads/group/' + item[itemKey].group + '/pad/view/' + item[itemKey]._id;
-        return m('li', [
-          m('a', { href: route, config: m.route }, item[itemKey].name),
-          m('p', { style: {fontSize: '12px'} }, m.trust(c.headlines[item[itemKey]._id])),
-        ]);
-      }));
+      return [
+        m('p', 'Found ' + ld.size(c.searchResults[type]) + ' search results.'),
+        m('ul.list-unstyled', ld.map(c.searchResults.pads, function (item) {
+          var itemKey;
+          Object.keys(item).forEach(function(key) {
+              itemKey = key
+          })
+          var route;
+          route = '/mypads/group/' + item[itemKey].group + '/pad/view/' + item[itemKey]._id;
+          return m('li', [
+            m('a', { style: {fontSize: '16px'}, href: route, config: m.route }, item[itemKey].name),
+            m('p', { style: {fontSize: '12px'} }, m.trust(c.headlines[item[itemKey]._id])),
+          ]);
+        }))
+      ];
       
     }
   };
@@ -172,7 +187,10 @@ module.exports = (function () {
         m('.panel-heading',
           m('h3.panel-title', conf.LANG.GROUP.PAD.PADS)
         ),
-        m('.panel-body', view.pads(c))
+        m('.panel-body', [
+          loader.view(),
+          view.pads(c)
+        ])
       ])
     ]);
   };
