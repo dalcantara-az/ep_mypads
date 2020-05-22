@@ -418,13 +418,21 @@ module.exports = (function () {
               }
             })(),
             (function (){
+              var date = new Date(p.lastEdited);
+              var month = date.getMonth() + 1;
+              var day = date.getDate();
+              var year = date.getFullYear();
+              var hour = date.getHours();
+              var minutes = date.getMinutes();
+
+              
               return m('span.name', [
                 m('a', {
                   href: '/mypads/group/'+ p.group + '/pad/view/' + p._id,
                   config: m.route,
                   title: conf.LANG.GROUP.VIEW
                 }, padName),
-                 m('span.pull-right', "Last Modified: "+ Date(p.lastEdited)),
+                 m('span.pull-right', "Last Modified: "+ month + "/" + day + "/" + year + " - " + hour + ":" + minutes ),
                 m('', "Folder " + p.group)
                 ]);
             })()
