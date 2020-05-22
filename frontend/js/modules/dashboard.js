@@ -59,6 +59,7 @@ module.exports = (function () {
         if(!exists){
           c.pads.push(resp.value.watchlist.pads[i]);
         } 
+        c.pads        = ld.sortByOrder(c.pads, 'lastEdited', false);
       }
       var len = Object.keys(c.pads).length;
       for(var i = 0; i < Object.keys(resp.value.watchlist.padsFromGroups).length; i++){
@@ -424,8 +425,10 @@ module.exports = (function () {
               var year = date.getFullYear();
               var hour = date.getHours();
               var minutes = date.getMinutes();
+              if(minutes <= 9){
+                minutes = "0"+ minutes;
+              }
 
-              
               return m('span.name', [
                 m('a', {
                   href: '/mypads/group/'+ p.group + '/pad/view/' + p._id,
