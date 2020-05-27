@@ -9,7 +9,7 @@ module.exports = (function() {
   var atIndex;
   var length;
   var userList = [];
-  // var userList = ['@folder', '@admins', '@invited', '@all'];
+  var userList = ['@folder', '@admins', '@invited', '@all'];
   var admins = [];
   var invited = [];
   var users = [];
