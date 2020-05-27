@@ -8,7 +8,8 @@ module.exports = (function() {
   var lineToReplace;
   var atIndex;
   var length;
-  var userList = ['@folder', '@admins', '@invited', '@all'];
+  var userList = [];
+  // var userList = ['@folder', '@admins', '@invited', '@all'];
   var admins = [];
   var invited = [];
   var users = [];
