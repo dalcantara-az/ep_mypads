@@ -31,7 +31,7 @@ function findAndScrollTo(condition, param) {
   var count = 1;
   $('iframe[name="ace_outer"]').contents().find('iframe').contents().find("#innerdocbody").contents().each(function() {
     if (condition(this, count, param)) {
-      var newY = $(this).context.offsetTop + "px";
+      var newY = this.offsetTop + "px";
       var $outerdoc = $('iframe[name="ace_outer"]').contents().find("#outerdocbody");
       var $outerdocHTML = $('iframe[name="ace_outer"]').contents().find("#outerdocbody").parent();
       $outerdoc.animate({scrollTop: newY});

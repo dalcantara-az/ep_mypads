@@ -93,26 +93,29 @@ module.exports = (function() {
     if (!$inputField.autocomplete) {
       return;
     }
+
     var query = getQuery(context);
     if (query !== null) {
-      drawSuggestions(query);
+      //execute after timeout to allow event to finish
+      setTimeout(function() {
+        positionSuggestions();
+        drawSuggestions(query);
+      }, 0);
     } else if ($inputField.autocomplete("instance") !== undefined) {
       $inputField.autocomplete("close");
     }
   }
 
-  autocomplete.aceKeyEvent = function(hook, context) {
+  function positionSuggestions() {
     var rect = innerDocWindow.getSelection().getRangeAt(0).getBoundingClientRect();
     var innerDocPadding = {
       left: parseInt($innerDocFrame.css('padding-left'), 10),
       top: parseInt($innerDocFrame.css('padding-top'), 10)
     };
-    var outerDocPadding = {
-      left: parseInt($padOuter.css('padding-left'), 10),
-      top: parseInt($padOuter.css('padding-top'), 10)
-    };
-    $suggestionsMarker.css('left', (rect.left + innerDocPadding.left + outerDocPadding.left) + 'px');
-    $suggestionsMarker.css('top', (rect.bottom + innerDocPadding.top + outerDocPadding.top) + 'px');
+    var innerOffset = $innerDocFrame.offset();
+
+    $suggestionsMarker.css('left', (rect.left + innerDocPadding.left + innerOffset.left) + 'px');
+    $suggestionsMarker.css('top', (rect.bottom + innerDocPadding.top + innerOffset.top) + 'px');
   }
 
   function getQuery(context) {
@@ -150,6 +153,11 @@ module.exports = (function() {
         at: "left top",
         of: $suggestionsMarker
       },
+      open: function(event, ui) {
+        // fixes top position incorrectly affected by scroll
+        $suggestionsMarker.find("ul").css("top", "0px");
+      },
+      appendTo: $suggestionsMarker,
       autoFocus: true,
       select: function(event, ui) {
         event.preventDefault();

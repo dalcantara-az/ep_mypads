@@ -165,13 +165,6 @@ exports.postAceInit = function(hook, context) {
   scrollTo.postAceInit(hook, context);
 }
 
-exports.aceKeyEvent = function(hook, context) {
-  autocomplete.aceKeyEvent(hook, context);
-  if (!/Edge/.test(navigator.userAgent)) {
-    return true;  
-  }
-}
-
 exports.aceSelectionChanged = function(hook, context) {
   autocomplete.aceSelectionChanged(hook, context);
   toolbarAlert.aceSelectionChanged(hook, context);
