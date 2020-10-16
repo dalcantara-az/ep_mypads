@@ -125,7 +125,9 @@
             "NO_REGISTRATION": "Sorry, registration is disabled.",
             "PASSWORD_INCORRECT": "Password is not correct.",
             "PLEASE_CHANGE_YOUR_PASSWORD": "Your password is the one registered when using external authentification. This server use internal authentication and as a safety mesure, this password is not allowed. Please click on the \"Lost your password?\" link to change it and be able to login.",
-            "TOKEN_INCORRECT": "Your security token is invalid."
+            "TOKEN_INCORRECT": "Your security token is invalid.",
+            "INVALID_LOGIN": "Username/Password is incorrect.",
+            "INVALID_OTP": "One-time Password is invalid."
          },
          "CONFIGURATION": {
             "CANTGET": "Configuration loading has failed. Please contact your administrator.",
@@ -435,9 +437,10 @@
          "REMOVE_ACCOUNT_SUCCESS": "Account removed with success.",
          "REMOVE_ACCOUNT_SURE": "You are on the verge of removing definitively your account and all the folders and pads on which you are the unique administrator. If you are really sure about what you are doing, please enter your current password and click OK.",
          "USECOLORINPADS": "Use chosen color in pads by default?",
-         "USELOGINANDCOLORINPADS": "Use login and chosen color in pads by default?"
+         "USELOGINANDCOLORINPADS": "Use login and chosen color in pads by default?",
+         "TWOFA": "Two-factor Authentication to be used on login"
       },
-      "LANG": "Language",
+      "LANG": "Language", 
       "LASTNAME": "Lastname",
       "LOGIN": "Login",
       "MANDATORY_FIELDS": "Mandatory fields",
@@ -446,6 +449,7 @@
       "OPTIONAL_FIELDS": "Optional fields",
       "ORGANIZATION": "Organization",
       "ORSUB": " (or subscribe)",
+      "OTP": "One-Time Password",
       "PAD_NICKNAME": "Nickname used in pads",
       "PASSCHECK": "Password Confirmation",
       "PASSCURRENT": "Current password",
@@ -456,11 +460,17 @@
       "PROFILE": "Profile",
       "REGISTER": "Register",
       "REMOVE_ACCOUNT": "Remove my account",
+      "SETUP_2FA": "Setup Two-factor Authentication",
+      "SETUP_2FA_STEP1": "Install Google Authenticator app on your device and scan the QR code below:",
+      "SETUP_2FA_STEP2": "Enter the One-Time Password you see in the Authenticator App:",
       "SUBSCRIBE": "Subscribe",
+      "TWOFA": "Two-factor Authentication",
+      "TWOFA_ENABLED": "Two-factor Authentication Enabled",
       "UNDEF": "********",
       "USECOLORINPADS": "Use color in pads?",
       "USELOGINANDCOLORINPADS": "Use login and color in pads?",
-      "USERNAME": "Username"
+      "USERNAME": "Username",
+      "VERIFY_CODE": "Verify Code"
    },
    "USERLIST": {
       "ADD": "Create a new userlist",

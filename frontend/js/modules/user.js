@@ -32,6 +32,8 @@ module.exports = (function () {
   // Global dependencies
   var m  = require('mithril');
   var ld = require('lodash');
+  var speakeasy = require('speakeasy');
+  var qrcode = require('qrcode');
 
   // Local dependencies
   var conf = require('../configuration.js');
@@ -129,6 +131,10 @@ module.exports = (function () {
   user.view.icon.padNickname = function (c) {
     return form.icon(c, 'padNickname', conf.LANG.USER.INFO.PAD_NICKNAME);
   };
+
+  user.view.icon.otpEnabled = function (c) {
+    return form.icon(c, 'otpEnabled', conf.LANG.USER.INFO.TWOFA);
+  }
 
   /**
   * ### Fields
@@ -372,6 +378,26 @@ module.exports = (function () {
       pattern: '#[0-9,a-f]{6}'
     });
     return fields;
+  };
+
+  /**
+  *  ### otp enabled
+  */
+
+  user.view.field.otpEnabled = function (c) { 
+    var icon = user.view.icon.otpEnabled(c);
+    var display =  m('span', 'Enabled');
+    if (!c.profileView()) {
+      display =  m('span', '-');
+    } else if (!c.data.otpEnabled()) {
+      display =  m('a', { href: '/setup2fa', config: m.route }, conf.LANG.USER.SETUP_2FA);
+    }
+
+    return {
+      label: m('label.col-sm-4', { for: 'twoFactorAuth' }, [ conf.LANG.USER.TWOFA, icon ]),
+      display: display,
+      icon: icon
+    }
   };
 
   /**

@@ -37,6 +37,8 @@ module.exports = (function () {
   var login                = require('./modules/login.js');
   var logout               = require('./modules/logout.js');
   var passRecover          = require('./modules/passrecover.js');
+  var loginOtp             = require('./modules/login-otp.js');
+  var setup2fa             = require('./modules/setup-2fa.js');
   var accountConfirm       = require('./modules/accountconfirm.js');
   var subscribe            = require('./modules/subscribe.js');
   var bookmark             = require('./modules/bookmark.js');
@@ -77,6 +79,8 @@ module.exports = (function () {
     '/logout': logout,
     '/passrecover': passRecover,
     '/passrecover/:token': passRecover,
+    '/loginotp': loginOtp,
+    '/setup2fa': setup2fa,
     '/accountconfirm/:token': accountConfirm,
     '/subscribe': subscribe,
     '/myprofile': subscribe,

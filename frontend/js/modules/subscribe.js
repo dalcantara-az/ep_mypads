@@ -41,9 +41,11 @@ module.exports = (function () {
   var layout = require('./layout.js');
   var user   = require('./user.js');
   var ready  = require('../helpers/ready.js');
+  var speakeasy = require('speakeasy');
+  var qrcode = require('qrcode');
 
+  var secret, dataUrl;
   var subscribe = {};
-
   /**
   * ## Controller
   *
@@ -67,12 +69,12 @@ module.exports = (function () {
       c.fields = ['organization', 'lang', 'color', 'hideHelp'];
     } else {
       c.fields = ['login', 'password', 'passwordConfirm', 'email', 'firstname',
-        'lastname', 'padNickname', 'organization', 'lang', 'color', 'hideHelp'];
+        'lastname', 'padNickname', 'organization', 'lang', 'color', 'otpEnabled', 'hideHelp'];
     }
     if (c.profileView()) {
       c.fields.push('passwordCurrent', 'useLoginAndColorInPads');
     }
-    form.initFields(c, c.fields);
+    form.initFields(c, c.fields);            
     if (c.profileView()) {
       ld.map(c.fields, function (f) {
         if (!ld.startsWith(f, 'password')) {
@@ -341,6 +343,10 @@ module.exports = (function () {
         m('.form-group', [
           fields.lang.label,
           m('.col-sm-7', fields.lang.select)
+        ]),
+        m('.form-group', [
+          fields.otpEnabled.label,
+          m('.col-sm-7', fields.otpEnabled.display)
         ])
       ];
     }
@@ -445,6 +451,16 @@ module.exports = (function () {
         m('div', requiredFields)
       ]),
       m('fieldset.show-when-ready.hidden', optionalFields),
+      m('fieldset.show-when-ready.hidden', [
+        m('legend.opt', conf.LANG.USER.TWOFA),
+          m('.form-group', { class: (conf.SERVER.hideHelpBlocks) ? 'hidden' : '' }, [
+            m('.col-sm-7.col-sm-offset-4', m('a', {
+                href: '/passrecover',
+                config: m.route
+              }, conf.LANG.USER.SETUP_2FA)
+            )
+          ])
+      ]),
       m('.form-group.show-when-ready.hidden', [
         m('.col-sm-12', [
           m('input.btn.btn-success pull-right', {

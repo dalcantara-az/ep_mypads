@@ -77,7 +77,7 @@ module.exports = (function () {
         method: 'POST',
         url: conf.URLS.LOGIN,
         data: c.data
-      }).then(login.getLogged,
+    }).then(login.attemptLogin,
       function (err) {
         notif.error({ body: ld.result(conf.LANG, err.error) });
       });
@@ -182,7 +182,7 @@ module.exports = (function () {
         method: 'POST',
         url: conf.URLS.CASLOGIN,
         data: {ticket: ticket[1]}
-      }).then(login.getLogged,
+    }).then(login.attemptLogin,
       function (err) {
         notif.error({ body: ld.result(conf.LANG, err.error) });
       });
@@ -193,9 +193,28 @@ module.exports = (function () {
     }
   };
 
-  login.getLogged = function (resp) {
+  login.attemptLogin = function(resp) {        
+    localStorage.setItem('login', resp.token.login);
+    localStorage.setItem('tempTokenKey', resp.token.key);    
+    if (resp.requestOtp) {
+      login.promptOtp(resp);
+    } else {
+      login.getLogged(resp);
+    }
+
+  };
+
+  login.promptOtp = function(resp) {    
+    localStorage.setItem('tempToken', resp.token);    
+    m.route('/loginotp');
+
+  };
+
+  login.getLogged = function (resp) {    
     auth.userInfo(resp.user);
+    
     localStorage.setItem('token', resp.token);
+    
 
     /*
      * Fix pad authorship mixup
