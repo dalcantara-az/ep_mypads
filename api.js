@@ -410,7 +410,7 @@ module.exports = (function () {
         if (err) { 
           return res.status(400).send({ error: err.message }); }
         if (!u) { return res.status(400).send({ error: info.message }); }
-        var tokenKey = u.otpSecret ? auth.tempTokens[u.login].key : auth.tokens[u.login].key;
+        var tokenKey = u.otpEnabled ? auth.tempTokens[u.login].key : auth.tokens[u.login].key;
         if (u.active) {
           var token = {
             login: u.login,
@@ -429,7 +429,7 @@ module.exports = (function () {
               });
             });
           } else {
-            if (u.otpSecret) {
+            if (u.otpEnabled) {
               return res.status(200).send({
                 success: true,
                 user: ld.omit(u, ['password', 'otpSecret']),
@@ -462,7 +462,7 @@ module.exports = (function () {
       
       user.get(req.body.login, function(err, u) {
         var verified = false;
-        if(u.otpSecret) {
+        if(u.otpEnabled) {
           verified = speakeasy.totp.verify({ secret: u.otpSecret,
                                              encoding: 'base32',
                                              token: req.body.otp });
