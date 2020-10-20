@@ -451,16 +451,6 @@ module.exports = (function () {
         m('div', requiredFields)
       ]),
       m('fieldset.show-when-ready.hidden', optionalFields),
-      m('fieldset.show-when-ready.hidden', [
-        m('legend.opt', conf.LANG.USER.TWOFA),
-          m('.form-group', { class: (conf.SERVER.hideHelpBlocks) ? 'hidden' : '' }, [
-            m('.col-sm-7.col-sm-offset-4', m('a', {
-                href: '/passrecover',
-                config: m.route
-              }, conf.LANG.USER.SETUP_2FA)
-            )
-          ])
-      ]),
       m('.form-group.show-when-ready.hidden', [
         m('.col-sm-12', [
           m('input.btn.btn-success pull-right', {
