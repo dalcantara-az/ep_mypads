@@ -102,11 +102,11 @@ module.exports = (function () {
         m('legend', conf.LANG.USER.SETUP_2FA),
         m('.form-group', 
           m('ol', [
-              m('li', [ m('div', conf.LANG.USER.SETUP_2FA_STEP1),
+              m('li', [ m('div.li-2fa', conf.LANG.USER.SETUP_2FA_STEP1),
                         m('img', {src:dataUrl})
                       ]
               ),
-              m('li', [ m('div', conf.LANG.USER.SETUP_2FA_STEP1),
+              m('li', [ m('div.li-2fa', conf.LANG.USER.SETUP_2FA_STEP2),
                         m('.col-sm-7', m('input.form-control', { name: 'otp' })),
                         m('input.btn.btn-success', {
                                     form: 'login-form',
