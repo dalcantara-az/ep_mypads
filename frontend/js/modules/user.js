@@ -386,8 +386,10 @@ module.exports = (function () {
 
   user.view.field.otpEnabled = function (c) { 
     var icon = user.view.icon.otpEnabled(c);
-    var display =  m('span', 'Enabled');
-    if (!c.profileView()) {
+    var display =  m('span', conf.LANG.USER.ENABLED);
+    if (c.adminView()) {
+      display = c.data.otpEnabled() ? conf.LANG.USER.ENABLED : conf.LANG.USER.DISABLED;
+    } else if (!c.profileView()) {
       display =  m('span', '-');
     } else if (!c.data.otpEnabled()) {
       display =  m('a', { href: '/setup2fa', config: m.route }, conf.LANG.USER.SETUP_2FA);

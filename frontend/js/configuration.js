@@ -48,6 +48,7 @@ module.exports = (function () {
   config.URLS.SEARCH_USERS         = config.URLS.BASE + '/search-users';
   config.URLS.USERMARK             = config.URLS.USER + 'mark';
   config.URLS.USERWATCH            = config.URLS.USER + 'watch';
+  config.URLS.DISABLE_2FA          = config.URLS.USER + '/disable2fa';
   config.URLS.SETUP_2FA            = config.URLS.USER + '/setup2fa';
   config.URLS.GROUP                = config.URLS.BASE + '/group';
   config.URLS.PAD                  = config.URLS.BASE + '/pad';

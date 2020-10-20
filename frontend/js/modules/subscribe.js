@@ -302,6 +302,18 @@ module.exports = (function () {
     ];
   };
 
+  view.disable2fa = function (c) {
+    return [
+      m('button.btn.btn-warning', {
+        onclick: c.submit.disable2fa
+      }, conf.LANG.USER.DISABLE_2FA),
+      m('i', {
+        class: 'glyphicon glyphicon-info-sign mp-tooltip mp-tooltip-left',
+        'data-msg': conf.LANG.USER.INFO.DISABLE_2FA
+      })
+    ];
+  };
+
   /**
   * ### form view
   *
@@ -458,6 +470,7 @@ module.exports = (function () {
             type: 'submit',
             value: profOrAdm ? conf.LANG.ACTIONS.SAVE : USER.REGISTER
           }),
+          (c.adminView() && c.data.otpEnabled()) ? view.disable2fa(c) : '',
           c.profileView() ? view.removeAccount(c) : ''
         ])
       ])

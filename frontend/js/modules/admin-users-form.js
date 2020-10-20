@@ -103,6 +103,20 @@ module.exports = (function () {
           auth.userInfo(resp.value);
           notif.success({ body: conf.LANG.USER.AUTH.PROFILE_SUCCESS });
         }, errfn);
+      },
+      disable2fa : function (e) {
+        e.preventDefault();
+        var confirm = window.confirm(conf.LANG.USER.INFO.DISABLE_2FA_SURE);
+        if (confirm) {
+          m.request({
+            method: 'PUT',
+            url: conf.URLS.DISABLE_2FA,
+            data: {login: c.data.login()}
+          }).then(function (resp) {
+            c.data.otpEnabled(false);
+            notif.success({ body: conf.LANG.USER.DISABLE_2FA_SUCCESS });
+          }, errfn);
+        }
       }
     };
 

@@ -900,6 +900,22 @@ module.exports = (function () {
       });
     });
 
+    /**
+    * Disable 2FA
+    */
+
+    app.put(userRoute + '/disable2fa', function(req, res){      
+      var login = req.body.login;
+      user.get(login, function (err, u) {        
+        if (err) { return res.status(400).send({ error: err.message }); }
+        u.otpEnabled = false;       
+        user.fn.set(u, function (err) {        
+          if (err) { return res.status(400).send({ error: err.message }); }        
+          res.send({ success: true });
+        });
+      });
+    });
+
     // `set` for POST and PUT, see below
     var _set = function (req, res) {
       var key;
