@@ -100,7 +100,7 @@ module.exports = (function () {
       }, conf.LANG.USER.PLEASE_WAIT),
       m('fieldset.show-when-ready.hidden', [
         m('legend', conf.LANG.USER.SETUP_2FA),
-        m('.form-group', 
+        m('.form-group', [
           m('ol', [
               m('li', [ m('div.li-2fa', conf.LANG.USER.SETUP_2FA_STEP1),
                         m('img', {src:dataUrl})
@@ -116,9 +116,9 @@ module.exports = (function () {
                         )
                       ]
                 )
-            ]
-          )
-          )
+            ]),
+          m('div.note-2fa', conf.LANG.USER.SETUP_2FA_NOTE)
+          ])
         ])
       ]
     );

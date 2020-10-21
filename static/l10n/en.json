@@ -469,6 +469,7 @@
       "SETUP_2FA": "Setup Two-factor Authentication",
       "SETUP_2FA_STEP1": "Install Google Authenticator app on your device and scan the QR code below:",
       "SETUP_2FA_STEP2": "Enter the One-Time Password you see in the Authenticator App:",
+      "SETUP_2FA_NOTE": "Note: As this is Time Based OTP, make sure the device with the Google Authenticator App and the device accessing Etherpad should have their date and time synced with internet time to avoid problems.",
       "SUBSCRIBE": "Subscribe",
       "TWOFA": "Two-factor Authentication",
       "TWOFA_ENABLED": "Two-factor Authentication Enabled",
