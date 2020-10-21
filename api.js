@@ -424,7 +424,7 @@ module.exports = (function () {
               if (err) { return res.status(400).send({ error: err.message }); }
               return res.status(200).send({
                 success: true,
-                user: ld.omit(u, ['password', 'otpSecret']),
+                user: ld.omit(u, ['password']),
                 token: jwt.sign(token, auth.secret)
               });
             });
@@ -432,14 +432,14 @@ module.exports = (function () {
             if (u.otpEnabled) {
               return res.status(200).send({
                 success: true,
-                user: ld.omit(u, ['password', 'otpSecret']),
+                user: ld.omit(u, ['password']),
                 token: token,
                 requestOtp: true
               });
             }
             return res.status(200).send({
               success: true,
-              user: ld.omit(u, ['password', 'otpSecret']),
+              user: ld.omit(u, ['password']),
               token: jwt.sign(token, auth.secret),
               requestOtp: false
             });
@@ -479,7 +479,7 @@ module.exports = (function () {
           delete auth.tempTokens[u.login];
           return res.status(200).send({
             success: true,
-            user: ld.omit(u, ['password', 'otpSecret']),
+            user: ld.omit(u, ['password']),
             token: jwt.sign(token, auth.secret)
           });
         } else {
@@ -893,9 +893,9 @@ module.exports = (function () {
         if (err) { return res.status(400).send({ error: err.message }); }        
         u.otpSecret = otpSecret;
         u.otpEnabled = true;       
-        user.fn.set(u, function (err) {        
+        user.fn.set(u, function (err) {
           if (err) { return res.status(400).send({ error: err.message }); }        
-          res.send({ success: true, user: ld.omit(u, ['password', 'otpSecret']), login: login });
+          res.send({ success: true, user: ld.omit(u, ['password']), login: login });
         });
       });
     });

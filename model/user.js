@@ -192,7 +192,8 @@ module.exports = (function () {
       login: p.login,
       password: p.password,
       email: p.email,
-      otpEnabled: p.otpEnabled
+      otpEnabled: p.otpEnabled,
+      otpSecret: p.otpSecret
     }, u);
   };
 

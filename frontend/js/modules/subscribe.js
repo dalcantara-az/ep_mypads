@@ -84,7 +84,12 @@ module.exports = (function () {
     } else {
       c.data.lang = m.prop(conf.USERLANG);
     }
-
+    if (c.profileView()) {
+      if (c.data.otpEnabled) {
+        c.data.otpSecret = m.prop(auth.userInfo().otpSecret);
+      }
+      c.data.eplAuthorToken = m.prop(auth.userInfo().eplAuthorToken);
+    }
     /**
     * ### submit
     *
@@ -356,10 +361,11 @@ module.exports = (function () {
           fields.lang.label,
           m('.col-sm-7', fields.lang.select)
         ]),
+        ((c.profileView() || c.adminView()) ? 
         m('.form-group', [
           fields.otpEnabled.label,
           m('.col-sm-7', fields.otpEnabled.display)
-        ])
+        ]) : '')
       ];
     }
     if (c.profileView()) {
