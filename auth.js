@@ -108,6 +108,7 @@ module.exports = (function () {
 
   var auth = {
     tokens: {},
+    tempTokens: {},
     adminTokens: {},
     secret: cuid() // secret per etherpad session
   };
@@ -376,6 +377,23 @@ module.exports = (function () {
     var ns      = (admin ? 'adminTokens' : 'tokens');
     var login   = jwt_payload.login;
     var token   = auth[ns][login];
+    var reqOtp  = jwt_payload.reqOtp;
+
+    if(reqOtp) {
+      checkFn(login, jwt_payload.password, function (err, u) {
+        if (err) { return callback(err, u); }
+        if (u.otpEnabled) {
+          auth.tempTokens[u.login]     = u;
+          auth.tempTokens[u.login].key = cuid();
+        } else {
+          auth[ns][u.login]     = u;
+          auth[ns][u.login].key = cuid();
+        }
+        return callback(null, u);
+      });
+      return;
+    }
+
     if (!token || !jwt_payload.key) {
       var pass = jwt_payload.password;
       if (!ld.isString(pass)) {

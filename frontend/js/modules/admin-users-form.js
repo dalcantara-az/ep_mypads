@@ -61,7 +61,7 @@ module.exports = (function () {
 
     var init = function () {
       c.fields = ['login', 'password', 'passwordConfirm', 'email', 'firstname',
-        'lastname', 'organization', 'padNickname', 'lang', 'color', 'hideHelp'];
+        'lastname', 'organization', 'padNickname', 'lang', 'otpEnabled', 'color', 'hideHelp'];
       form.initFields(c, c.fields);
       var u = c.user();
       ld.forEach(c.fields, function (f) {
@@ -103,6 +103,20 @@ module.exports = (function () {
           auth.userInfo(resp.value);
           notif.success({ body: conf.LANG.USER.AUTH.PROFILE_SUCCESS });
         }, errfn);
+      },
+      disable2fa : function (e) {
+        e.preventDefault();
+        var confirm = window.confirm(conf.LANG.USER.INFO.DISABLE_2FA_SURE);
+        if (confirm) {
+          m.request({
+            method: 'PUT',
+            url: conf.URLS.DISABLE_2FA,
+            data: {login: c.data.login()}
+          }).then(function (resp) {
+            c.data.otpEnabled(false);
+            notif.success({ body: conf.LANG.USER.DISABLE_2FA_SUCCESS });
+          }, errfn);
+        }
       }
     };
 

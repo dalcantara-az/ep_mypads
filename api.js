@@ -34,6 +34,7 @@ var ld       = require('lodash');
 var passport = require('passport');
 var jwt      = require('jsonwebtoken');
 var bodyParser = require('body-parser');
+var speakeasy = require('speakeasy');
 var urlencodedParser = bodyParser.urlencoded({ extended: false });
 
 var testMode = false;
@@ -404,13 +405,16 @@ module.exports = (function () {
       } else if (typeof(req.cookies.token) !== 'undefined') {
         eplAuthorToken = req.cookies.token;
       }
+      req.body.reqOtp = true;
       auth.fn.JWTFn(req, req.body, false, function (err, u, info) {
-        if (err) { return res.status(400).send({ error: err.message }); }
+        if (err) { 
+          return res.status(400).send({ error: err.message }); }
         if (!u) { return res.status(400).send({ error: info.message }); }
+        var tokenKey = u.otpEnabled ? auth.tempTokens[u.login].key : auth.tokens[u.login].key;
         if (u.active) {
           var token = {
             login: u.login,
-            key: auth.tokens[u.login].key
+            key: tokenKey
           };
           if (!u.eplAuthorToken && typeof(eplAuthorToken) !== 'undefined') {
             u.eplAuthorToken   = eplAuthorToken;
@@ -420,15 +424,24 @@ module.exports = (function () {
               if (err) { return res.status(400).send({ error: err.message }); }
               return res.status(200).send({
                 success: true,
-                user: ld.omit(u, 'password'),
+                user: ld.omit(u, ['password']),
                 token: jwt.sign(token, auth.secret)
               });
             });
           } else {
+            if (u.otpEnabled) {
+              return res.status(200).send({
+                success: true,
+                user: ld.omit(u, ['password']),
+                token: token,
+                requestOtp: true
+              });
+            }
             return res.status(200).send({
               success: true,
-              user: ld.omit(u, 'password'),
-              token: jwt.sign(token, auth.secret)
+              user: ld.omit(u, ['password']),
+              token: jwt.sign(token, auth.secret),
+              requestOtp: false
             });
           }
         } else {
@@ -436,6 +449,45 @@ module.exports = (function () {
           return fn.denied(res, msg);
         }
       });
+    });
+
+    app.post(authRoute + '/loginotp', function(req, res){
+      if (!req.body.token) {
+        return res.status(400).send({error: 'BACKEND.ERROR.AUTHENTICATION.NOT_AUTH'});
+      } 
+
+      if (!auth.tempTokens[req.body.login] || auth.tempTokens[req.body.login].key != req.body.token) {
+        return res.status(400).send({error: 'BACKEND.ERROR.AUTHENTICATION.NOT_AUTH'});
+      }
+      
+      user.get(req.body.login, function(err, u) {
+        var verified = false;
+        if(u.otpEnabled) {
+          verified = speakeasy.totp.verify({ secret: u.otpSecret,
+                                             encoding: 'base32',
+                                             token: req.body.otp });
+
+        } else {
+          verified = true;
+        }
+        if (verified) {
+          var token = {
+            login: u.login,
+            key: auth.tempTokens[u.login].key
+          };
+          auth.tokens[u.login] = auth.tempTokens[u.login];
+          delete auth.tempTokens[u.login];
+          return res.status(200).send({
+            success: true,
+            user: ld.omit(u, ['password']),
+            token: jwt.sign(token, auth.secret)
+          });
+        } else {
+          return res.status(400).send({error: 'BACKEND.ERROR.AUTHENTICATION.INVALID_OTP'});
+        }
+
+      });
+
     });
 
     /**
@@ -829,6 +881,40 @@ module.exports = (function () {
         res.send({ users: users, usersCount: ld.size(users) });
       }
     );
+
+    /**
+    * Setup 2FA
+    */
+
+    app.put(userRoute + '/setup2fa', function(req, res){      
+      var login = req.body.login;
+      var otpSecret = req.body.otpSecret;
+      user.get(login, function (err, u) {        
+        if (err) { return res.status(400).send({ error: err.message }); }        
+        u.otpSecret = otpSecret;
+        u.otpEnabled = true;       
+        user.fn.set(u, function (err) {
+          if (err) { return res.status(400).send({ error: err.message }); }        
+          res.send({ success: true, user: ld.omit(u, ['password']), login: login });
+        });
+      });
+    });
+
+    /**
+    * Disable 2FA
+    */
+
+    app.put(userRoute + '/disable2fa', function(req, res){      
+      var login = req.body.login;
+      user.get(login, function (err, u) {        
+        if (err) { return res.status(400).send({ error: err.message }); }
+        u.otpEnabled = false;       
+        user.fn.set(u, function (err) {        
+          if (err) { return res.status(400).send({ error: err.message }); }        
+          res.send({ success: true });
+        });
+      });
+    });
 
     // `set` for POST and PUT, see below
     var _set = function (req, res) {

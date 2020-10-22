@@ -1,30 +1,12 @@
 /**
 *  vim:set sw=2 ts=2 sts=2 ft=javascript expandtab:
 *
-*  # Login module
-*
-*  ## License
-*
-*  Licensed to the Apache Software Foundation (ASF) under one
-*  or more contributor license agreements.  See the NOTICE file
-*  distributed with this work for additional information
-*  regarding copyright ownership.  The ASF licenses this file
-*  to you under the Apache License, Version 2.0 (the
-*  "License"); you may not use this file except in compliance
-*  with the License.  You may obtain a copy of the License at
-*
-*    http://www.apache.org/licenses/LICENSE-2.0
-*
-*  Unless required by applicable law or agreed to in writing,
-*  software distributed under the License is distributed on an
-*  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-*  KIND, either express or implied.  See the License for the
-*  specific language governing permissions and limitations
-*  under the License.
+*  # Login OTP module - contents created with help of passrecover.js 
+*     and login.js as references
 *
 *  ## Description
 *
-*  This module contains the login markup.
+*  This module contains the login otp page
 */
 
 module.exports = (function () {
@@ -55,7 +37,7 @@ module.exports = (function () {
   login.controller = function () {
     var c          = {};
     document.title = conf.SERVER.title;
-    form.initFields(c, ['login', 'password']);
+    form.initFields(c, ['login', 'otp']);
 
     /**
     * `submit` internal calls the public API to login with given login and
@@ -65,19 +47,15 @@ module.exports = (function () {
 
     c.submit = function (e) {
       e.preventDefault();
-      if (!c.data.login()) {
-        var $login = document.querySelector('input[name=login]');
-        c.data.login($login.value);
-      }
-      if (!c.data.password()) {
-        var $pass = document.querySelector('input[name=password]');
-        c.data.password($pass.value);
-      }
+      var $otp = document.querySelector('input[name=otp]');
+      c.data.otp($otp.value);
+      c.data.login(localStorage.getItem('login'));
+      c.data.token = localStorage.getItem('tempTokenKey');
       m.request({
         method: 'POST',
-        url: conf.URLS.LOGIN,
+        url: conf.URLS.LOGIN_OTP,
         data: c.data
-    }).then(login.attemptLogin,
+      }).then(login.getLogged,
       function (err) {
         notif.error({ body: ld.result(conf.LANG, err.error) });
       });
@@ -94,22 +72,6 @@ module.exports = (function () {
   var view = {};
 
   view.form = function (c) {
-    var login                   = user.view.field.login(c);
-    login.input.attrs.config    = form.focusOnInit;
-    login.input.attrs.maxlength = 40;
-    login.label.attrs.class     = 'col-sm-4';
-    var password                = user.view.field.password(c);
-    var passwordBlock           = [ password.input ];
-    if (conf.SERVER.authMethod === 'internal') {
-      passwordBlock.push(
-        m('p.help-block', [
-          m('a', {
-            href: '/passrecover',
-            config: m.route
-          }, conf.LANG.USER.PASSWORD_LOST)
-        ])
-      );
-    }
 
     if (conf.SERVER.authMethod !== 'cas') {
       return m('form.form-horizontal.col-sm-8.col-sm-offset-2.well', {
@@ -121,12 +83,10 @@ module.exports = (function () {
         m('fieldset.show-when-ready.hidden', [
           m('legend', conf.LANG.USER.MYPADS_ACCOUNT),
           m('.form-group', [
-            login.label,
-            m('.col-sm-7', login.input)
-          ]),
-          m('.form-group', [
-            password.label,
-            m('.col-sm-7', passwordBlock)
+            m('.col-sm-4', m('label', { for: 'otp' }, [ conf.LANG.USER.OTP ])),
+            m('.col-sm-7', m('input.form-control', {
+          name: 'otp'
+        }))
           ]),
           m('input.btn.btn-success.pull-right', {
             form: 'login-form',
@@ -182,7 +142,7 @@ module.exports = (function () {
         method: 'POST',
         url: conf.URLS.CASLOGIN,
         data: {ticket: ticket[1]}
-    }).then(login.attemptLogin,
+      }).then(login.getLogged,
       function (err) {
         notif.error({ body: ld.result(conf.LANG, err.error) });
       });
@@ -193,27 +153,11 @@ module.exports = (function () {
     }
   };
 
-  login.attemptLogin = function(resp) {        
-    localStorage.setItem('login', resp.token.login);
-    localStorage.setItem('tempTokenKey', resp.token.key);    
-    if (resp.requestOtp) {
-      login.promptOtp(resp);
-    } else {
-      login.getLogged(resp);
-    }
-
-  };
-
-  login.promptOtp = function(resp) {    
-    localStorage.setItem('tempToken', resp.token);    
-    m.route('/loginotp');
-
-  };
-
-  login.getLogged = function (resp) {    
+  login.getLogged = function (resp) {
     auth.userInfo(resp.user);
     
     localStorage.setItem('token', resp.token);
+    localStorage.removeItem('tempTokenKey');
     
 
     /*
@@ -231,6 +175,7 @@ module.exports = (function () {
         cookies.set('token-' + resp.user.login, browserAuthorCookie, { expires: 365 });
       }
     }
+    
 
     var lang = auth.userInfo().lang;
     if (lang !== conf.USERLANG) {
@@ -246,6 +191,7 @@ module.exports = (function () {
     } else {
       m.route('/');
     }
+    
   };
   return login;
 }).call(this);

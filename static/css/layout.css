@@ -227,4 +227,21 @@ span.h5.folder-title {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+.disabled-2fa-banner {
+  background-color: #d07171;
+  text-align: center;
+  padding: 5px 0px 5px 0px;
+}
+
+.li-2fa {
+  margin: 10px 0px 10px 0px;
+}
+
+.note-2fa {
+  padding: 0px 50px 0px 20px;
+  text-align: justify;
+  margin-top: 30px;
+}
+
 /* Customizations for Azeus: End */

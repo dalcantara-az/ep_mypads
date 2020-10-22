@@ -208,7 +208,16 @@ module.exports = (function () {
           m('nav.pull-right', { class: 'menu-main' }, [
             m('ul.nav.nav-tabs', views.menuMain())
           ])
-        ])
+        ]),((auth.isAuthenticated() && !auth.is2faEnabled()) ?
+        m('div.disabled-2fa-banner', [
+            m('span', 'Two-factor authentication is disabled. Click '), 
+            m('a', {
+                href: '/setup2fa',
+                config: m.route
+              }, 'here'),
+            m('span', ' to enable.')
+          ]) : m('div.hidden')
+        )
       ]),
       m(mainC, [
         m(section, { config: expandPad.autoExpand }, main || ''),

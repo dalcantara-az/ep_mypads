@@ -191,7 +191,9 @@ module.exports = (function () {
       _id: p._id,
       login: p.login,
       password: p.password,
-      email: p.email
+      email: p.email,
+      otpEnabled: p.otpEnabled,
+      otpSecret: p.otpSecret
     }, u);
   };
 
@@ -387,8 +389,12 @@ module.exports = (function () {
   * here but will be retrieved from database in case of update.
   */
 
-  user.set = function (params, callback) {
-    common.addSetInit(params, callback, ['login', 'password']);
+  user.set = function (params, callback) {    
+    var reqStr = [ 'login' ];
+    if(!params.skipPasswordCheck) {
+      reqStr = [ 'login', 'password' ];
+    }
+    common.addSetInit(params, callback, reqStr);
     if (!ld.isEmail(params.email)) {
       throw new TypeError('BACKEND.ERROR.TYPE.MAIL');
     }

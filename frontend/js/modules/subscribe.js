@@ -41,9 +41,11 @@ module.exports = (function () {
   var layout = require('./layout.js');
   var user   = require('./user.js');
   var ready  = require('../helpers/ready.js');
+  var speakeasy = require('speakeasy');
+  var qrcode = require('qrcode');
 
+  var secret, dataUrl;
   var subscribe = {};
-
   /**
   * ## Controller
   *
@@ -67,12 +69,12 @@ module.exports = (function () {
       c.fields = ['organization', 'lang', 'color', 'hideHelp'];
     } else {
       c.fields = ['login', 'password', 'passwordConfirm', 'email', 'firstname',
-        'lastname', 'padNickname', 'organization', 'lang', 'color', 'hideHelp'];
+        'lastname', 'padNickname', 'organization', 'lang', 'color', 'otpEnabled', 'hideHelp'];
     }
     if (c.profileView()) {
       c.fields.push('passwordCurrent', 'useLoginAndColorInPads');
     }
-    form.initFields(c, c.fields);
+    form.initFields(c, c.fields);            
     if (c.profileView()) {
       ld.map(c.fields, function (f) {
         if (!ld.startsWith(f, 'password')) {
@@ -82,7 +84,12 @@ module.exports = (function () {
     } else {
       c.data.lang = m.prop(conf.USERLANG);
     }
-
+    if (c.profileView()) {
+      if (c.data.otpEnabled) {
+        c.data.otpSecret = m.prop(auth.userInfo().otpSecret);
+      }
+      c.data.eplAuthorToken = m.prop(auth.userInfo().eplAuthorToken);
+    }
     /**
     * ### submit
     *
@@ -300,6 +307,18 @@ module.exports = (function () {
     ];
   };
 
+  view.disable2fa = function (c) {
+    return [
+      m('button.btn.btn-warning', {
+        onclick: c.submit.disable2fa
+      }, conf.LANG.USER.DISABLE_2FA),
+      m('i', {
+        class: 'glyphicon glyphicon-info-sign mp-tooltip mp-tooltip-left',
+        'data-msg': conf.LANG.USER.INFO.DISABLE_2FA
+      })
+    ];
+  };
+
   /**
   * ### form view
   *
@@ -341,7 +360,12 @@ module.exports = (function () {
         m('.form-group', [
           fields.lang.label,
           m('.col-sm-7', fields.lang.select)
-        ])
+        ]),
+        ((c.profileView() || c.adminView()) ? 
+        m('.form-group', [
+          fields.otpEnabled.label,
+          m('.col-sm-7', fields.otpEnabled.display)
+        ]) : '')
       ];
     }
     if (c.profileView()) {
@@ -452,6 +476,7 @@ module.exports = (function () {
             type: 'submit',
             value: profOrAdm ? conf.LANG.ACTIONS.SAVE : USER.REGISTER
           }),
+          (c.adminView() && c.data.otpEnabled()) ? view.disable2fa(c) : '',
           c.profileView() ? view.removeAccount(c) : ''
         ])
       ])

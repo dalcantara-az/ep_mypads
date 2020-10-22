@@ -37,6 +37,7 @@ module.exports = (function () {
   auth.token = function () { return localStorage.getItem('token'); };
   //auth.isAuthenticated = m.prop(!!auth.token());
   auth.isAuthenticated = function () { return !!auth.token(); };
+  auth.is2faEnabled = function () { return !! auth.userInfo().otpEnabled }
 
   auth.fn = {};
 
