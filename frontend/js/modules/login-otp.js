@@ -158,8 +158,8 @@ module.exports = (function () {
     
     localStorage.setItem('token', resp.token);
     localStorage.removeItem('tempTokenKey');
+    localStorage.removeItem('tempToken');
     
-
     /*
      * Fix pad authorship mixup
      * See https://framagit.org/framasoft/ep_mypads/issues/148

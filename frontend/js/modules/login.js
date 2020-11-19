@@ -199,7 +199,7 @@ module.exports = (function () {
     if (resp.requestOtp) {
       login.promptOtp(resp);
     } else {
-      login.getLogged(resp);
+      login.setup2Fa(resp);
     }
 
   };
@@ -207,6 +207,13 @@ module.exports = (function () {
   login.promptOtp = function(resp) {    
     localStorage.setItem('tempToken', resp.token);    
     m.route('/loginotp');
+
+  };
+
+  login.setup2Fa = function(resp) {
+    localStorage.setItem('tempToken', resp.token);
+    localStorage.setItem('tempLogin', resp.user.login);
+    m.route('/setup2fa');
 
   };
 

@@ -382,13 +382,8 @@ module.exports = (function () {
     if(reqOtp) {
       checkFn(login, jwt_payload.password, function (err, u) {
         if (err) { return callback(err, u); }
-        if (u.otpEnabled) {
           auth.tempTokens[u.login]     = u;
           auth.tempTokens[u.login].key = cuid();
-        } else {
-          auth[ns][u.login]     = u;
-          auth[ns][u.login].key = cuid();
-        }
         return callback(null, u);
       });
       return;

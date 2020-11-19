@@ -410,7 +410,7 @@ module.exports = (function () {
         if (err) { 
           return res.status(400).send({ error: err.message }); }
         if (!u) { return res.status(400).send({ error: info.message }); }
-        var tokenKey = u.otpEnabled ? auth.tempTokens[u.login].key : auth.tokens[u.login].key;
+        var tokenKey = auth.tempTokens[u.login].key;
         if (u.active) {
           var token = {
             login: u.login,
@@ -429,19 +429,11 @@ module.exports = (function () {
               });
             });
           } else {
-            if (u.otpEnabled) {
-              return res.status(200).send({
-                success: true,
-                user: ld.omit(u, ['password']),
-                token: token,
-                requestOtp: true
-              });
-            }
             return res.status(200).send({
               success: true,
               user: ld.omit(u, ['password']),
-              token: jwt.sign(token, auth.secret),
-              requestOtp: false
+              token: token,
+              requestOtp: u.otpEnabled
             });
           }
         } else {
