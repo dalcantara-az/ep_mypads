@@ -150,26 +150,9 @@ module.exports = (function () {
           url: conf.URLS.USER,
           data: c.data
         }).then(function (resp) {
-          if (!resp.value.active) {
-            var msg = conf.LANG.USER.AUTH.SUBSCRIBE_CONFIRM_SUCCESS;
-            m.route('/');
-            return notif.success({ body: msg });
-          } else {
-            auth.userInfo(resp.value);
-            notif.success({ body: conf.LANG.USER.AUTH.SUBSCRIBE_SUCCESS });
-          }
-          var lang = auth.userInfo().lang;
-          if (lang !== conf.USERLANG) {
-            conf.updateLang(lang);
-          }
-          m.request({
-            method: 'POST',
-            url: conf.URLS.LOGIN,
-            data: c.data
-          }).then(function (resp) {
-            localStorage.setItem('token', resp.token);
-            m.route('/');
-          }, errfn);
+          var msg = resp.value.active ? conf.LANG.USER.AUTH.SUBSCRIBE_SUCCESS : conf.LANG.USER.AUTH.SUBSCRIBE_CONFIRM_SUCCESS;
+          m.route('/login');
+          return notif.success({ body: msg });
         }, errfn);
       }
     };
