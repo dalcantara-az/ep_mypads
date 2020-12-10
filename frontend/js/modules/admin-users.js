@@ -40,6 +40,7 @@ module.exports = (function () {
   var layout = require('./layout.js');
   var user   = require('./user.js');
   var form   = require('../helpers/form.js');
+  var cookies = require('js-cookie');
 
   var admin = {};
 
@@ -79,6 +80,7 @@ module.exports = (function () {
         c.usersCount(resp.usersCount);
         notif.info({ body: conf.LANG.ADMIN.INFO.USER_FOUND });
       }, function (err) {
+        checkJwtErr(err);
         c.users(false);
         c.usersCount(false);
         notif.error({ body: ld.result(conf.LANG, err.error) });
@@ -241,6 +243,37 @@ module.exports = (function () {
     return layout.view(view.main(c), view.aside(c));
   };
 
+  /** 
+  * ##checkJwtErr
+  * For handling timeout error (check api.js for fn.checkJwt). 
+  *
+  * If error is confirmed to be incorrect token or session timeout (expired jwt),
+  * this will send a logout api call (to do necessary server side processing) 
+  * and handle response in the client side accordingly.
+  *
+  * Note: logout part copied (with minor modifications) from admin-logout.js
+  *
+  */
+
+  var checkJwtErr = function (err) {
+    if (err && (err.error === 'BACKEND.ERROR.AUTHENTICATION.SESSION_TIMEOUT' ||
+         err.error === 'BACKEND.ERROR.AUTHENTICATION.TOKEN_INCORRECT')) {      
+      if (!auth.isAuthenticated()) { return m.route('/login'); }
+      m.request({
+        method: 'GET',
+        url: conf.URLS.AUTH + '/admin/logout',
+        data: { auth_token: auth.admToken() }
+      }).then(function () {
+      document.title = conf.SERVER.title;
+      localStorage.removeItem('admToken');
+        m.route('/admin');
+      }, function(err) {
+        notif.error({ body: ld.result(conf.LANG, err.error) });
+      });
+      return true;
+    }
+    return false;
+  }
   return admin;
 
 }).call(this);

@@ -55,6 +55,7 @@ module.exports = (function () {
     document.title = conf.LANG.ADMIN.FORM_LOGIN + ' - ' + conf.SERVER.title;
     var c          = {};
     localStorage.removeItem('token');
+    localStorage.removeItem('exp');
     form.initFields(c, ['login', 'password']);
     var init = function (resp) {
       if (resp) { localStorage.setItem('admToken', resp.token); }

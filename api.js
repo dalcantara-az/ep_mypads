@@ -104,6 +104,7 @@ module.exports = (function () {
   var padAPI;
   var cacheAPI;
   var statsAPI;
+  var jwtDuration = 10; //seconds
 
   /**
   * `init` is the first function that takes an Express app as argument.
@@ -135,14 +136,21 @@ module.exports = (function () {
         it: JSON.parse(rFS(__dirname + '/templates/mail_it.json', rFSOpts)),
       }
     };
+
     auth.init(app);
-    authAPI(app);
     configurationAPI(app);
-    userAPI(app);
-    groupAPI(app);
-    padAPI(app);
     cacheAPI(app);
     statsAPI(app);
+
+    authAPI(app);
+    padAPI(app);
+
+    app.post(api.initialRoute + '*', fn.checkJwt);
+    app.get(api.initialRoute + '*', fn.checkJwt);
+    app.put(api.initialRoute + '*', fn.checkJwt);
+
+    userAPI(app);
+    groupAPI(app);
     perm.init(app);
 
     /**
@@ -277,6 +285,31 @@ module.exports = (function () {
   fn.ensureAuthenticated = passport.authenticate('jwt', { session: false });
 
   /**
+  * `checkJwt` is a middleware to check if the auth token of the request
+  * is expired or is invalid. Sends the appropriate error message if 
+  * expired/invalid. Proceeds to next() otherwise.
+  */
+  fn.checkJwt = function(req, res, next) {
+
+    var token = req.query.auth_token || req.body.auth_token;
+    jwt.verify(token, auth.secret, function(err, decoded) {
+      if (err) {
+        console.error('Error on the token: ', err.name);
+        var errMsg = 'BACKEND.ERROR.AUTHENTICATION.TOKEN_INCORRECT';
+        if (err.name === 'TokenExpiredError') {
+          errMsg = 'BACKEND.ERROR.AUTHENTICATION.SESSION_TIMEOUT';
+        }
+        return res.status(401).send({ error: errMsg, tokenError: true });
+      } 
+      if (decoded) {
+        // no errors; proceed
+        return next();
+      }
+    });
+
+  };
+
+  /**
   * `isAdmin` internal is a function that checks if current connnected user is
   * an Etherpad instance admin or not. It returns a boolean.
   */
@@ -343,7 +376,7 @@ module.exports = (function () {
     * http://etherpad.ndd/mypads/api/auth/check
     */
 
-    app.post(authRoute + '/check', fn.ensureAuthenticated,
+    app.post(authRoute + '/check', fn.checkJwt, fn.ensureAuthenticated,
       function (req, res) {
         auth.fn.localFn(req.body.login, req.body.password, function (err, u) {
           if (err) { return res.status(400).send({ error: err.message }); }
@@ -375,12 +408,14 @@ module.exports = (function () {
           if (u.active) {
             var token = {
               login: u.login,
-              key: auth.tokens[u.login].key
+              key: auth.tokens[u.login].key,
+              exp: Math.floor(Date.now() / 1000) + jwtDuration
             };
             return res.status(200).send({
               success: true,
               user: ld.omit(u, 'password'),
-              token: jwt.sign(token, auth.secret)
+              token: jwt.sign(token, auth.secret),
+              exp: token.exp
             });
           } else {
             var msg = 'BACKEND.ERROR.AUTHENTICATION.ACTIVATION_NEEDED';
@@ -414,7 +449,8 @@ module.exports = (function () {
         if (u.active) {
           var token = {
             login: u.login,
-            key: tokenKey
+            key: tokenKey,
+            exp: Math.floor(Date.now() / 1000) + jwtDuration
           };
           if (!u.eplAuthorToken && typeof(eplAuthorToken) !== 'undefined') {
             u.eplAuthorToken   = eplAuthorToken;
@@ -425,7 +461,8 @@ module.exports = (function () {
               return res.status(200).send({
                 success: true,
                 user: ld.omit(u, ['password']),
-                token: jwt.sign(token, auth.secret)
+                token: jwt.sign(token, auth.secret),
+                exp: token.exp
               });
             });
           } else {
@@ -453,6 +490,7 @@ module.exports = (function () {
       }
       
       user.get(req.body.login, function(err, u) {
+        if (err) { return res.status(400).send({ error: err.message }); }
         var verified = false;
         if(u.otpEnabled) {
           verified = speakeasy.totp.verify({ secret: u.otpSecret,
@@ -465,14 +503,16 @@ module.exports = (function () {
         if (verified) {
           var token = {
             login: u.login,
-            key: auth.tempTokens[u.login].key
+            key: auth.tempTokens[u.login].key,
+            exp: Math.floor(Date.now() / 1000) + jwtDuration
           };
           auth.tokens[u.login] = auth.tempTokens[u.login];
           delete auth.tempTokens[u.login];
           return res.status(200).send({
             success: true,
             user: ld.omit(u, ['password']),
-            token: jwt.sign(token, auth.secret)
+            token: jwt.sign(token, auth.secret),
+            exp: token.exp
           });
         } else {
           return res.status(400).send({error: 'BACKEND.ERROR.AUTHENTICATION.INVALID_OTP'});
@@ -483,13 +523,32 @@ module.exports = (function () {
     });
 
     /**
+    * Setup 2FA
+    */
+
+    app.put(authRoute + '/setup2fa', function(req, res){      
+      var login = req.body.login;
+      var otpSecret = req.body.otpSecret;
+      user.get(login, function (err, u) {        
+        if (err) { return res.status(400).send({ error: err.message }); }        
+        u.otpSecret = otpSecret;
+        u.otpEnabled = true;       
+        user.fn.set(u, function (err) {
+          if (err) { return res.status(400).send({ error: err.message }); }        
+          res.send({ success: true, user: ld.omit(u, ['password']), login: login });
+        });
+      });
+    });
+
+
+    /**
     * GET method : logout, method that destroy current cached token
     *
     * Sample URL:
     * http://etherpad.ndd/mypads/api/auth/logout
     */
 
-    app.get(authRoute + '/logout', fn.ensureAuthenticated, function (req, res) {
+    app.get(authRoute + '/logout', function (req, res) {
       delete auth.tokens[req.mypadsLogin];
       res.status(200).send({ success: true });
     });
@@ -508,11 +567,13 @@ module.exports = (function () {
         if (!u) { return res.status(400).send({ error: info.message }); }
         var token = {
           login: u.login,
-          key: auth.adminTokens[u.login].key
+          key: auth.adminTokens[u.login].key,
+          exp: Math.floor(Date.now() / 1000) + jwtDuration
         };
         return res.status(200).send({
           success: true,
-          token: jwt.sign(token, auth.secret)
+          token: jwt.sign(token, auth.secret),
+          exp: token.exp
         });
       });
     });
@@ -873,24 +934,6 @@ module.exports = (function () {
         res.send({ users: users, usersCount: ld.size(users) });
       }
     );
-
-    /**
-    * Setup 2FA
-    */
-
-    app.put(userRoute + '/setup2fa', function(req, res){      
-      var login = req.body.login;
-      var otpSecret = req.body.otpSecret;
-      user.get(login, function (err, u) {        
-        if (err) { return res.status(400).send({ error: err.message }); }        
-        u.otpSecret = otpSecret;
-        u.otpEnabled = true;       
-        user.fn.set(u, function (err) {
-          if (err) { return res.status(400).send({ error: err.message }); }        
-          res.send({ success: true, user: ld.omit(u, ['password']), login: login });
-        });
-      });
-    });
 
     /**
     * Disable 2FA
@@ -1734,7 +1777,7 @@ module.exports = (function () {
     };
 
     
-    app.get(padRoute + '/search', function (req, res) {
+    app.get(padRoute + '/search', fn.checkJwt, function (req, res) {
       var searcherUtil = require('./searcher');
       var u = auth.fn.getUser(req.body.auth_token || req.query.auth_token);
       if (!u) {
@@ -1758,7 +1801,7 @@ module.exports = (function () {
     */
 
     // TODO: + admin, no pass needed...
-    app.get(padRoute + '/:key',
+    app.get(padRoute + '/:key', fn.checkJwt, 
       ld.partial(canAct, false, function (req, res, val) {
         return res.send({ key: req.params.key, value: val });
       })
@@ -1779,7 +1822,7 @@ module.exports = (function () {
     * http://etherpad.ndd/mypads/api/pad
     */
 
-    app.post(padRoute, function (req, res) {
+    app.post(padRoute, fn.checkJwt, function (req, res) {
       var isAdmin = fn.isAdmin(req);
       var u;
       if (!isAdmin) { u = auth.fn.getUser(req.body.auth_token); }
@@ -1821,7 +1864,7 @@ module.exports = (function () {
     * http://etherpad.ndd/mypads/api/pad/xxx
     */
 
-    app.put(padRoute + '/:key', ld.partial(canAct, true, _set));
+    app.put(padRoute + '/:key', fn.checkJwt, ld.partial(canAct, true, _set));
 
     /**
     * DELETE method : `pad.del` with pad id
@@ -1830,7 +1873,7 @@ module.exports = (function () {
     * http://etherpad.ndd/mypads/api/pad/xxxx
     */
 
-    app.delete(padRoute + '/:key', function (req, res) {
+    app.delete(padRoute + '/:key', fn.checkJwt, function (req, res) {
       var isAdmin = fn.isAdmin(req);
       var u;
       if (!isAdmin) { u = auth.fn.getUser(req.body.auth_token); }
@@ -1847,7 +1890,7 @@ module.exports = (function () {
     * http://etherpad.ndd/mypads/api/pad/chathistory/xxxx
     */
 
-    app.delete(padRoute + '/chathistory/:key', function (req, res) {
+    app.delete(padRoute + '/chathistory/:key', fn.checkJwt, function (req, res) {
       var isAdmin = fn.isAdmin(req);
       var u;
       if (!isAdmin) { u = auth.fn.getUser(req.body.auth_token); }
@@ -1881,7 +1924,7 @@ module.exports = (function () {
       });
     });
 
-    app.get(padRoute + '/getLastEdited/:key', function (req, res) {
+    app.get(padRoute + '/getLastEdited/:key', fn.checkJwt, function (req, res) {
       var etherpadAPI = require('ep_etherpad-lite/node/db/API');
 
       var padId = req.params.key; 
@@ -1897,7 +1940,7 @@ module.exports = (function () {
     });
 
 
-    app.get(padRoute + '/getRelevantPads/:u', function (req, res){
+    app.get(padRoute + '/getRelevantPads/:u', fn.checkJwt, function (req, res){
       var u = auth.fn.getUser(req.params.u);
       var etherpadAPI = require('ep_etherpad-lite/node/db/API');
       user.get(u.login, function (err, u) {

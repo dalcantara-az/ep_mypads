@@ -127,7 +127,8 @@
             "PLEASE_CHANGE_YOUR_PASSWORD": "Your password is the one registered when using external authentification. This server use internal authentication and as a safety mesure, this password is not allowed. Please click on the \"Lost your password?\" link to change it and be able to login.",
             "TOKEN_INCORRECT": "Your security token is invalid.",
             "INVALID_LOGIN": "Username/Password is incorrect.",
-            "INVALID_OTP": "One-time Password is invalid."
+            "INVALID_OTP": "One-time Password is invalid.",
+            "SESSION_TIMEOUT": "Your session has timed out. Please login again to proceed."
          },
          "CONFIGURATION": {
             "CANTGET": "Configuration loading has failed. Please contact your administrator.",
@@ -470,6 +471,7 @@
       "SETUP_2FA_STEP1": "Install Google Authenticator app on your device and scan the QR code below:",
       "SETUP_2FA_STEP2": "Enter the One-Time Password you see in the Authenticator App:",
       "SETUP_2FA_NOTE": "Note: As this is Time Based OTP, make sure the device with the Google Authenticator App and the device accessing Etherpad should have their date and time synced with internet time to avoid problems.",
+      "INPUT_OTP_NOTE": "Note: Your OTP can be found in the Google Authenticator App of the device you used during the initial setup of your 2FA.",
       "SUBSCRIBE": "Subscribe",
       "TWOFA": "Two-factor Authentication",
       "TWOFA_ENABLED": "Two-factor Authentication Enabled",

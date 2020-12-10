@@ -36,6 +36,7 @@ module.exports = (function () {
   var conf  = require('../configuration.js');
   var model = require('../model/group.js');
   var notif = require('../widgets/notification.js');
+  var cookies = require('js-cookie');
 
   var remove = {};
 
@@ -63,6 +64,7 @@ module.exports = (function () {
         notif.success({ body: conf.LANG.GROUP.INFO.REMOVE_SUCCESS });
         m.route('/mypads/group/list');
       }, function (err) {
+        checkJwtErr(err);
         notif.error({ body: ld.result(conf.LANG, err.error) });
       });
     } else {
@@ -71,6 +73,47 @@ module.exports = (function () {
   };
 
   remove.view = function () {};
+
+  /** 
+  * ##checkJwtErr
+  * For handling timeout error (check api.js for fn.checkJwt). 
+  *
+  * If error is confirmed to be incorrect token or session timeout (expired jwt),
+  * this will send a logout api call (to do necessary server side processing) 
+  * and handle response in the client side accordingly.
+  *
+  * Note: logout part copied (with minor modifications) from logout.js 
+  *
+  */
+
+  var checkJwtErr = function (err) {
+    if (err && (err.error === 'BACKEND.ERROR.AUTHENTICATION.SESSION_TIMEOUT' ||
+         err.error === 'BACKEND.ERROR.AUTHENTICATION.TOKEN_INCORRECT')) {      
+      if (!auth.isAuthenticated()) { return m.route('/login'); }
+      m.request({
+        method: 'GET',
+        url: conf.URLS.LOGOUT,
+        config: auth.fn.xhrConfig
+      }).then(function () {
+        /*
+         * Fix pad authorship mixup
+         * See https://framagit.org/framasoft/ep_mypads/issues/148
+         */
+        if (cookies.get('token')) {
+          cookies.set('token-' + auth.userInfo().login, cookies.get('token'), { expires: 365 });
+          cookies.remove('token');
+        }
+        auth.userInfo(null);
+        localStorage.removeItem('token');
+        localStorage.removeItem('exp');
+        m.route('/login');
+      }, function(err) {
+        notif.error({ body: ld.result(conf.LANG, err.error) });
+      });
+      return true;
+    }
+    return false;
+  }
 
   return remove;
 }).call(this);

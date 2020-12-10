@@ -13,6 +13,7 @@ module.exports = (function () {
   var sortingPreferences = require('../helpers/sortingPreferences.js');
   var padWatch = require('./pad-watch.js');
   var padMark = require('./pad-mark.js');
+  var cookies = require('js-cookie');
 
   var dashboard = {};
 
@@ -130,6 +131,7 @@ module.exports = (function () {
       model.fetch(c.computeSearchResults());
       
     }, function (err) {
+      checkJwtErr(err);
       notif.error({ body: ld.result(conf.LANG, err.error) });
     });
      
@@ -455,6 +457,48 @@ module.exports = (function () {
   dashboard.view = function (c) {
     return layout.view(view.main(c), view.aside(c));
   };
+
+  
+  /** 
+  * ##checkJwtErr
+  * For handling timeout error (check api.js for fn.checkJwt). 
+  *
+  * If error is confirmed to be incorrect token or session timeout (expired jwt),
+  * this will send a logout api call (to do necessary server side processing) 
+  * and handle response in the client side accordingly.
+  *
+  * Note: logout part copied (with minor modifications) from logout.js 
+  *
+  */
+
+  var checkJwtErr = function (err) {
+    if (err && (err.error === 'BACKEND.ERROR.AUTHENTICATION.SESSION_TIMEOUT' ||
+         err.error === 'BACKEND.ERROR.AUTHENTICATION.TOKEN_INCORRECT')) {      
+      if (!auth.isAuthenticated()) { return m.route('/login'); }
+      m.request({
+        method: 'GET',
+        url: conf.URLS.LOGOUT,
+        config: auth.fn.xhrConfig
+      }).then(function () {
+        /*
+         * Fix pad authorship mixup
+         * See https://framagit.org/framasoft/ep_mypads/issues/148
+         */
+        if (cookies.get('token')) {
+          cookies.set('token-' + auth.userInfo().login, cookies.get('token'), { expires: 365 });
+          cookies.remove('token');
+        }
+        auth.userInfo(null);
+        localStorage.removeItem('token');
+        localStorage.removeItem('exp');
+        m.route('/login');
+      }, function(err) {
+        notif.error({ body: ld.result(conf.LANG, err.error) });
+      });
+      return true;
+    }
+    return false;
+  }
 
   return dashboard;
 

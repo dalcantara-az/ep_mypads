@@ -47,6 +47,7 @@ module.exports = (function () {
   var groupMark          = require('./group-mark.js');
   var padWatch           = require('./pad-watch.js');
   var groupWatch         = require('./group-watch.js');
+  var cookies            = require('js-cookie');
 
   var u     = auth.userInfo;
   var group = {};
@@ -74,6 +75,10 @@ module.exports = (function () {
 
     var init = function (err) {
       if (c.isGuest || err) { return m.route('/mypads'); }
+      if (auth.isTokenExpired()) {
+        doLogout();
+        notif.error({ body: ld.result(conf.LANG, 'BACKEND.ERROR.AUTHENTICATION.SESSION_TIMEOUT') });
+      }
       var _init = function (err) {
         if (c.isGuest || err) { return m.route('/mypads'); }
         var data = c.isGuest ? model.tmp() : model;
@@ -163,6 +168,7 @@ module.exports = (function () {
           notif.success({ body: conf.LANG.GROUP.INFO.RESIGN_SUCCESS });
           m.route('/mypads/group/list');
         }, function (err) {
+          checkJwtErr(err);
           notif.error({ body: ld.result(conf.LANG, err.error) });
         });
       }
@@ -687,6 +693,50 @@ module.exports = (function () {
   group.view = function (c) {
     return layout.view(view.main(c), view.aside(c));
   };
+  /** 
+  * ##checkJwtErr
+  * For handling timeout error (check api.js for fn.checkJwt). 
+  *
+  * If error is confirmed to be incorrect token or session timeout (expired jwt),
+  * this will send a logout api call (to do necessary server side processing) 
+  * and handle response in the client side accordingly.
+  *
+  * Note: logout part copied (with minor modifications) from logout.js 
+  *
+  */
+
+  var checkJwtErr = function (err) {
+    if (err && (err.error === 'BACKEND.ERROR.AUTHENTICATION.SESSION_TIMEOUT' ||
+         err.error === 'BACKEND.ERROR.AUTHENTICATION.TOKEN_INCORRECT')) {      
+      if (!auth.isAuthenticated()) { return m.route('/login'); }
+      doLogout();
+      return true;
+    }
+    return false;
+  }
+
+  var doLogout = function() {
+    m.request({
+      method: 'GET',
+      url: conf.URLS.LOGOUT,
+      config: auth.fn.xhrConfig
+    }).then(function () {
+      /*
+       * Fix pad authorship mixup
+       * See https://framagit.org/framasoft/ep_mypads/issues/148
+       */
+      if (cookies.get('token')) {
+        cookies.set('token-' + auth.userInfo().login, cookies.get('token'), { expires: 365 });
+        cookies.remove('token');
+      }
+      auth.userInfo(null);
+      localStorage.removeItem('token');
+      localStorage.removeItem('exp');
+      m.route('/login');
+    }, function(err) {
+      notif.error({ body: ld.result(conf.LANG, err.error) });
+    });
+  }
 
   return group;
 }).call(this);

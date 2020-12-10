@@ -44,6 +44,8 @@ module.exports = (function () {
   var expandPad = require('../helpers/expandPad.js');
   var ready     = require('../helpers/ready.js');
   var padWatch  = require('./pad-watch.js');
+  var notif     = require('../widgets/notification.js');
+  var cookies   = require('js-cookie');
 
   var pad = {};
 
@@ -87,6 +89,10 @@ module.exports = (function () {
 
     var init = function (err) {
       if (err || !c.isAuth) { return m.route('/mypads'); }
+      if (auth.isTokenExpired()) {
+        doLogout();
+        notif.error({ body: ld.result(conf.LANG, 'BACKEND.ERROR.AUTHENTICATION.SESSION_TIMEOUT') });
+      }
       var _init = function () {
         var data = c.isGuest ? model.tmp() : model;
         c.group  = data.groups()[c.gid] || {};
@@ -352,6 +358,29 @@ module.exports = (function () {
   pad.view = function (c) {
     return layout.view(view.main(c), view.aside());
   };
+
+  var doLogout = function() {
+    m.request({
+      method: 'GET',
+      url: conf.URLS.LOGOUT,
+      config: auth.fn.xhrConfig
+    }).then(function () {
+      /*
+       * Fix pad authorship mixup
+       * See https://framagit.org/framasoft/ep_mypads/issues/148
+       */
+      if (cookies.get('token')) {
+        cookies.set('token-' + auth.userInfo().login, cookies.get('token'), { expires: 365 });
+        cookies.remove('token');
+      }
+      auth.userInfo(null);
+      localStorage.removeItem('token');
+      localStorage.removeItem('exp');
+      m.route('/login');
+    }, function(err) {
+      notif.error({ body: ld.result(conf.LANG, err.error) });
+    });
+  }
 
   return pad;
 
