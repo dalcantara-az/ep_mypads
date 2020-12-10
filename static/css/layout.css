@@ -244,4 +244,10 @@ span.h5.folder-title {
   margin-top: 30px;
 }
 
+.note-otp {
+  padding-bottom: 20px;
+  text-align: justify;
+  margin-top: 30px;
+}
+
 /* Customizations for Azeus: End */
