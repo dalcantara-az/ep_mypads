@@ -71,16 +71,26 @@ module.exports = (function () {
     if (auth.isAuthenticated()) {
       c.bookmarks = auth.userInfo().bookmarks.pads;
     }
-    c.isGuest = !auth.isAuthenticated();
+    c.isGuest = !auth.isAuthenticated() || auth.isTokenExpired();
 
     var init = function (err) {
-      if (c.isGuest || err) { return m.route('/mypads'); }
-      if (auth.isTokenExpired()) {
-        doLogout();
-        notif.error({ body: ld.result(conf.LANG, 'BACKEND.ERROR.AUTHENTICATION.SESSION_TIMEOUT') });
+      if (c.isGuest || err) { 
+        conf.unauthUrl(true);
+        localStorage.removeItem('token');
+        localStorage.removeItem('exp');
+        var errMsg = auth.isTokenExpired() ? 'BACKEND.ERROR.AUTHENTICATION.SESSION_TIMEOUT' : err.error;
+        notif.error({ body: ld.result(conf.LANG, errMsg) });
+        return m.route('/login'); 
       }
       var _init = function (err) {
-        if (c.isGuest || err) { return m.route('/mypads'); }
+        if (c.isGuest || err) { 
+          conf.unauthUrl(true);
+          localStorage.removeItem('token');
+          localStorage.removeItem('exp');
+          errMsg = auth.isTokenExpired() ? 'BACKEND.ERROR.AUTHENTICATION.SESSION_TIMEOUT' : err.error;
+          notif.error({ body: ld.result(conf.LANG, errMsg) });
+          return m.route('/login'); 
+        }
         var data = c.isGuest ? model.tmp() : model;
         c.group  = data.groups()[key];
         if (!c.isGuest) {
@@ -708,7 +718,7 @@ module.exports = (function () {
   var checkJwtErr = function (err) {
     if (err && (err.error === 'BACKEND.ERROR.AUTHENTICATION.SESSION_TIMEOUT' ||
          err.error === 'BACKEND.ERROR.AUTHENTICATION.TOKEN_INCORRECT')) {      
-      if (!auth.isAuthenticated()) { return m.route('/login'); }
+      //if (!auth.isAuthenticated()) { return m.route('/login'); }
       doLogout();
       return true;
     }

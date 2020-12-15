@@ -55,35 +55,14 @@ module.exports = (function () {
   */
 
   group.controller = function () {
-    if (!auth.isAuthenticated()) {
+    if (!auth.isAuthenticated() || auth.isTokenExpired()) {
       conf.unauthUrl(true);
-      return m.route('/login');
+      localStorage.removeItem('token');
+      localStorage.removeItem('exp');
+      var errMsg = 'BACKEND.ERROR.AUTHENTICATION.SESSION_TIMEOUT';
+      notif.error({ body: ld.result(conf.LANG, errMsg) });
+      return m.route('/login'); 
     }
-
-    if (auth.isTokenExpired()) {
-      m.request({
-        method: 'GET',
-        url: conf.URLS.LOGOUT,
-        config: auth.fn.xhrConfig
-      }).then(function () {
-        /*
-         * Fix pad authorship mixup
-         * See https://framagit.org/framasoft/ep_mypads/issues/148
-         */
-        if (cookies.get('token')) {
-          cookies.set('token-' + auth.userInfo().login, cookies.get('token'), { expires: 365 });
-          cookies.remove('token');
-        }
-        auth.userInfo(null);
-        localStorage.removeItem('token');
-        localStorage.removeItem('exp');
-        notif.error({ body: ld.result(conf.LANG, 'BACKEND.ERROR.AUTHENTICATION.SESSION_TIMEOUT') });
-        m.route('/login');
-      }, function(err) {
-        notif.error({ body: ld.result(conf.LANG, err.error) });
-      });
-    }
-
 
     document.title = conf.LANG.GROUP.MYGROUPS + ' - ' + conf.SERVER.title;
     var c          = { groups: {} };

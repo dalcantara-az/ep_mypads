@@ -88,10 +88,13 @@ module.exports = (function () {
     */
 
     var init = function (err) {
-      if (err || !c.isAuth) { return m.route('/mypads'); }
-      if (auth.isTokenExpired()) {
-        doLogout();
-        notif.error({ body: ld.result(conf.LANG, 'BACKEND.ERROR.AUTHENTICATION.SESSION_TIMEOUT') });
+      if (err || !c.isAuth || auth.isTokenExpired()) { 
+        conf.unauthUrl(true);
+        localStorage.removeItem('token');
+        localStorage.removeItem('exp');
+        var errMsg = auth.isTokenExpired() ? 'BACKEND.ERROR.AUTHENTICATION.SESSION_TIMEOUT' : err.error;
+        notif.error({ body: ld.result(conf.LANG, errMsg) });
+        return m.route('/login'); 
       }
       var _init = function () {
         var data = c.isGuest ? model.tmp() : model;

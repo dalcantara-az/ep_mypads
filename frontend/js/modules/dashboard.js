@@ -13,6 +13,7 @@ module.exports = (function () {
   var sortingPreferences = require('../helpers/sortingPreferences.js');
   var padWatch = require('./pad-watch.js');
   var padMark = require('./pad-mark.js');
+  var notif   = require('../widgets/notification.js');
   var cookies = require('js-cookie');
 
   var dashboard = {};
@@ -24,9 +25,13 @@ module.exports = (function () {
   */
 
   dashboard.controller = function () {
-    if (!auth.isAuthenticated()) {
+    if (!auth.isAuthenticated() || auth.isTokenExpired()) {
       conf.unauthUrl(true);
-      return m.route('/login');
+      localStorage.removeItem('token');
+      localStorage.removeItem('exp');
+      var errMsg ='BACKEND.ERROR.AUTHENTICATION.SESSION_TIMEOUT';
+      notif.error({ body: ld.result(conf.LANG, errMsg) });
+      return m.route('/login'); 
     }
     document.title = conf.LANG.DASHBOARD.TITLE + ' - ' + conf.SERVER.title;
 
@@ -42,7 +47,7 @@ module.exports = (function () {
       c.pads = [];
       m.request({
         method: 'GET',
-        url: conf.URLS.PAD + '/getRelevantPads/' + auth.token()
+        url: conf.URLS.PAD + '/getRelevantPads/' + auth.token() + '?auth_token=' + auth.token()
       }).then(function (resp) {  
       for(var i = 0; i < Object.keys(resp.value.pads).length; i++){
           c.pads.push(resp.value.pads[i]);
@@ -83,7 +88,8 @@ module.exports = (function () {
       }
 
       }, function (err) {
-        //notif.error({ body: ld.result(conf.LANG, err.error) });
+        if (checkJwtErr(err)) { return; }
+        notif.error({ body: ld.result(conf.LANG, err.error) });
       });
       
     };

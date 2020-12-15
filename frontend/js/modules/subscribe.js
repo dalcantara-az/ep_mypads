@@ -537,6 +537,7 @@ module.exports = (function () {
         auth.userInfo(null);
         localStorage.removeItem('token');
         localStorage.removeItem('exp');
+        conf.unauthUrl(true);
         m.route('/login');
       }, function(err) {
         notif.error({ body: ld.result(conf.LANG, err.error) });

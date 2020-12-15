@@ -585,7 +585,7 @@ module.exports = (function () {
     * http://etherpad.ndd/mypads/api/auth/admin/logout
     */
 
-    app.get(authRoute + '/admin/logout', fn.ensureAdmin, function (req, res) {
+    app.get(authRoute + '/admin/logout', function (req, res) {
       delete auth.adminTokens[req.mypadsLogin];
       return res.status(200).send({ success: true });
     });

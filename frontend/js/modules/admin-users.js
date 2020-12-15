@@ -51,7 +51,14 @@ module.exports = (function () {
   */
 
   admin.controller = function () {
-    if (!auth.isAdmin()) { return m.route('/admin'); }
+    if (!auth.isAdmin() || auth.isTokenExpired()) {
+      if (auth.isTokenExpired()) {
+        notif.error({ body: ld.result(conf.LANG, 'BACKEND.ERROR.AUTHENTICATION.SESSION_TIMEOUT') });
+      }
+      localStorage.removeItem('admToken');
+      localStorage.removeItem('exp');
+      return m.route('/admin'); 
+    }
     document.title = conf.LANG.ADMIN.FORM_USERS_SEARCH + ' - ' +
       conf.SERVER.title;
 
@@ -80,10 +87,12 @@ module.exports = (function () {
         c.usersCount(resp.usersCount);
         notif.info({ body: conf.LANG.ADMIN.INFO.USER_FOUND });
       }, function (err) {
-        checkJwtErr(err);
+        notif.error({ body: ld.result(conf.LANG, err.error) });
+        if(checkJwtErr(err)) {
+          return;
+        }
         c.users(false);
         c.usersCount(false);
-        notif.error({ body: ld.result(conf.LANG, err.error) });
       });
     };
 
@@ -100,9 +109,12 @@ module.exports = (function () {
         c.usersCount(resp.usersCount);
         notif.info({ body: conf.LANG.ADMIN.INFO.USER_FOUND });
       }, function (err) {
+        notif.error({ body: ld.result(conf.LANG, err.error) });
+        if(checkJwtErr(err)) {
+          return;
+        }
         c.users(false);
         c.usersCount(false);
-        notif.error({ body: ld.result(conf.LANG, err.error) });
       });
     };
 
@@ -257,15 +269,19 @@ module.exports = (function () {
 
   var checkJwtErr = function (err) {
     if (err && (err.error === 'BACKEND.ERROR.AUTHENTICATION.SESSION_TIMEOUT' ||
-         err.error === 'BACKEND.ERROR.AUTHENTICATION.TOKEN_INCORRECT')) {      
-      if (!auth.isAuthenticated()) { return m.route('/login'); }
+         err.error === 'BACKEND.ERROR.AUTHENTICATION.TOKEN_INCORRECT')) {
+      if (!auth.isAdmin()) {  
+        m.route('/admin'); 
+        return true;
+      }
       m.request({
         method: 'GET',
         url: conf.URLS.AUTH + '/admin/logout',
         data: { auth_token: auth.admToken() }
       }).then(function () {
-      document.title = conf.SERVER.title;
-      localStorage.removeItem('admToken');
+        document.title = conf.SERVER.title;
+        localStorage.removeItem('admToken');
+        localStorage.removeItem('exp');
         m.route('/admin');
       }, function(err) {
         notif.error({ body: ld.result(conf.LANG, err.error) });
@@ -274,6 +290,7 @@ module.exports = (function () {
     }
     return false;
   }
+
   return admin;
 
 }).call(this);

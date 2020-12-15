@@ -58,13 +58,20 @@ module.exports = (function () {
     localStorage.removeItem('exp');
     form.initFields(c, ['login', 'password']);
     var init = function (resp) {
-      if (resp) { localStorage.setItem('admToken', resp.token); }
+      if (resp) { 
+        localStorage.setItem('admToken', resp.token); 
+        localStorage.setItem('exp', resp.exp);
+      }
       m.request({
         url: conf.URLS.CONF,
         method: 'GET',
         data: { auth_token: auth.admToken() }
       }).then(function (resp) {
-        if (!resp.auth) { return localStorage.removeItem('admToken'); }
+        if (!resp.auth) {
+          localStorage.removeItem('admToken');
+          localStorage.removeItem('exp');
+          return;
+        }
         form.initFields(c, ['title', 'rootUrl', 'allowEtherPads',
           'passwordMin', 'passwordMax', 'defaultLanguage', 'checkMails',
           'tokenDuration', 'SMTPHost', 'SMTPPort', 'SMTPSSL', 'SMTPTLS',
@@ -104,7 +111,9 @@ module.exports = (function () {
         notif.error({ body: ld.result(conf.LANG, err.error) });
       });
     };
-    if (auth.isAdmin()) { init(); }
+    if (auth.isAdmin()) {
+     init(); 
+   }
 
     /**
     * ### login
@@ -681,7 +690,7 @@ module.exports = (function () {
   };
 
   view.aside = function () {
-    var helpKey = (auth.isAdmin() ? 'HELP_SETTINGS' : 'HELP_LOGIN');
+    var helpKey = ((auth.isAdmin()) ? 'HELP_SETTINGS' : 'HELP_LOGIN');
     return m('section.user-aside', [
       m('h2', conf.LANG.ACTIONS.HELP),
       m('article.well', m.trust(conf.LANG.ADMIN[helpKey]))

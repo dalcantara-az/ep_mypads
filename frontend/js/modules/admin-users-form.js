@@ -51,7 +51,12 @@ module.exports = (function () {
   */
 
   admin.controller = function () {
-    if (!auth.isAdmin()) { return m.route('/admin'); }
+    if (!auth.isAdmin() || auth.isTokenExpired()) {
+      if (auth.isTokenExpired()) {
+        notif.error({ body: ld.result(conf.LANG, 'BACKEND.ERROR.AUTHENTICATION.SESSION_TIMEOUT') });
+      }
+      return m.route('/admin'); 
+    }
     document.title = conf.LANG.ADMIN.FORM_USER_EDIT + ' - ' + conf.SERVER.title;
 
     var c = {
@@ -85,8 +90,9 @@ module.exports = (function () {
     */
 
     var errfn = function (err) {
-      checkJwtErr(err);
-      m.route('/admin/users');
+      if (!checkJwtErr(err)) {
+        m.route('/admin/users');
+      }
       return notif.error({ body: ld.result(conf.LANG, err.error) });
     };
 
@@ -170,31 +176,26 @@ module.exports = (function () {
   * this will send a logout api call (to do necessary server side processing) 
   * and handle response in the client side accordingly.
   *
-  * Note: logout part copied (with minor modifications) from logout.js 
+  * Note: logout part copied (with minor modifications) from admin-logout.js
   *
   */
 
   var checkJwtErr = function (err) {
     if (err && (err.error === 'BACKEND.ERROR.AUTHENTICATION.SESSION_TIMEOUT' ||
-         err.error === 'BACKEND.ERROR.AUTHENTICATION.TOKEN_INCORRECT')) {      
-      if (!auth.isAuthenticated()) { return m.route('/login'); }
+         err.error === 'BACKEND.ERROR.AUTHENTICATION.TOKEN_INCORRECT')) {
+      if (!auth.isAdmin()) {  
+        m.route('/admin'); 
+        return true;
+      }
       m.request({
         method: 'GET',
-        url: conf.URLS.LOGOUT,
-        config: auth.fn.xhrConfig
+        url: conf.URLS.AUTH + '/admin/logout',
+        data: { auth_token: auth.admToken() }
       }).then(function () {
-        /*
-         * Fix pad authorship mixup
-         * See https://framagit.org/framasoft/ep_mypads/issues/148
-         */
-        if (cookies.get('token')) {
-          cookies.set('token-' + auth.userInfo().login, cookies.get('token'), { expires: 365 });
-          cookies.remove('token');
-        }
-        auth.userInfo(null);
-        localStorage.removeItem('token');
+        document.title = conf.SERVER.title;
+        localStorage.removeItem('admToken');
         localStorage.removeItem('exp');
-        m.route('/login');
+        m.route('/admin');
       }, function(err) {
         notif.error({ body: ld.result(conf.LANG, err.error) });
       });
