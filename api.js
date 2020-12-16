@@ -104,7 +104,7 @@ module.exports = (function () {
   var padAPI;
   var cacheAPI;
   var statsAPI;
-  var jwtDuration = 120; //seconds
+  var jwtDuration = 604800; //seconds
 
   /**
   * `init` is the first function that takes an Express app as argument.
