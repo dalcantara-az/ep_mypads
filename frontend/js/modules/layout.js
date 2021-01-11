@@ -115,11 +115,6 @@ module.exports = (function () {
           route: '/login',
           icon: 'lock',
           txt: conf.LANG.USER.LOGIN
-        },
-        {
-          route: '/subscribe',
-          icon: 'user',
-          txt: conf.LANG.USER.SUBSCRIBE
         }
       ]
     };
