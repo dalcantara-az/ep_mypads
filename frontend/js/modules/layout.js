@@ -220,8 +220,9 @@ module.exports = (function () {
       ]),
       m('section', { class: 'notification' }, notif.view(notif.controller())),
       m(footer, m('p', [
-        m('span', m.trust(conf.LANG.GLOBAL.FOOTER + ' | ')),
-        m('a', { href: '/admin', config: m.route }, conf.LANG.MENU.ADMIN)
+        m('span', m.trust(conf.LANG.GLOBAL.FOOTER + '<br>')),
+        m('span', m.trust(conf.LANG.GLOBAL.FOOTER2))/*,
+        m('a', { href: '/admin', config: m.route }, conf.LANG.MENU.ADMIN)*/
       ]))
     ];
   };

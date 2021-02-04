@@ -103,6 +103,7 @@ module.exports = (function () {
   var groupAPI;
   var padAPI;
   var cacheAPI;
+  var accountSetupAPI;
   var statsAPI;
   var jwtDuration = 604800; //seconds
 
@@ -144,6 +145,7 @@ module.exports = (function () {
 
     authAPI(app);
     padAPI(app);
+    accountSetupAPI(app);
 
     app.post(api.initialRoute + '*', fn.checkJwt);
     app.get(api.initialRoute + '*', fn.checkJwt);
@@ -1116,124 +1118,6 @@ module.exports = (function () {
         // canEdit(req, res, successFn);
       }
     )
-    /**
-    * POST method : special password recovery with mail sending.
-    * Need to have the email address into the body
-    *
-    * Sample URL:
-    * http://etherpad.ndd/mypads/api/passrecover
-    */
-
-    app.post(api.initialRoute + 'passrecover', function (req, res) {
-      var email = req.body.email;
-      var err;
-      if (conf.isNotInternalAuth()) {
-        err = 'BACKEND.ERROR.AUTHENTICATION.NO_RECOVER';
-        return res.status(400).send({ error: err });
-      }
-      if (!ld.isEmail(email)) {
-        err = 'BACKEND.ERROR.TYPE.MAIL';
-        return res.status(400).send({ error: err });
-      }
-      if (!userCache.emails[email]) {
-        err = 'BACKEND.ERROR.USER.NOT_FOUND';
-        return res.status(404).send({ error: err });
-      }
-      if (conf.get('rootUrl').length === 0) {
-        err = 'BACKEND.ERROR.CONFIGURATION.ROOTURL_NOT_CONFIGURED';
-        return res.status(501).send({ error: err });
-      }
-      user.get(email, function (err, u) {
-        if (err) { return res.status(400).send({ error: err }); }
-        var token = mail.genToken({ login: u.login, action: 'passrecover' });
-        var subject = fn.mailMessage('PASSRECOVER_SUBJECT', {
-          title: conf.get('title') }, u.lang);
-        var message = fn.mailMessage('PASSRECOVER', {
-          login: u.login,
-          title: conf.get('title'),
-          url: conf.get('rootUrl') + '/mypads/index.html?/passrecover/' + token,
-          duration: conf.get('tokenDuration')
-        }, u.lang);
-        mail.send(u.email, subject, message, function (err) {
-          if (err) { return res.status(501).send({ error: err }); }
-          return res.send({ success: true });
-        });
-      });
-    });
-
-    /**
-    * PUT method : password recovery with token and new password
-    * Need to have the login into the body
-    *
-    * Sample URL:
-    * http://etherpad.ndd/mypads/api/passrecover
-    */
-
-    app.put(api.initialRoute + 'passrecover/:token', function (req, res) {
-      var err;
-      var val       = mail.tokens[req.params.token];
-      var badLogin  = (!val || !val.login || !userCache.logins[val.login]);
-      var badAction = (!val || !val.action || (val.action !== 'passrecover'));
-      if (conf.isNotInternalAuth()) {
-        err = 'BACKEND.ERROR.AUTHENTICATION.NO_RECOVER';
-        return res.status(400).send({ error: err });
-      }
-      if (badLogin || badAction) {
-        err = 'BACKEND.ERROR.TOKEN.INCORRECT';
-        return res.status(400).send({ error: err });
-      }
-      if (!mail.isValidToken(req.params.token)) {
-        err = 'BACKEND.ERROR.TOKEN.EXPIRED';
-        return res.status(400).send({ error: err });
-      }
-      var pass  = req.body.password;
-      var passC = req.body.passwordConfirm;
-      if (!pass || (pass !== passC)) {
-        err = 'USER.ERR.PASSWORD_MISMATCH';
-        return res.status(400).send({ error: err });
-      }
-      user.get(val.login, function (err, u) {
-        if (err) { return res.status(400).send({ error: err.message }); }
-        u.password = pass;
-        if (!u.active) { u.active = true; }
-        user.set(u, function (err) {
-          if (err) { return res.status(400).send({ error: err.message }); }
-          res.send({ success: true, login: val.login });
-        });
-      });
-    });
-
-    /**
-    * POST method : account confirmation with token on body
-    *
-    * Sample URL:
-    * http://etherpad.ndd/mypads/api/accountconfirm
-    */
-
-    app.post(api.initialRoute + 'accountconfirm', function (req, res) {
-      var val = mail.tokens[req.body.token];
-      var err;
-      if (conf.isNotInternalAuth()) {
-        err = 'BACKEND.ERROR.AUTHENTICATION.NO_RECOVER';
-        return res.status(400).send({ error: err });
-      }
-      if (!val || !val.action || (val.action !== 'accountconfirm')) {
-        err = 'BACKEND.ERROR.TOKEN.INCORRECT';
-        return res.status(400).send({ error: err });
-      }
-      if (!mail.isValidToken(req.body.token)) {
-        err = 'BACKEND.ERROR.TOKEN.EXPIRED';
-        return res.status(400).send({ error: err });
-      }
-      user.get(val.login, function (err, u) {
-        if (err) { return res.status(400).send({ error: err.message }); }
-        u.active = true;
-        user.fn.set(u, function (err) {
-          if (err) { return res.status(400).send({ error: err.message }); }
-          res.send({ success: true, login: val.login });
-        });
-      });
-    });
 
     app.post(notifyUsersRoute, urlencodedParser, function(req, res) {
       var u = auth.fn.getUser(req.body.auth_token);
@@ -2052,6 +1936,128 @@ module.exports = (function () {
         }
       });
      }); 
+  };
+
+  accountSetupAPI = function (app) {
+
+    /**
+    * POST method : special password recovery with mail sending.
+    * Need to have the email address into the body
+    *
+    * Sample URL:
+    * http://etherpad.ndd/mypads/api/passrecover
+    */
+
+    app.post(api.initialRoute + 'passrecover', function (req, res) {
+      var email = req.body.email;
+      var err;
+      if (conf.isNotInternalAuth()) {
+        err = 'BACKEND.ERROR.AUTHENTICATION.NO_RECOVER';
+        return res.status(400).send({ error: err });
+      }
+      if (!ld.isEmail(email)) {
+        err = 'BACKEND.ERROR.TYPE.MAIL';
+        return res.status(400).send({ error: err });
+      }
+      if (!userCache.emails[email]) {
+        err = 'BACKEND.ERROR.USER.NOT_FOUND';
+        return res.status(404).send({ error: err });
+      }
+      if (conf.get('rootUrl').length === 0) {
+        err = 'BACKEND.ERROR.CONFIGURATION.ROOTURL_NOT_CONFIGURED';
+        return res.status(501).send({ error: err });
+      }
+      user.get(email, function (err, u) {
+        if (err) { return res.status(400).send({ error: err }); }
+        var token = mail.genToken({ login: u.login, action: 'passrecover' });
+        var subject = fn.mailMessage('PASSRECOVER_SUBJECT', {
+          title: conf.get('title') }, u.lang);
+        var message = fn.mailMessage('PASSRECOVER', {
+          login: u.login,
+          title: conf.get('title'),
+          url: conf.get('rootUrl') + '/mypads/index.html?/passrecover/' + token,
+          duration: conf.get('tokenDuration')
+        }, u.lang);
+        mail.send(u.email, subject, message, function (err) {
+          if (err) { return res.status(501).send({ error: err }); }
+          return res.send({ success: true });
+        });
+      });
+    });
+
+    /**
+    * PUT method : password recovery with token and new password
+    * Need to have the login into the body
+    *
+    * Sample URL:
+    * http://etherpad.ndd/mypads/api/passrecover
+    */
+
+    app.put(api.initialRoute + 'passrecover/:token', function (req, res) {
+      var err;
+      var val       = mail.tokens[req.params.token];
+      var badLogin  = (!val || !val.login || !userCache.logins[val.login]);
+      var badAction = (!val || !val.action || (val.action !== 'passrecover'));
+      if (conf.isNotInternalAuth()) {
+        err = 'BACKEND.ERROR.AUTHENTICATION.NO_RECOVER';
+        return res.status(400).send({ error: err });
+      }
+      if (badLogin || badAction) {
+        err = 'BACKEND.ERROR.TOKEN.INCORRECT';
+        return res.status(400).send({ error: err });
+      }
+      if (!mail.isValidToken(req.params.token)) {
+        err = 'BACKEND.ERROR.TOKEN.EXPIRED';
+        return res.status(400).send({ error: err });
+      }
+      var pass  = req.body.password;
+      var passC = req.body.passwordConfirm;
+      if (!pass || (pass !== passC)) {
+        err = 'USER.ERR.PASSWORD_MISMATCH';
+        return res.status(400).send({ error: err });
+      }
+      user.get(val.login, function (err, u) {
+        if (err) { return res.status(400).send({ error: err.message }); }
+        u.password = pass;
+        if (!u.active) { u.active = true; }
+        user.set(u, function (err) {
+          if (err) { return res.status(400).send({ error: err.message }); }
+          res.send({ success: true, login: val.login });
+        });
+      });
+    });
+
+    /**
+    * POST method : account confirmation with token on body
+    *
+    * Sample URL:
+    * http://etherpad.ndd/mypads/api/accountconfirm
+    */
+
+    app.post(api.initialRoute + 'accountconfirm', function (req, res) {
+      var val = mail.tokens[req.body.token];
+      var err;
+      if (conf.isNotInternalAuth()) {
+        err = 'BACKEND.ERROR.AUTHENTICATION.NO_RECOVER';
+        return res.status(400).send({ error: err });
+      }
+      if (!val || !val.action || (val.action !== 'accountconfirm')) {
+        err = 'BACKEND.ERROR.TOKEN.INCORRECT';
+        return res.status(400).send({ error: err });
+      }
+      if (!mail.isValidToken(req.body.token)) {
+        err = 'BACKEND.ERROR.TOKEN.EXPIRED';
+        return res.status(400).send({ error: err });
+      }
+      user.get(val.login, function (err, u) {
+        if (err) { return res.status(400).send({ error: err.message }); }
+        u.active = true;
+        user.fn.set(u, function (err) {
+          if (err) { return res.status(400).send({ error: err.message }); }
+          res.send({ success: true, login: val.login });
+        });
+      });
+    });
   };
 
   cacheAPI = function (app) {
