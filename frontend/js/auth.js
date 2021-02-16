@@ -35,8 +35,10 @@ module.exports = (function () {
   auth.isAdmin = function () { return !!auth.admToken(); };
   auth.userInfo = m.prop();
   auth.token = function () { return localStorage.getItem('token'); };
+  auth.tokenExp = function () { return localStorage.getItem('exp'); };
   //auth.isAuthenticated = m.prop(!!auth.token());
   auth.isAuthenticated = function () { return !!auth.token(); };
+  auth.isTokenExpired = function() { return (!auth.tokenExp() || auth.tokenExp() < (Date.now()/1000)); }
   auth.is2faEnabled = function () { return !! auth.userInfo().otpEnabled }
 
   auth.fn = {};

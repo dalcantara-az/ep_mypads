@@ -27,7 +27,7 @@ module.exports = (function () {
   var qrcode = require('qrcode');
 
   var setup2fa = {};
-  var secret, dataUrl;
+  var secret, dataUrl, userLogin, setupFromLogin;
 
   /**
   * ## Controller
@@ -40,13 +40,20 @@ module.exports = (function () {
   setup2fa.controller = function () {
     var c          = {};
     document.title = conf.LANG.USER.PROFILE + ' - ' + conf.SERVER.title;
-    if (!auth.isAuthenticated()) {
+    if (!auth.isAuthenticated() && !(localStorage.getItem('tempToken') && localStorage.getItem('tempLogin'))) {
       conf.unauthUrl(true);
       return m.route('/login');
     }
+    if (!auth.userInfo()) {
+      setupFromLogin = true;
+    }
+    if (auth.userInfo() && auth.userInfo().otpEnabled) {
+      return m.route('/');
+    }
     form.initFields(c, ['login', 'otp']);
 
-    var authLabel = 'Etherpad-' + auth.userInfo().login;
+    userLogin = auth.userInfo() ? auth.userInfo().login : localStorage.getItem('tempLogin');
+    var authLabel = 'Etherpad-' + userLogin;
     var secret = speakeasy.generateSecret({
       name: authLabel
     });
@@ -74,7 +81,7 @@ module.exports = (function () {
       m.request({
         method: 'PUT',
         url: conf.URLS.SETUP_2FA,
-        data: { login: auth.userInfo().login, otpSecret: secret.base32 }
+        data: { login: userLogin, otpSecret: secret.base32 }
       }).then(setup2fa.setupSuccess,
       function (err) {
         notif.error({ body: ld.result(conf.LANG, err.error) });
@@ -138,7 +145,7 @@ module.exports = (function () {
       }
     }
     elements.splice(0, 0, m('h2',
-      conf.LANG.USER.PROFILE + ' : ' + auth.userInfo().login));
+      conf.LANG.USER.PROFILE + ' : ' + userLogin));
     return m('section', { class: 'user' }, elements);
   };
 
@@ -147,9 +154,27 @@ module.exports = (function () {
   };
 
   setup2fa.setupSuccess = function (resp) {
+    localStorage.removeItem('tempToken');
+    localStorage.removeItem('tempLogin');
+    localStorage.removeItem('tempTokenKey');
+    if (setupFromLogin) {
+      setup2fa.goBackToLogin();
+    } else {
+      setup2fa.continueLogin(resp);
+    }
+  };
+
+  setup2fa.continueLogin = function (resp) {
     auth.userInfo(resp.user);
     notif.success({ body: 'Successfully enabled 2FA.' });
     m.route('/myprofile');
   };
+
+  setup2fa.goBackToLogin = function () {
+    localStorage.removeItem('login');
+    notif.success({ body: 'Successfully enabled 2FA. Please re-login to proceed.' });
+    m.route('/login');
+  };
+
   return setup2fa;
 }).call(this);

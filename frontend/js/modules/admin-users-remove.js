@@ -36,6 +36,7 @@ module.exports = (function () {
   var conf  = require('../configuration.js');
   var auth  = require('../auth.js');
   var notif = require('../widgets/notification.js');
+  var cookies = require('js-cookie');
 
   var remove = {};
 
@@ -47,7 +48,12 @@ module.exports = (function () {
   */
 
   remove.controller = function () {
-    if (!auth.isAdmin()) { return m.route('/admin'); }
+    if (!auth.isAdmin() || auth.isTokenExpired()) {
+      if (auth.isTokenExpired()) {
+        notif.error({ body: ld.result(conf.LANG, 'BACKEND.ERROR.AUTHENTICATION.SESSION_TIMEOUT') });
+      }
+      return m.route('/admin'); 
+   } 
     var login = m.route.param('login');
     m.route('/admin/users');
     if (window.confirm(conf.LANG.ADMIN.INFO.USER_REMOVE_SURE)) {
@@ -60,10 +66,47 @@ module.exports = (function () {
           body: conf.LANG.USER.INFO.REMOVE_ACCOUNT_SUCCESS
         });
       }, function (err) {
+        checkJwtErr(err);
         notif.error({ body: ld.result(conf.LANG, err.error) });
       });
     }
   };
+  
+  /** 
+  * ##checkJwtErr
+  * For handling timeout error (check api.js for fn.checkJwt). 
+  *
+  * If error is confirmed to be incorrect token or session timeout (expired jwt),
+  * this will send a logout api call (to do necessary server side processing) 
+  * and handle response in the client side accordingly.
+  *
+  * Note: logout part copied (with minor modifications) from admin-logout.js
+  *
+  */
+
+  var checkJwtErr = function (err) {
+    if (err && (err.error === 'BACKEND.ERROR.AUTHENTICATION.SESSION_TIMEOUT' ||
+         err.error === 'BACKEND.ERROR.AUTHENTICATION.TOKEN_INCORRECT')) {
+      if (!auth.isAdmin()) {  
+        m.route('/admin'); 
+        return true;
+      }
+      m.request({
+        method: 'GET',
+        url: conf.URLS.AUTH + '/admin/logout',
+        data: { auth_token: auth.admToken() }
+      }).then(function () {
+        document.title = conf.SERVER.title;
+        localStorage.removeItem('admToken');
+        localStorage.removeItem('exp');
+        m.route('/admin');
+      }, function(err) {
+        notif.error({ body: ld.result(conf.LANG, err.error) });
+      });
+      return true;
+    }
+    return false;
+  }
 
   return remove;
 

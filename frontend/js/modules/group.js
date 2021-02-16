@@ -43,6 +43,8 @@ module.exports = (function () {
   var sortingPreferences = require('../helpers/sortingPreferences.js');
   var groupMark          = require('./group-mark.js');
   var groupWatch         = require('./group-watch.js');
+  var cookies            = require('js-cookie');
+  var notif              = require('../widgets/notification.js');
 
   var group = {};
 
@@ -53,10 +55,15 @@ module.exports = (function () {
   */
 
   group.controller = function () {
-    if (!auth.isAuthenticated()) {
+    if (!auth.isAuthenticated() || auth.isTokenExpired()) {
       conf.unauthUrl(true);
-      return m.route('/login');
+      localStorage.removeItem('token');
+      localStorage.removeItem('exp');
+      var errMsg = 'BACKEND.ERROR.AUTHENTICATION.SESSION_TIMEOUT';
+      notif.error({ body: ld.result(conf.LANG, errMsg) });
+      return m.route('/login'); 
     }
+
     document.title = conf.LANG.GROUP.MYGROUPS + ' - ' + conf.SERVER.title;
     var c          = { groups: {} };
 

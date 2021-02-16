@@ -88,6 +88,7 @@ module.exports = (function () {
           name: 'otp'
         }))
           ]),
+          m('div.note-otp', conf.LANG.USER.INPUT_OTP_NOTE),
           m('input.btn.btn-success.pull-right', {
             form: 'login-form',
             type: 'submit',
@@ -157,9 +158,10 @@ module.exports = (function () {
     auth.userInfo(resp.user);
     
     localStorage.setItem('token', resp.token);
+    localStorage.setItem('exp', resp.exp);
     localStorage.removeItem('tempTokenKey');
+    localStorage.removeItem('tempToken');
     
-
     /*
      * Fix pad authorship mixup
      * See https://framagit.org/framasoft/ep_mypads/issues/148

@@ -82,7 +82,6 @@ module.exports = (function () {
     '/loginotp': loginOtp,
     '/setup2fa': setup2fa,
     '/accountconfirm/:token': accountConfirm,
-    '/subscribe': subscribe,
     '/myprofile': subscribe,
     '/dashboard': dashboard,
     '/mybookmarks': bookmark,

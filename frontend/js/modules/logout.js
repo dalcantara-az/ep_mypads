@@ -68,6 +68,7 @@ module.exports = (function () {
         }
         auth.userInfo(null);
         localStorage.removeItem('token');
+        localStorage.removeItem('exp');
         model.init();
         document.title = conf.SERVER.title;
         if (conf.SERVER.authMethod === 'cas') {

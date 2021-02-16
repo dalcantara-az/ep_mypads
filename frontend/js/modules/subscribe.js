@@ -43,6 +43,7 @@ module.exports = (function () {
   var ready  = require('../helpers/ready.js');
   var speakeasy = require('speakeasy');
   var qrcode = require('qrcode');
+  var cookies = require('js-cookie');
 
   var secret, dataUrl;
   var subscribe = {};
@@ -98,6 +99,7 @@ module.exports = (function () {
     */
 
     var errfn = function (err) {
+      checkJwtErr(err);
       return notif.error({ body: ld.result(conf.LANG, err.error) });
     };
 
@@ -150,26 +152,9 @@ module.exports = (function () {
           url: conf.URLS.USER,
           data: c.data
         }).then(function (resp) {
-          if (!resp.value.active) {
-            var msg = conf.LANG.USER.AUTH.SUBSCRIBE_CONFIRM_SUCCESS;
-            m.route('/');
-            return notif.success({ body: msg });
-          } else {
-            auth.userInfo(resp.value);
-            notif.success({ body: conf.LANG.USER.AUTH.SUBSCRIBE_SUCCESS });
-          }
-          var lang = auth.userInfo().lang;
-          if (lang !== conf.USERLANG) {
-            conf.updateLang(lang);
-          }
-          m.request({
-            method: 'POST',
-            url: conf.URLS.LOGIN,
-            data: c.data
-          }).then(function (resp) {
-            localStorage.setItem('token', resp.token);
-            m.route('/');
-          }, errfn);
+          var msg = resp.value.active ? conf.LANG.USER.AUTH.SUBSCRIBE_SUCCESS : conf.LANG.USER.AUTH.SUBSCRIBE_CONFIRM_SUCCESS;
+          m.route('/login');
+          return notif.success({ body: msg });
         }, errfn);
       }
     };
@@ -266,6 +251,7 @@ module.exports = (function () {
             data: { auth_token: auth.token() }
           }).then(function () {
             localStorage.removeItem('token');
+            localStorage.removeItem('exp');
             auth.userInfo(null);
             model.init();
             document.title = conf.SERVER.title;
@@ -518,6 +504,48 @@ module.exports = (function () {
       c.profileView() ? user.view.aside.profile(c) : user.view.aside.common(c)
     );
   };
+
+  /** 
+  * ##checkJwtErr
+  * For handling timeout error (check api.js for fn.checkJwt). 
+  *
+  * If error is confirmed to be incorrect token or session timeout (expired jwt),
+  * this will send a logout api call (to do necessary server side processing) 
+  * and handle response in the client side accordingly.
+  *
+  * Note: logout part copied (with minor modifications) from logout.js 
+  *
+  */
+
+  var checkJwtErr = function (err) {
+    if (err && (err.error === 'BACKEND.ERROR.AUTHENTICATION.SESSION_TIMEOUT' ||
+         err.error === 'BACKEND.ERROR.AUTHENTICATION.TOKEN_INCORRECT')) {      
+      if (!auth.isAuthenticated()) { return m.route('/login'); }
+      m.request({
+        method: 'GET',
+        url: conf.URLS.LOGOUT,
+        config: auth.fn.xhrConfig
+      }).then(function () {
+        /*
+         * Fix pad authorship mixup
+         * See https://framagit.org/framasoft/ep_mypads/issues/148
+         */
+        if (cookies.get('token')) {
+          cookies.set('token-' + auth.userInfo().login, cookies.get('token'), { expires: 365 });
+          cookies.remove('token');
+        }
+        auth.userInfo(null);
+        localStorage.removeItem('token');
+        localStorage.removeItem('exp');
+        conf.unauthUrl(true);
+        m.route('/login');
+      }, function(err) {
+        notif.error({ body: ld.result(conf.LANG, err.error) });
+      });
+      return true;
+    }
+    return false;
+  }
 
   return subscribe;
 }).call(this);

@@ -43,13 +43,13 @@ module.exports = (function () {
   config.URLS.LOGOUT               = config.URLS.AUTH + '/logout';
   config.URLS.CASLOGIN             = config.URLS.AUTH + '/login/cas';
   config.URLS.CHECK                = config.URLS.AUTH + '/check';
+  config.URLS.SETUP_2FA            = config.URLS.AUTH + '/setup2fa';
   config.URLS.USER                 = config.URLS.BASE + '/user';
   config.URLS.ALL_USERS            = config.URLS.BASE + '/all-users';
   config.URLS.SEARCH_USERS         = config.URLS.BASE + '/search-users';
   config.URLS.USERMARK             = config.URLS.USER + 'mark';
   config.URLS.USERWATCH            = config.URLS.USER + 'watch';
   config.URLS.DISABLE_2FA          = config.URLS.USER + '/disable2fa';
-  config.URLS.SETUP_2FA            = config.URLS.USER + '/setup2fa';
   config.URLS.GROUP                = config.URLS.BASE + '/group';
   config.URLS.PAD                  = config.URLS.BASE + '/pad';
   config.URLS.USERLIST             = config.URLS.BASE + '/userlist';
@@ -122,6 +122,7 @@ module.exports = (function () {
       config.SERVER = settings.value; 
       if (!settings.auth && auth.isAuthenticated()) {
         localStorage.removeItem('token');
+        localStorage.removeItem('exp');
       }
       auth.userInfo(settings.user);
       var ulang = window.navigator.userLanguage || window.navigator.language;

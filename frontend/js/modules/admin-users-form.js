@@ -40,6 +40,7 @@ module.exports = (function () {
   var layout    = require('./layout.js');
   var form      = require('../helpers/form.js');
   var subscribe = require('./subscribe.js');
+  var cookies = require('js-cookie');
 
   var admin = {};
 
@@ -50,7 +51,12 @@ module.exports = (function () {
   */
 
   admin.controller = function () {
-    if (!auth.isAdmin()) { return m.route('/admin'); }
+    if (!auth.isAdmin() || auth.isTokenExpired()) {
+      if (auth.isTokenExpired()) {
+        notif.error({ body: ld.result(conf.LANG, 'BACKEND.ERROR.AUTHENTICATION.SESSION_TIMEOUT') });
+      }
+      return m.route('/admin'); 
+    }
     document.title = conf.LANG.ADMIN.FORM_USER_EDIT + ' - ' + conf.SERVER.title;
 
     var c = {
@@ -84,7 +90,9 @@ module.exports = (function () {
     */
 
     var errfn = function (err) {
-      m.route('/admin/users');
+      if (!checkJwtErr(err)) {
+        m.route('/admin/users');
+      }
       return notif.error({ body: ld.result(conf.LANG, err.error) });
     };
 
@@ -111,7 +119,7 @@ module.exports = (function () {
           m.request({
             method: 'PUT',
             url: conf.URLS.DISABLE_2FA,
-            data: {login: c.data.login()}
+            data: {login: c.data.login(), auth_token: auth.admToken()}
           }).then(function (resp) {
             c.data.otpEnabled(false);
             notif.success({ body: conf.LANG.USER.DISABLE_2FA_SUCCESS });
@@ -159,6 +167,42 @@ module.exports = (function () {
       view.aside()
     );
   };
+  
+  /** 
+  * ##checkJwtErr
+  * For handling timeout error (check api.js for fn.checkJwt). 
+  *
+  * If error is confirmed to be incorrect token or session timeout (expired jwt),
+  * this will send a logout api call (to do necessary server side processing) 
+  * and handle response in the client side accordingly.
+  *
+  * Note: logout part copied (with minor modifications) from admin-logout.js
+  *
+  */
+
+  var checkJwtErr = function (err) {
+    if (err && (err.error === 'BACKEND.ERROR.AUTHENTICATION.SESSION_TIMEOUT' ||
+         err.error === 'BACKEND.ERROR.AUTHENTICATION.TOKEN_INCORRECT')) {
+      if (!auth.isAdmin()) {  
+        m.route('/admin'); 
+        return true;
+      }
+      m.request({
+        method: 'GET',
+        url: conf.URLS.AUTH + '/admin/logout',
+        data: { auth_token: auth.admToken() }
+      }).then(function () {
+        document.title = conf.SERVER.title;
+        localStorage.removeItem('admToken');
+        localStorage.removeItem('exp');
+        m.route('/admin');
+      }, function(err) {
+        notif.error({ body: ld.result(conf.LANG, err.error) });
+      });
+      return true;
+    }
+    return false;
+  }
 
   return admin;
 
