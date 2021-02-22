@@ -43,7 +43,9 @@
     "simple-cas-interface": "^1.0.2",
     "slugg": "~0.1.2",
     "speakeasy": "^2.0.0",
-    "ueberdb2": "^0.3.8"
+    "ueberdb2": "^0.3.8",
+    "winston": "^3.3.3",
+    "winston-daily-rotate-file": "^4.5.0"
   },
   "devDependencies": {
     "browserify": "^9.0.3",

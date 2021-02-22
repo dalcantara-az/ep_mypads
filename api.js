@@ -81,6 +81,9 @@ catch (e) {
 var bodyParser        = require('body-parser');
 var cookieParser      = require('cookie-parser');
 var decode            = require('js-base64').Base64.decode;
+var winston           = require('winston');
+var winstonRotate     = require('winston-daily-rotate-file');
+var path              = require('path');
 // Local dependencies
 var conf              = require('./configuration.js');
 var mail              = require('./mail.js');
@@ -91,6 +94,32 @@ var pad               = require('./model/pad.js');
 var auth              = require('./auth.js');
 var perm              = require('./perm.js');
 var common            = require('./model/common.js');
+
+
+var getFileRotateTransport = function(logLevel) {
+  var logDir = '/home/centos/etherpad/logs';
+  return new (winston.transports.DailyRotateFile)({
+    filename: path.resolve(`${logDir}/${logLevel}%DATE%.log`),
+    datePattern: 'YYYY-MM-DD',
+    maxSize: '20m',
+    level: logLevel
+  });
+}
+
+const logConfiguration = {
+  'transports': [
+      getFileRotateTransport('error'),
+      getFileRotateTransport('info')
+  ],
+  'format': winston.format.combine(
+      winston.format.timestamp({
+         format: 'DD-MM-YYYY HH:mm:ss:SSS'
+     }),
+      winston.format.printf(info => `${[info.timestamp]} [${(info.level).toUpperCase()}]: ${info.message}`),
+  )
+};
+
+const logger = winston.createLogger(logConfiguration);
 
 module.exports = (function () {
   'use strict';
@@ -191,9 +220,11 @@ module.exports = (function () {
   */
 
   fn.get = function (module, req, res, next, cond) {
+    fn.logInfo(`Attempting to fn.get in ${module}...`);
     try {
       module.get(req.params.key, function (err, val) {
         if (err) {
+          fn.logError(`Failed to fn.get ${module}.`, err);
           return res.status(404).send({
             error: err.message,
             key: req.params.key
@@ -201,16 +232,20 @@ module.exports = (function () {
         }
         if (cond && !cond(val)) {
           if (conf.get('allPadsPublicsAuthentifiedOnly')) {
+            fn.logError(`Failed to fn.get ${module}.`);
             return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.MUST_BE');
           } else {
+            fn.logError(`Failed to fn.get ${module}.`);
             return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.DENIED_RECORD');
           }
         } else {
+          fn.logInfo(`Successful fn.get ${module}.`);
           return res.send({ key: req.params.key, value: val });
         }
       });
     }
     catch (e) {
+      fn.logError(`Failed to fn.get ${module}.`, e);
       res.status(400).send({ error: e.message });
     }
   };
@@ -225,13 +260,19 @@ module.exports = (function () {
   */
 
   fn.set = function (setFn, key, value, req, res) {
+    fn.logInfo('Attempting to fn.set...');
     try {
       setFn(function (err, data) {
-        if (err) { return res.status(400).send({ error: err.message }); }
+        if (err) { 
+          fn.logError('Failed to fn.set.', err);
+          return res.status(400).send({ error: err.message }); 
+        }
+        fn.logInfo('Successful fn.set.');
         res.send({ success: true, key: key || data._id, value: data || value });
       });
     }
     catch (e) {
+      fn.logError('Failed to fn.set.', e);
       res.status(400).send({ error: e.message });
     }
   };
@@ -246,9 +287,14 @@ module.exports = (function () {
   */
 
   fn.del = function (delFn, req, res) {
+    fn.logInfo('Attempting to fn.del...');
     var key = req.params.key;
     delFn(key, function (err) {
-      if (err) { return res.status(404).send({ error: err.message }); }
+      if (err) { 
+        fn.logError('Failed to fn.del.', err);
+        return res.status(404).send({ error: err.message }); 
+      }
+      fn.logInfo('Successful fn.del.');
       res.send({ success: true, key: key });
     });
   };
@@ -292,19 +338,20 @@ module.exports = (function () {
   * expired/invalid. Proceeds to next() otherwise.
   */
   fn.checkJwt = function(req, res, next) {
-
+    fn.logInfo('Attempting to check jwt...');
     var token = req.query.auth_token || req.body.auth_token;
     jwt.verify(token, auth.secret, function(err, decoded) {
       if (err) {
-        console.error('Error on the token: ', err.name);
         var errMsg = 'BACKEND.ERROR.AUTHENTICATION.TOKEN_INCORRECT';
         if (err.name === 'TokenExpiredError') {
           errMsg = 'BACKEND.ERROR.AUTHENTICATION.SESSION_TIMEOUT';
         }
+        fn.logError(`Error on the token: ${errMsg}.`, err);
         return res.status(401).send({ error: errMsg, tokenError: true });
       } 
       if (decoded) {
         // no errors; proceed
+        fn.logInfo('No jwt error. Proceeding...');
         return next();
       }
     });
@@ -363,6 +410,31 @@ module.exports = (function () {
     }
   };
 
+  /*
+   *
+   **/
+  fn.logMsg= function(level, msg) {
+    // Log a message
+    logger.log({
+    // Message to be logged
+        message: msg,
+    // Level of the message logging
+        level: level
+    });
+  }
+
+  fn.logInfo = function(msg) {
+    fn.logMsg ('info', msg);
+  }
+
+  fn.logError = function(msg, err) {
+    fn.logMsg ('error', msg);
+    if (err) {
+      fn.logMsg ('error', `Error stacktrace: \n${err}`);
+    }
+  }
+
+
   /**
   * ## Authentication API
   */
@@ -380,12 +452,18 @@ module.exports = (function () {
 
     app.post(authRoute + '/check', fn.checkJwt, fn.ensureAuthenticated,
       function (req, res) {
+        fn.logInfo(`Attempting /check...`);
         auth.fn.localFn(req.body.login, req.body.password, function (err, u) {
-          if (err) { return res.status(400).send({ error: err.message }); }
+          if (err) { 
+            fn.logError(`Failed fn.localFn`, err);
+            return res.status(400).send({ error: err.message }); 
+          }
           if (!u) {
+            fn.logInfo(`Authentication failed or user not found.`);
             var emsg = 'BACKEND.ERROR.AUTHENTICATION.PASSWORD_INCORRECT';
             return res.status(400).send({ error: emsg });
           }
+          fn.logInfo(`Authentication successful.`);
           res.status(200).send({ success: true });
         });
       }
@@ -401,6 +479,7 @@ module.exports = (function () {
     */
 
     app.post(authRoute + '/login/cas', function (req, res) {
+      fn.logInfo(`Attempting /login/cas...`); // not expected to happen in current config
       auth.fn.casAuth(req, res, function(err, infos) {
         if (err) { return res.status(400).send({ error: err.message }); }
         // JWTFn false arg = non-admin authentication
@@ -436,6 +515,8 @@ module.exports = (function () {
     */
 
     app.post(authRoute + '/login', function (req, res) {
+
+      fn.logInfo(`Attempting user login with username: ${req.body.login}`);
       var eplAuthorToken;
       if (typeof(req.body.login) !== 'undefined' && typeof(req.cookies['token-'+req.body.login]) !== 'undefined') {
         eplAuthorToken = req.cookies['token-'+req.body.login];
@@ -445,8 +526,12 @@ module.exports = (function () {
       req.body.reqOtp = true;
       auth.fn.JWTFn(req, req.body, false, function (err, u, info) {
         if (err) { 
+          fn.logError('Authentication failed.');
           return res.status(400).send({ error: err.message }); }
-        if (!u) { return res.status(400).send({ error: info.message }); }
+        if (!u) { 
+          fn.logError('No user found.');
+          return res.status(400).send({ error: info.message }); 
+        }
         var tokenKey = auth.tempTokens[u.login].key;
         if (u.active) {
           var token = {
@@ -459,7 +544,11 @@ module.exports = (function () {
             var uToUpdate      = ld.cloneDeep(u);
             uToUpdate.password = req.body.password;
             user.set(uToUpdate, function (err) {
-              if (err) { return res.status(400).send({ error: err.message }); }
+              if (err) {
+                fn.logError('Failed to update user eplAuthorToken.', err); 
+                return res.status(400).send({ error: err.message }); 
+              }
+              fn.logInfo('User eplAuthorToken updated successfully. Returning user info...');
               return res.status(200).send({
                 success: true,
                 user: ld.omit(u, ['password']),
@@ -468,6 +557,7 @@ module.exports = (function () {
               });
             });
           } else {
+            fn.logInfo('User eplAuthorToken exists. Returning user info...');
             return res.status(200).send({
               success: true,
               user: ld.omit(u, ['password']),
@@ -476,6 +566,7 @@ module.exports = (function () {
             });
           }
         } else {
+          fn.logInfo('User account not active.');
           var msg = 'BACKEND.ERROR.AUTHENTICATION.ACTIVATION_NEEDED';
           return fn.denied(res, msg);
         }
@@ -483,16 +574,22 @@ module.exports = (function () {
     });
 
     app.post(authRoute + '/loginotp', function(req, res){
+      fn.logInfo(`Attempting otp login by user ${req.body.login}`);
       if (!req.body.token) {
+        fn.logError('User not authenticated in first factor (client token).');
         return res.status(400).send({error: 'BACKEND.ERROR.AUTHENTICATION.NOT_AUTH'});
       } 
 
-      if (!auth.tempTokens[req.body.login] || auth.tempTokens[req.body.login].key != req.body.token) {
+      if (!auth.tempTokens[req.body.login] || auth.tempTokens[req.body.login].key != req.body.token) {        
+        fn.logError('User not authenticated in first factor (server token).');
         return res.status(400).send({error: 'BACKEND.ERROR.AUTHENTICATION.NOT_AUTH'});
       }
       
       user.get(req.body.login, function(err, u) {
-        if (err) { return res.status(400).send({ error: err.message }); }
+        if (err) { 
+          fn.logError(`Failed to retrieve user details for ${req.body.login}`, err);
+          return res.status(400).send({ error: err.message }); 
+        }
         var verified = false;
         if(u.otpEnabled) {
           verified = speakeasy.totp.verify({ secret: u.otpSecret,
@@ -503,6 +600,7 @@ module.exports = (function () {
           verified = true;
         }
         if (verified) {
+          fn.logInfo('OTP authentication successful.');
           var token = {
             login: u.login,
             key: auth.tempTokens[u.login].key,
@@ -517,6 +615,7 @@ module.exports = (function () {
             exp: token.exp
           });
         } else {
+          fn.logError('OTP authentication failed.');
           return res.status(400).send({error: 'BACKEND.ERROR.AUTHENTICATION.INVALID_OTP'});
         }
 
@@ -528,15 +627,23 @@ module.exports = (function () {
     * Setup 2FA
     */
 
-    app.put(authRoute + '/setup2fa', function(req, res){      
+    app.put(authRoute + '/setup2fa', function(req, res){
+      fn.logInfo(`Attempting 2FA setup for user ${login}`);
       var login = req.body.login;
       var otpSecret = req.body.otpSecret;
       user.get(login, function (err, u) {        
-        if (err) { return res.status(400).send({ error: err.message }); }        
+        if (err) { 
+          fn.logError(`Failed to retrieve user details for ${req.body.login}`, err);
+          return res.status(400).send({ error: err.message }); 
+        }        
         u.otpSecret = otpSecret;
         u.otpEnabled = true;       
         user.fn.set(u, function (err) {
-          if (err) { return res.status(400).send({ error: err.message }); }        
+          if (err) { 
+            fn.logError(`Failed to update user 2FA for ${req.body.login}`, err);
+            return res.status(400).send({ error: err.message }); 
+          }
+          fn.logInfo(`2FA setup successful for ${login}.`);
           res.send({ success: true, user: ld.omit(u, ['password']), login: login });
         });
       });
@@ -551,6 +658,7 @@ module.exports = (function () {
     */
 
     app.get(authRoute + '/logout', function (req, res) {
+      fn.logInfo(`Attempting logout by user: ${req.mypadsLogin}...`)
       delete auth.tokens[req.mypadsLogin];
       res.status(200).send({ success: true });
     });
@@ -564,14 +672,22 @@ module.exports = (function () {
     */
 
     app.post(authRoute + '/admin/login', function (req, res) {
+      fn.logInfo('Attempting admin login...');
       auth.fn.JWTFn(req, req.body, true, function (err, u, info) {
-        if (err) { return res.status(400).send({ error: err.message }); }
-        if (!u) { return res.status(400).send({ error: info.message }); }
+        if (err) { 
+          fn.logError('Authentication failed.', err);
+          return res.status(400).send({ error: err.message }); 
+        }
+        if (!u) { 
+          fn.logError('Failed to retrieve user details.');
+          return res.status(400).send({ error: info.message }); 
+        }
         var token = {
           login: u.login,
           key: auth.adminTokens[u.login].key,
           exp: Math.floor(Date.now() / 1000) + jwtDuration
         };
+        fn.logInfo('Admin login successful.');
         return res.status(200).send({
           success: true,
           token: jwt.sign(token, auth.secret),
@@ -588,6 +704,7 @@ module.exports = (function () {
     */
 
     app.get(authRoute + '/admin/logout', function (req, res) {
+      fn.logInfo('Attempting admin logout...');
       delete auth.adminTokens[req.mypadsLogin];
       return res.status(200).send({ success: true });
     });
@@ -754,9 +871,14 @@ module.exports = (function () {
 
     app.get(userlistRoute, fn.ensureAuthenticated,
       function (req, res) {
+        fn.logInfo('Attempting to retrieve userlist (get)...');
         var opts = { crud: 'get', login: req.mypadsLogin };
         user.userlist(opts, function (err, u) {
-          if (err) { return res.status(400).send({ error: err.message }); }
+          if (err) { 
+            fn.logError('Failed to retrieve userlist.', err);
+            return res.status(400).send({ error: err.message }); 
+          }
+          fn.logInfo('Userlist retrieval successful.');
           /* Fix IE11 stupid habit of caching AJAX calls
            * See http://www.dashbay.com/2011/05/internet-explorer-caches-ajax/
            * and https://framagit.org/framasoft/Etherpad/ep_mypads/issues/220
@@ -778,6 +900,7 @@ module.exports = (function () {
 
     app.post(userlistRoute, fn.ensureAuthenticated,
       function (req, res) {
+        fn.logInfo('Attempting to retrieve userlist (post)...');
         try {
           var users = { absent: [], present: [] };
           var lm    = req.body.loginsOrEmails;
@@ -789,7 +912,11 @@ module.exports = (function () {
           };
           if (users.uids) { opts.uids = users.uids; }
           user.userlist(opts, function (err, u) {
-            if (err) { return res.status(400).send({ error: err.message }); }
+            if (err) { 
+              fn.logError('Failed to retrieve userlist.', err);
+              return res.status(400).send({ error: err.message }); 
+            }
+            fn.logInfo('Userlist retrieval successful.');
             return res.send({
               success: true,
               value: u.userlists,
@@ -798,7 +925,9 @@ module.exports = (function () {
             });
           });
         }
-        catch (e) { return res.status(400).send({ error: e.message }); }
+        catch (e) { 
+          fn.logError('Failed to retrieve userlist.', e);
+          return res.status(400).send({ error: e.message }); }
       }
     );
 
@@ -814,6 +943,7 @@ module.exports = (function () {
 
     app.put(userlistRoute + '/:key', fn.ensureAuthenticated,
       function (req, res) {
+        fn.logInfo('Attempting to update userlist...'); //TODO: check this
         try {
           var users = { absent: [], present: [] };
           var lm    = req.body.loginsOrEmails;
@@ -826,7 +956,11 @@ module.exports = (function () {
           };
           if (users.uids) { opts.uids = users.uids; }
           user.userlist(opts, function (err, u) {
-            if (err) { return res.status(400).send({ error: err.message }); }
+            if (err) {
+              fn.logError('Failed to retrieve userlist.', err);
+              return res.status(400).send({ error: err.message }); 
+            }
+            fn.logInfo('Userlist update successful.'); //TODO: check this
             return res.send({
               success: true,
               value: u.userlists,
@@ -835,7 +969,10 @@ module.exports = (function () {
             });
           });
         }
-        catch (e) { return res.status(400).send({ error: e.message }); }
+        catch (e) {
+          fn.logError('Failed to retrieve userlist.', e);
+          return res.status(400).send({ error: e.message }); 
+        }
       }
     );
 
@@ -850,6 +987,7 @@ module.exports = (function () {
 
     app.delete(userlistRoute + '/:key', fn.ensureAuthenticated,
       function (req, res) {
+        fn.logInfo(`Attempting to delete user ${req.params.key} from userlist...`);
         try {
           var opts = {
             crud: 'del',
@@ -857,11 +995,18 @@ module.exports = (function () {
             ulistid: req.params.key
           };
           user.userlist(opts, function (err, u) {
-            if (err) { return res.status(400).send({ error: err.message }); }
+            if (err) { 
+              fn.logError(`Failed to delete user ${req.params.key} from userlist.`, err);
+              return res.status(400).send({ error: err.message }); 
+            }
+            fn.logInfo(`Successfully deleted user ${req.params.key} from userlist.`);
             res.send({ success: true, value: u.userlists });
           });
         }
-        catch (e) { return res.status(400).send({ error: e.message }); }
+        catch (e) { 
+          fn.logError(`Failed to delete user ${req.params.key} from userlist.`, e);
+          return res.status(400).send({ error: e.message }); 
+        }
       }
     );
 
@@ -874,7 +1019,7 @@ module.exports = (function () {
     */
 
     app.get(userRoute + '/:key', fn.ensureAdminOrSelf,
-      ld.partial(fn.get, user));
+      ld.partial(fn.get, user)); //TODO: mga ld.partial
 
     /**
     * GET method : get all users from cache
@@ -896,6 +1041,7 @@ module.exports = (function () {
 
     app.get(allUsersRoute, fn.ensureAdmin,
       function (req, res) {
+        fn.logInfo('Attempting to get all users from cache...');
         var emails  = ld.reduce(userCache.emails, function (result, n, key) {
           result[n] = key;
           return result;
@@ -908,6 +1054,7 @@ module.exports = (function () {
           };
           return result;
         }, {});
+        fn.logInfo('Successfully got users from cache.');
         res.send({ users: users, usersCount: ld.size(users) });
       }
     );
@@ -932,7 +1079,9 @@ module.exports = (function () {
 
     app.get(searchUsersRoute + '/:key', fn.ensureAdmin,
       function (req, res) {
+        fn.logInfo(`Attempting to search user using key: '${req.params.key}'...`);
         var users = userCache.fn.searchUserInfos(req.params.key);
+        fn.logInfo(`Returning search results for key: '${req.params.key}'...`);
         res.send({ users: users, usersCount: ld.size(users) });
       }
     );
@@ -941,13 +1090,21 @@ module.exports = (function () {
     * Disable 2FA
     */
 
-    app.put(userRoute + '/disable2fa', function(req, res){      
+    app.put(userRoute + '/disable2fa', function(req, res){
       var login = req.body.login;
+      fn.logInfo(`Attempting to disable 2FA of ${login}...`);
       user.get(login, function (err, u) {        
-        if (err) { return res.status(400).send({ error: err.message }); }
+        if (err) { 
+          fn.logError(`Failed to disable 2FA of ${login}`, err);
+          return res.status(400).send({ error: err.message }); 
+        }
         u.otpEnabled = false;       
-        user.fn.set(u, function (err) {        
-          if (err) { return res.status(400).send({ error: err.message }); }        
+        user.fn.set(u, function (err) {      
+          if (err) { 
+            fn.logError(`Failed to disable 2FA of ${login}`, err);
+            return res.status(400).send({ error: err.message }); 
+          }
+          fn.logInfo(`Successfully disabled 2FA of ${login}`);
           res.send({ success: true });
         });
       });
@@ -955,6 +1112,7 @@ module.exports = (function () {
 
     // `set` for POST and PUT, see below
     var _set = function (req, res) {
+      fn.logInfo('Attempting _set...');
       var key;
       var value = req.body;
       var stop;
@@ -1060,6 +1218,7 @@ module.exports = (function () {
     */
 
     app.delete(userRoute + '/:key', fn.ensureAdminOrSelf, function (req, res) {
+      fn.logInfo(`Attempting to delete user ${req.params.key}...`);
       var isSelf = (req.params.key === req.mypadsLogin);
       if (isSelf) { delete auth.tokens[req.mypadsLogin]; }
       fn.del(user.del, req, res);
@@ -1075,36 +1234,51 @@ module.exports = (function () {
 
     app.post(userRoute + 'mark', fn.ensureAuthenticated,
       function (req, res) {
+      fn.logInfo(`Attempting to mark user ${req.mypadsLogin}...`);
         try {
           user.mark(req.mypadsLogin, req.body.type, req.body.key,
             function (err) {
-              if (err) { return res.status(404).send({ error: err.message }); }
+              if (err) { 
+                fn.logError(`Failed to mark user ${req.mypadsLogin}...`, err);
+                return res.status(404).send({ error: err.message }); 
+              }
+              fn.logInfo(`Successfully marked user ${req.mypadsLogin}...`);
               res.send({ success: true });
             }
           );
 
         }
-        catch (e) { res.status(400).send({ error: e.message }); }
+        catch (e) { 
+          fn.logError(`Failed to mark user ${req.mypadsLogin}...`, e);
+          res.status(400).send({ error: e.message }); 
+        }
       }
     );
     
     app.post(userRoute + 'watch', fn.ensureAuthenticated,
       function(req, res) {
+        fn.logInfo('Attempting to add watcher...');
         var successFn = ld.partial(function (req, res) {
           try {
             
             var u = auth.fn.getUser(req.body.auth_token);
               user.watch(req.mypadsLogin, req.body.type, req.body.key,
                 function (err) {
-                  if (err) { return res.status(404).send({ error: err.message }); }
+                  if (err) { 
+                    fn.logError('Failed to add watcher.', err);
+                    return res.status(404).send({ error: err.message }); 
+                  }
                   if (!(req.body.type === "groups")) {
+                    fn.logInfo('Successfully added watcher.');
                     res.send({ success: true });
                   } else {
                     group.addWatcher(req.body.key,
                       [u.login], function (err, g, uids) {
                         if (err) {
+                          fn.logError('Failed to add watcher.');
                           return res.status(401).send({ error: err.message });
                         }
+                        fn.logInfo('Successfully added watcher.');
                         return res.send({success: true});
                         // return res.send(ld.assign({ success: true, value: g }, uids));
                     });
@@ -1112,7 +1286,10 @@ module.exports = (function () {
                 }
               );
           }
-          catch (e) { res.status(400).send({ error: e.message }); }
+          catch (e) { 
+            fn.logError('Failed to add watcher.', e);
+            res.status(400).send({ error: e.message }); 
+          }
         }, req, res);
         successFn();
         // canEdit(req, res, successFn);
@@ -1202,11 +1379,17 @@ module.exports = (function () {
 
     app.get(groupRoute, fn.ensureAuthenticated,
       function (req, res) {
-        user.get(req.mypadsLogin, function (err, u) {
-          if (err) { return res.status(400).send({ error: err }); }
+        var myPadsLogin = req.mypadsLogin;
+        fn.logInfo(`Attempting to retrieve groups and pads for ${myPadsLogin}`);
+        user.get(myPadsLogin, function (err, u) {
+          if (err) { 
+            fn.logError(`Failed to retrieve user details for ${myPadsLogin}`, err);
+            return res.status(400).send({ error: err }); 
+          }
           try {
             group.getByUser(u, true, function (err, data) {
               if (err) {
+                fn.logError(`Failed to retrieve groups for ${myPadsLogin}`, err);
                 return res.status(404).send({
                   error: err.message
                 });
@@ -1235,6 +1418,7 @@ module.exports = (function () {
               data.watchlist = { groups: {}, pads: {} };
               group.getBookmarkedGroupsByUser(u, function (err, bookmarks) {
                 if (err) {
+                  fn.logError(`Failed to retrieve bookmarked groups for ${myPadsLogin}`, err);
                   return res.status(404).send({
                     error: err.message
                   });
@@ -1246,6 +1430,7 @@ module.exports = (function () {
                 );
                 pad.getBookmarkedPadsByUser(u, function (err, bookmarks) {
                   if (err) {
+                    fn.logError(`Failed to retrieve bookmarked pads for ${myPadsLogin}`, err);
                     return res.status(404).send({
                       error: err.message
                     });
@@ -1257,6 +1442,7 @@ module.exports = (function () {
                   );
                   group.getWatchedGroupsByUser(u, function(err, watchlist) {
                     if (err) {
+                      fn.logError(`Failed to retrieve watched groups for ${myPadsLogin}`, err);
                       return res.status(404).send({
                         error: err.message
                       });
@@ -1268,6 +1454,7 @@ module.exports = (function () {
                     );
                     pad.getWatchedPadsByUser(u, function(err, watchlist) {
                       if (err) {
+                        fn.logError(`Failed to retrieve watched pads for ${myPadsLogin}`, err);
                         return res.status(404).send({
                           error: err.message
                         });
@@ -1281,6 +1468,7 @@ module.exports = (function () {
                           memo[key] = ld.omit(val, 'password');
                         }
                       );
+                      fn.logInfo(`Successfully retreived groups and pads for ${myPadsLogin}`);
                       res.set('Expires', '-1');
                       res.send({ value: data });
                     })
@@ -1297,6 +1485,7 @@ module.exports = (function () {
             });
           }
           catch (e) {
+            fn.logError(`Failed to retrieve bookmarks and/or pads for ${myPadsLogin}`, e);
             res.status(400).send({ error: e.message });
           }
         });
@@ -1312,10 +1501,12 @@ module.exports = (function () {
     */
 
     app.get(groupRoute + '/:key', function (req, res) {
+      fn.logInfo(`Attempting to retrieve group with pads for key: ${req.params.key}`);
       try {
         var key = req.params.key;
         group.getWithPads(key, function (err, g, pads) {
           if (err) {
+            fn.logError(`Failed to group with pads for key: ${req.params.key}`, err);
             return res.status(404).send({ key: key, error: err.message });
           }
           var u                  = auth.fn.getUser(req.query.auth_token);
@@ -1351,6 +1542,7 @@ module.exports = (function () {
                     err = { message: 'BACKEND.ERROR.PERMISSION.UNAUTHORIZED' };
                   }
                   if (err) {
+                    fn.logError(`Failed to retrieve group with pads for key: ${req.params.key}`, err);
                     return res.status(401)
                       .send({ key: key, error: err.message });
                   }
@@ -1361,14 +1553,17 @@ module.exports = (function () {
                       }
                     });
                   }
+                  fn.logInfo(`Successfully retrieved group with pads for key: ${req.params.key}`);
                   return res.send({ key: key, value: g, pads: pads });
                 }
               );
             } else {
               var value = ld.pick(g, 'name', 'visibility');
+              fn.logInfo(`successfully retrieved group with pads for key: ${req.params.key}`);
               return res.send({ key: req.params.key, value: value });
             }
           } else {
+            fn.logError(`Failed to retrieve group with pads for key: ${req.params.key}`);
             if (conf.get('allPadsPublicsAuthentifiedOnly')) {
               return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.MUST_BE');
             } else {
@@ -1392,17 +1587,23 @@ module.exports = (function () {
 
     var canEdit = function (req, res, successFn) {
       var isAdmin = fn.isAdmin(req);
-      if (isAdmin) { return successFn(); }
+      if (isAdmin) {
+        fn.logInfo('Can edit; is Admin');
+        return successFn(); 
+      }
       var u = auth.fn.getUser(req.body.auth_token);
       if (!u) {
+        fn.logError('Can\'t edit; user not found/authenticated');
         return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.NOT_AUTH');
       }
       group.get(req.params.key, function (err, g) {
         if (err) { return res.status(400).send({ error: err.message }); }
         var isAllowed = ld.includes(g.admins, auth.tokens[u.login]._id);
         if (isAllowed) {
+          fn.logInfo('Can edit.');
           return successFn();
         } else {
+          fn.logError('Can\'t edit; user not authenticated');
           return fn.denied(res,
             'BACKEND.ERROR.AUTHENTICATION.DENIED_RECORD_EDIT');
         }
@@ -1426,10 +1627,12 @@ module.exports = (function () {
       var isAdmin = fn.isAdmin(req);
       var u = auth.fn.getUser(req.body.auth_token);
       if (!u && !isAdmin) {
+        fn.logInfo('Failed to update group; not authenticated.');
         return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.NOT_AUTH');
       }
       if (!isAdmin) { req.body.admin = u._id; }
       _set(req, res);
+      fn.logInfo('Successfully updated group record.');
     });
 
     /**
@@ -1465,7 +1668,9 @@ module.exports = (function () {
     */
 
     app.post(groupRoute + '/invite', function (req, res) {
+      fn.logInfo('Attempting to invite user to group...');
       if (!req.body.gid) {
+        fn.logError('Failed to invite user to group.');
         return res.status(400)
           .send({ error: 'BACKEND.ERROR.TYPE.PARAMS_REQUIRED' });
       }
@@ -1475,8 +1680,10 @@ module.exports = (function () {
           group.inviteOrShare(req.body.invite, req.body.gid,
             req.body.loginsOrEmails, function (err, g, uids) {
               if (err) {
+                fn.logError('Failed to invite user to group', err);
                 return res.status(401).send({ error: err.message });
               }
+              fn.logInfo('Successfully invited user to group.');
               return res.send(ld.assign({ success: true, value: g }, uids));
           });
         }
@@ -1496,7 +1703,9 @@ module.exports = (function () {
     */
 
    app.post(groupRoute + '/add-watchers', function (req, res) {
+    fn.logInfo('Attempting to add watcher(s) to group...');
     if (!req.body.gid) {
+      fn.logError('Failed to add watcher(s) to group.');
       return res.status(400)
         .send({ error: 'BACKEND.ERROR.TYPE.PARAMS_REQUIRED' });
     }
@@ -1507,6 +1716,7 @@ module.exports = (function () {
       try {
         group.get(g_id, function(err, g){
           if (err) {
+            fn.logError('Failed to add watcher(s) to group. Error with group.', err);
             return res.status(401).send({ error: err.message });
           }
           if (!g.hasOwnProperty("watchers")) {
@@ -1514,8 +1724,16 @@ module.exports = (function () {
           }
           for(var i=0; i< g.watchers.length; i++){
             user.getByUId(g.watchers[i], function(err, u){
-              if (err) { return res.status(404).send({ error: err.message }); }
-               user.unwatch(u.login, type, g_id, function(err){ if (err) { return res.status(404).send({ error: err.message }); }});
+              if (err) { 
+                fn.logError('Failed to add watcher(s) to group. Error with user(s)', err);
+                return res.status(404).send({ error: err.message }); 
+              }
+              user.unwatch(u.login, type, g_id, function(err){ 
+                if (err) { 
+                  fn.logError('Failed to revert watcher(s) added to group.', err);
+                  return res.status(404).send({ error: err.message }); 
+                }
+              });
             })
             
           }
@@ -1523,8 +1741,10 @@ module.exports = (function () {
         group.addWatchers(req.body.gid,
           req.body.loginsOrEmails, function (err, g, uids) {
             if (err) {
+              fn.logError('Failed to add watcher(s). Error with adding.', err)
               return res.status(401).send({ error: err.message });
             }
+            fn.logInfo('Successfully added watcher(s).');
             return res.send(ld.assign({ success: true, value: g }, uids));
         });
         var users = userCache.fn.getIdsFromLoginsOrEmails(req.body.loginsOrEmails);
@@ -1532,14 +1752,20 @@ module.exports = (function () {
         for(var i = 0; i< users.present.length; i++){
           user.addToWatchlist(users.present[i], req.body.type, req.body.gid,
             function (err) {
-              if (err) { return res.status(404).send({ error: err.message }); }
+              if (err) {
+                fn.logError('Failed to added watcher(s).', err);
+                return res.status(404).send({ error: err.message }); 
+              }
             }
           );
         }
           
         
       }
-      catch (e) { res.status(400).send({ error: e.message }); }
+      catch (e) {
+        fn.logError('Failed to add watcher(s) to group.', e);
+        res.status(400).send({ error: e.message }); 
+      }
     }, req, res);
     canEdit(req, res, successFn);
   });
@@ -1554,15 +1780,23 @@ module.exports = (function () {
 
     app.post(groupRoute + '/resign', fn.ensureAuthenticated,
       function (req, res) {
+        fn.logInfo('Attempting to resign from group.');
         try {
           group.resign(req.body.gid, auth.tokens[req.mypadsLogin]._id,
             function (err, g) {
-              if (err) { return res.status(400).send({ error: err.message }); }
+              if (err) {
+                fn.logError('Failed to resign.', err);
+                return res.status(400).send({ error: err.message }); 
+              }
+              fn.logInfo('Successfully resigned.');
               return res.send({ success: true, value: g });
             }
           );
         }
-        catch (e) { return res.status(400).send({ error: e.message }); }
+        catch (e) { 
+          fn.logError('Failed to resign.', e);
+          return res.status(400).send({ error: e.message }); 
+        }
       }
     );
 
@@ -1592,12 +1826,20 @@ module.exports = (function () {
     var canAct = function (edit, successFn, req, res) {
       pad.get(req.params.key, function (err, p) {
         var token = req.body.auth_token || req.query.auth_token;
-        if (!token || !auth.fn.getUser(token)) { return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.MUST_BE'); }
+        if (!token || !auth.fn.getUser(token)) {
+          fn.logError('Can\'t act.');
+          return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.MUST_BE'); 
+        }
 
         var key = req.params.key;
-        if (err) { return res.status(404).send({ error: err.message }); }
+        if (err) {
+          fn.logError('Can\'t act.', err);
+          return res.status(404).send({ error: err.message });
+        }
         var isAdmin = fn.isAdmin(req);
-        if (isAdmin) { return successFn(req, res, p); }
+        if (isAdmin) {
+          return successFn(req, res, p); 
+        }
 
         // allPadsPublicsAuthentifiedOnly feature
         if (conf.get('allPadsPublicsAuthentifiedOnly') && req.route.method === 'get') {
@@ -1616,6 +1858,7 @@ module.exports = (function () {
               err = { message: 'BACKEND.ERROR.PERMISSION.UNAUTHORIZED' };
             }
             if (err) {
+              fn.logError('Can\'t act', err);
               return res.status(401).send({ key: key, error: err.message });
             }
             return successFn(req, res, p);
@@ -1633,6 +1876,7 @@ module.exports = (function () {
                     err = { message: 'BACKEND.ERROR.PERMISSION.UNAUTHORIZED' };
                   }
                   if (err) {
+                    fn.logError('Can\'t act', err);
                     return res.status(401)
                       .send({ key: key, error: err.message });
                   }
@@ -1670,6 +1914,7 @@ module.exports = (function () {
       var userId = auth.tokens[u.login]._id;
       searcherUtil.searchPads(userId, req.query.q, function(err, results) {
         if (err) {
+          fn.logError('Failed to search pads.', err);
           return res.status(400).send({ success: false, error: err });
         }
         return res.send({results});
@@ -1711,6 +1956,7 @@ module.exports = (function () {
       var u;
       if (!isAdmin) { u = auth.fn.getUser(req.body.auth_token); }
       if (!isAdmin && !u) {
+        fn.logError('Failed to create/update pad; not authenticated.');
         return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.NOT_AUTH');
       }
       if (isAdmin) {
@@ -1722,20 +1968,24 @@ module.exports = (function () {
               if (ld.isEqual(err, new Error('BACKEND.ERROR.CONFIGURATION.KEY_NOT_FOUND'))) {
                 err = 'BACKEND.ERROR.PAD.ITEMS_NOT_FOUND';
               }
+              fn.logError('Failed to create/update pad.', err);
               return res.status(400).send({ success: false, error: err });
             }
             if (ld.isUndefined(g)) {
+              fn.logError('Failed to create/update pad.');
               return res.status(400).send({ success: false, error: 'BACKEND.ERROR.PAD.ITEMS_NOT_FOUND'});
             } else {
               if (ld.indexOf(g.admins, u._id) !== -1 ||
                 (g.allowUsersToCreatePads && ld.indexOf(g.users, u._id) !== -1)) {
                 _set(req, res);
               } else {
+                fn.logError('Failed to create/update pad.');
                 return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.DENIED');
               }
             }
           });
         } else {
+          fn.logError('Failed to create/update pad.');
           return res.status(400).send({ success: false, error: 'BACKEND.ERROR.TYPE.PARAM_STR'});
         }
       }
@@ -1760,8 +2010,10 @@ module.exports = (function () {
     app.delete(padRoute + '/:key', fn.checkJwt, function (req, res) {
       var isAdmin = fn.isAdmin(req);
       var u;
+      fn.logInfo(`Attempting to delete pad ${req.params.key}...`);
       if (!isAdmin) { u = auth.fn.getUser(req.body.auth_token); }
       if (!isAdmin && !u) {
+        fn.logError('Failed to delete pad ${req.params.key}; not authenticated.');
         return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.NOT_AUTH');
       }
       canAct(true, ld.partial(fn.del, pad.del), req, res);
@@ -1777,8 +2029,10 @@ module.exports = (function () {
     app.delete(padRoute + '/chathistory/:key', fn.checkJwt, function (req, res) {
       var isAdmin = fn.isAdmin(req);
       var u;
+      fn.logInfo(`Attempting to delete pad chat history ${req.params.key}...`);
       if (!isAdmin) { u = auth.fn.getUser(req.body.auth_token); }
       if (!isAdmin && !u) {
+        fn.logInfo(`Failed to delete pad chat history ${req.params.key}; not authenticated.`);
         return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.NOT_AUTH');
       }
       canAct(true, ld.partial(fn.del, pad.delChatHistory), req, res);
@@ -1794,14 +2048,21 @@ module.exports = (function () {
     */
 
     app.get(padRoute + '/ispublic/:key', function (req, res) {
+      fn.logInfo(`Attempting to check if pad is public ${req.params.key}...`);
       pad.get(req.params.key, function(err, p) {
         if (err) {
+          fn.logError(`Failed to check if pad is public ${req.params.key}.`, err);
           return res.send({ success: false, error: err });
         } else if (p.visibility !== null) {
+          fn.logInfo(`Successfully checked if pad is public ${req.params.key}`);
           return res.send({ success: true, key: req.params.key, ispublic: (p.visibility === 'public') });
         } else {
           group.get(p.group, function(err, g) {
-            if (err) { return res.send({ success: false, error: err }); }
+            if (err) { 
+              fn.logError(`Failed to check if pad is public ${req.params.key}.`, err);
+              return res.send({ success: false, error: err }); 
+            }
+            fn.logInfo(`Successfully checked if pad is public ${req.params.key}`);
             return res.send({ success: true, key: req.params.key, ispublic: (g.visibility === 'public') });
           });
         }
@@ -1812,6 +2073,7 @@ module.exports = (function () {
       var etherpadAPI = require('ep_etherpad-lite/node/db/API');
 
       var padId = req.params.key; 
+      fn.logInfo(`Attempting to get last edited ${padId}...`);
 
       return etherpadAPI.getLastEdited(padId).catch(err => {
         return {err}; 
@@ -1825,13 +2087,18 @@ module.exports = (function () {
 
 
     app.get(padRoute + '/getRelevantPads/:u', fn.checkJwt, function (req, res){
+      fn.logInfo(`Attempting to get relevant pads ${req.params.u}...`);
       var u = auth.fn.getUser(req.params.u);
       var etherpadAPI = require('ep_etherpad-lite/node/db/API');
       user.get(u.login, function (err, u) {
-        if (err) { return res.status(400).send({ error: err }); }
+        if (err) { 
+          fn.logError(`Attempting to get relevant pads ${req.params.u}.`, err);
+          return res.status(400).send({ error: err }); 
+        }
         try {
           group.getByUser(u, true, function (err, data) {
             if (err) {
+              fn.logError(`Attempting to get relevant pads ${req.params.u}.`, err);
               return res.status(404).send({
                 error: err.message
               });
@@ -1854,6 +2121,7 @@ module.exports = (function () {
           
                 group.getWatchedGroupsByUser(u, function(err, watchlist) {
                   if (err) {
+                    fn.logError(`Attempting to get relevant pads ${req.params.u}.`, err);
                     return res.status(404).send({
                       error: err.message
                     });
@@ -1867,6 +2135,7 @@ module.exports = (function () {
                   );
                   pad.getWatchedPadsByUser(u, function(err, watchlist) {
                     if (err) {
+                      fn.logError(`Attempting to get relevant pads ${req.params.u}.`, err);
                       return res.status(404).send({
                         error: err.message
                       });
@@ -1885,6 +2154,7 @@ module.exports = (function () {
 
                     pad.getWatchedPadsFromGroups(data.watchlist.groups, function(err, watchlist) {
                       if (err) {
+                        fn.logError(`Attempting to get relevant pads ${req.params.u}.`, err);
                         return res.status(404).send({
                           error: err.message
                         });
@@ -1932,6 +2202,7 @@ module.exports = (function () {
           });
         }
         catch (e) {
+          fn.logError(`Attempting to get relevant pads ${req.params.u}.`, e);
           res.status(400).send({ error: e.message });
         }
       });
@@ -1951,24 +2222,32 @@ module.exports = (function () {
     app.post(api.initialRoute + 'passrecover', function (req, res) {
       var email = req.body.email;
       var err;
+      fn.logInfo(`Attempting to recover password for email ${email}...`);
       if (conf.isNotInternalAuth()) {
         err = 'BACKEND.ERROR.AUTHENTICATION.NO_RECOVER';
+        fn.logError(`Failed to recover password for ${email}.`, err);
         return res.status(400).send({ error: err });
       }
       if (!ld.isEmail(email)) {
         err = 'BACKEND.ERROR.TYPE.MAIL';
+        fn.logError(`Failed to recover password for ${email}.`, err);
         return res.status(400).send({ error: err });
       }
       if (!userCache.emails[email]) {
         err = 'BACKEND.ERROR.USER.NOT_FOUND';
+        fn.logError(`Failed to recover password for ${email}.`, err);
         return res.status(404).send({ error: err });
       }
       if (conf.get('rootUrl').length === 0) {
         err = 'BACKEND.ERROR.CONFIGURATION.ROOTURL_NOT_CONFIGURED';
+        fn.logError(`Failed to recover password for ${email}.`, err);
         return res.status(501).send({ error: err });
       }
       user.get(email, function (err, u) {
-        if (err) { return res.status(400).send({ error: err }); }
+        if (err) { 
+          fn.logError(`Failed to recover password for ${email}.`, err);
+          return res.status(400).send({ error: err }); 
+        }
         var token = mail.genToken({ login: u.login, action: 'passrecover' });
         var subject = fn.mailMessage('PASSRECOVER_SUBJECT', {
           title: conf.get('title') }, u.lang);
@@ -1979,7 +2258,11 @@ module.exports = (function () {
           duration: conf.get('tokenDuration')
         }, u.lang);
         mail.send(u.email, subject, message, function (err) {
-          if (err) { return res.status(501).send({ error: err }); }
+          if (err) { 
+            fn.logError(`Failed to send recovery email to ${email}.`, err);
+            return res.status(501).send({ error: err }); 
+          }
+          fn.logInfo(`Successfully sent recovery email to ${email}.`);
           return res.send({ success: true });
         });
       });
@@ -1994,34 +2277,46 @@ module.exports = (function () {
     */
 
     app.put(api.initialRoute + 'passrecover/:token', function (req, res) {
+      fn.logInfo('Attempting to recover password from email...');
       var err;
       var val       = mail.tokens[req.params.token];
       var badLogin  = (!val || !val.login || !userCache.logins[val.login]);
       var badAction = (!val || !val.action || (val.action !== 'passrecover'));
       if (conf.isNotInternalAuth()) {
         err = 'BACKEND.ERROR.AUTHENTICATION.NO_RECOVER';
+        fn.logError('Failed to recover password from email.', err);
         return res.status(400).send({ error: err });
       }
       if (badLogin || badAction) {
         err = 'BACKEND.ERROR.TOKEN.INCORRECT';
+        fn.logError('Failed to recover password from email.', err);
         return res.status(400).send({ error: err });
       }
       if (!mail.isValidToken(req.params.token)) {
         err = 'BACKEND.ERROR.TOKEN.EXPIRED';
+        fn.logError('Failed to recover password from email.', err);
         return res.status(400).send({ error: err });
       }
       var pass  = req.body.password;
       var passC = req.body.passwordConfirm;
       if (!pass || (pass !== passC)) {
         err = 'USER.ERR.PASSWORD_MISMATCH';
+        fn.logError('Failed to recover password from email.', err);
         return res.status(400).send({ error: err });
       }
       user.get(val.login, function (err, u) {
-        if (err) { return res.status(400).send({ error: err.message }); }
+        if (err) { 
+          fn.logError('Failed to recover password from email.', err);
+          return res.status(400).send({ error: err.message }); 
+        }
         u.password = pass;
         if (!u.active) { u.active = true; }
         user.set(u, function (err) {
-          if (err) { return res.status(400).send({ error: err.message }); }
+          if (err) { 
+            fn.logError('Failed to recover password from email.', err);
+            return res.status(400).send({ error: err.message }); 
+          }
+          fn.logInfo('Successfully recovered password from email.');
           res.send({ success: true, login: val.login });
         });
       });
@@ -2035,25 +2330,36 @@ module.exports = (function () {
     */
 
     app.post(api.initialRoute + 'accountconfirm', function (req, res) {
+      fn.logInfo('Attempting to confirm account...');
       var val = mail.tokens[req.body.token];
       var err;
       if (conf.isNotInternalAuth()) {
         err = 'BACKEND.ERROR.AUTHENTICATION.NO_RECOVER';
+        fn.logError('Failed to confirm account.', err);
         return res.status(400).send({ error: err });
       }
       if (!val || !val.action || (val.action !== 'accountconfirm')) {
         err = 'BACKEND.ERROR.TOKEN.INCORRECT';
+        fn.logError('Failed to confirm account.', err);
         return res.status(400).send({ error: err });
       }
       if (!mail.isValidToken(req.body.token)) {
         err = 'BACKEND.ERROR.TOKEN.EXPIRED';
+        fn.logError('Failed to confirm account.', err);
         return res.status(400).send({ error: err });
       }
       user.get(val.login, function (err, u) {
-        if (err) { return res.status(400).send({ error: err.message }); }
+        if (err) { 
+          fn.logError('Failed to confirm account.', err);
+          return res.status(400).send({ error: err.message }); 
+        }
         u.active = true;
         user.fn.set(u, function (err) {
-          if (err) { return res.status(400).send({ error: err.message }); }
+          if (err) { 
+            fn.logError('Failed to confirm account.', err);
+            return res.status(400).send({ error: err.message }); 
+          }
+          fn.logInfo('Successfully confirmed account.');
           res.send({ success: true, login: val.login });
         });
       });
