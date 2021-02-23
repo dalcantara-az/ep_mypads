@@ -97,7 +97,7 @@ var common            = require('./model/common.js');
 
 
 var getFileRotateTransport = function(logLevel) {
-  var logDir = '../../logs';
+  var logDir = 'logs';
   return new (winston.transports.DailyRotateFile)({
     filename: path.resolve(`${logDir}/${logLevel}%DATE%.log`),
     datePattern: 'YYYY-MM-DD',
