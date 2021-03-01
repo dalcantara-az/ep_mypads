@@ -81,9 +81,6 @@ catch (e) {
 var bodyParser        = require('body-parser');
 var cookieParser      = require('cookie-parser');
 var decode            = require('js-base64').Base64.decode;
-var winston           = require('winston');
-var winstonRotate     = require('winston-daily-rotate-file');
-var path              = require('path');
 // Local dependencies
 var conf              = require('./configuration.js');
 var mail              = require('./mail.js');
@@ -94,32 +91,7 @@ var pad               = require('./model/pad.js');
 var auth              = require('./auth.js');
 var perm              = require('./perm.js');
 var common            = require('./model/common.js');
-
-
-var getFileRotateTransport = function(logLevel) {
-  var logDir = 'logs';
-  return new (winston.transports.DailyRotateFile)({
-    filename: path.resolve(`${logDir}/${logLevel}%DATE%.log`),
-    datePattern: 'YYYY-MM-DD',
-    maxSize: '20m',
-    level: logLevel
-  });
-}
-
-const logConfiguration = {
-  'transports': [
-      getFileRotateTransport('error'),
-      getFileRotateTransport('info')
-  ],
-  'format': winston.format.combine(
-      winston.format.timestamp({
-         format: 'DD-MM-YYYY HH:mm:ss:SSS'
-     }),
-      winston.format.printf(info => `${[info.timestamp]} [${(info.level).toUpperCase()}]: ${info.message}`),
-  )
-};
-
-const logger = winston.createLogger(logConfiguration);
+var logger            = require('./winston-logger.js').wLogger;
 
 module.exports = (function () {
   'use strict';
@@ -220,11 +192,11 @@ module.exports = (function () {
   */
 
   fn.get = function (module, req, res, next, cond) {
-    fn.logInfo(`Attempting to fn.get in ${module}...`);
+    fn.logInfo(`Attempting to fn.get...`);
     try {
       module.get(req.params.key, function (err, val) {
         if (err) {
-          fn.logError(`Failed to fn.get ${module}.`, err);
+          fn.logError(`Failed to fn.get.`, err);
           return res.status(404).send({
             error: err.message,
             key: req.params.key
@@ -232,20 +204,20 @@ module.exports = (function () {
         }
         if (cond && !cond(val)) {
           if (conf.get('allPadsPublicsAuthentifiedOnly')) {
-            fn.logError(`Failed to fn.get ${module}.`);
+            fn.logError(`Failed to fn.get.`);
             return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.MUST_BE');
           } else {
-            fn.logError(`Failed to fn.get ${module}.`);
+            fn.logError(`Failed to fn.get.`);
             return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.DENIED_RECORD');
           }
         } else {
-          fn.logInfo(`Successful fn.get ${module}.`);
+          fn.logInfo(`Successful fn.get.`);
           return res.send({ key: req.params.key, value: val });
         }
       });
     }
     catch (e) {
-      fn.logError(`Failed to fn.get ${module}.`, e);
+      fn.logError(`Failed to fn.get.`, e);
       res.status(400).send({ error: e.message });
     }
   };
@@ -410,28 +382,12 @@ module.exports = (function () {
     }
   };
 
-  /*
-   *
-   **/
-  fn.logMsg= function(level, msg) {
-    // Log a message
-    logger.log({
-    // Message to be logged
-        message: msg,
-    // Level of the message logging
-        level: level
-    });
-  }
-
   fn.logInfo = function(msg) {
-    fn.logMsg ('info', msg);
+    logger.info(msg);
   }
 
   fn.logError = function(msg, err) {
-    fn.logMsg ('error', msg);
-    if (err) {
-      fn.logMsg ('error', `Error stacktrace: \n${err}`);
-    }
+    logger.error(msg, err);
   }
 
 
@@ -871,7 +827,7 @@ module.exports = (function () {
 
     app.get(userlistRoute, fn.ensureAuthenticated,
       function (req, res) {
-        fn.logInfo('Attempting to retrieve userlist (get)...');
+        fn.logInfo(`Attempting to retrieve userlist (get) for ${req.mypadsLogin}...`);
         var opts = { crud: 'get', login: req.mypadsLogin };
         user.userlist(opts, function (err, u) {
           if (err) { 
@@ -1626,6 +1582,7 @@ module.exports = (function () {
     app.post(groupRoute, function (req, res) {
       var isAdmin = fn.isAdmin(req);
       var u = auth.fn.getUser(req.body.auth_token);
+      fn.logInfo(`Attempting to do /group for ${u.login}`);
       if (!u && !isAdmin) {
         fn.logInfo('Failed to update group; not authenticated.');
         return fn.denied(res, 'BACKEND.ERROR.AUTHENTICATION.NOT_AUTH');
@@ -1668,9 +1625,9 @@ module.exports = (function () {
     */
 
     app.post(groupRoute + '/invite', function (req, res) {
-      fn.logInfo('Attempting to invite user to group...');
+      fn.logInfo(`Attempting to invite user to group (${req.body.gid})...`);
       if (!req.body.gid) {
-        fn.logError('Failed to invite user to group.');
+        fn.logError('Failed to invite user to group; No group id.');
         return res.status(400)
           .send({ error: 'BACKEND.ERROR.TYPE.PARAMS_REQUIRED' });
       }
@@ -2087,8 +2044,8 @@ module.exports = (function () {
 
 
     app.get(padRoute + '/getRelevantPads/:u', fn.checkJwt, function (req, res){
-      fn.logInfo(`Attempting to get relevant pads ${req.params.u}...`);
       var u = auth.fn.getUser(req.params.u);
+      fn.logInfo(`Attempting to get relevant pads for ${u.login}...`);
       var etherpadAPI = require('ep_etherpad-lite/node/db/API');
       user.get(u.login, function (err, u) {
         if (err) { 
